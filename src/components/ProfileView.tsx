@@ -56,7 +56,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
           <div className="truncate">
             <div className="text-xs font-bold truncate">
-              {isVip ? '👑 玩伴年卡尊贵 VIP 会员已激活' : '免费体验版 · 解锁全阶段 300+ 专家活动'}
+              {isVip ? '👑 VIP 年卡会员至 2027-10-28' : '免费体验版 · 解锁全阶段 300+ 专家活动'}
             </div>
           </div>
         </div>
@@ -78,8 +78,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* 2. 紧凑名片：将宝宝信息与保存按钮合二为一，首屏内闭环 */}
       <form onSubmit={handleSave} className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(44,34,30,0.05)] space-y-4">
         <div className="flex items-center gap-3 pb-3 border-b border-[#F3EDE2]">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-xs">
-            <Baby className="w-6 h-6" />
+          <div className="relative w-12 h-12 shrink-0">
+            {isVip && (
+              <span className="absolute -top-1.5 -left-1 text-base leading-none transform -rotate-[12deg] select-none filter drop-shadow-xs z-10 pointer-events-none">
+                👑
+              </span>
+            )}
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+              isVip ? 'bg-amber-100 text-amber-700 border border-amber-200/80' : 'bg-emerald-100 text-emerald-700'
+            }`}>
+              <Baby className="w-6 h-6" />
+            </div>
           </div>
           <div className="min-w-0">
             <h3 className="text-sm sm:text-base font-bold text-[#2C221E] truncate">

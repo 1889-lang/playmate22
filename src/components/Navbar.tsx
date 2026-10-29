@@ -9,11 +9,11 @@ import { Calendar, Crown } from 'lucide-react';
 interface NavbarProps {
   currentTab: string;
   onSelectTab: (tab: string) => void;
-  isVip: boolean;
-  onOpenMembership: () => void;
+  isVip?: boolean;
+  onOpenMembership?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab, isVip, onOpenMembership }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
   return (
     <header className="sticky top-0 z-30 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#F3EDE2] px-4 py-3 flex items-center justify-between shadow-[0_4px_20px_-4px_rgba(44,34,30,0.03)]">
       <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onSelectTab('today')}>
@@ -32,23 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab, isVip, 
         <button onClick={() => onSelectTab('library')} className={`hover:text-[#2C221E] transition-colors cursor-pointer ${currentTab === 'library' ? 'font-bold text-[#2C221E]' : ''}`}>活动宝库</button>
         <button onClick={() => onSelectTab('history')} className={`hover:text-[#2C221E] transition-colors cursor-pointer ${currentTab === 'history' ? 'font-bold text-[#2C221E]' : ''}`}>成长足迹</button>
         <button onClick={() => onSelectTab('profile')} className={`hover:text-[#2C221E] transition-colors cursor-pointer ${currentTab === 'profile' ? 'font-bold text-[#2C221E]' : ''}`}>宝宝档案</button>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {isVip ? (
-          <div className="px-3.5 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-xs">
-            <Crown className="w-3.5 h-3.5 fill-amber-300 text-amber-600" />
-            <span>VIP年卡尊享中</span>
-          </div>
-        ) : (
-          <button
-            onClick={onOpenMembership}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all cursor-pointer animate-pulse"
-          >
-            <Crown className="w-3.5 h-3.5 fill-amber-200 text-amber-200" />
-            <span>开通VIP年卡</span>
-          </button>
-        )}
       </div>
     </header>
   );
