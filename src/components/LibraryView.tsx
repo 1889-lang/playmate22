@@ -61,49 +61,29 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-4xl mx-auto">
+    <div className="space-y-3.5 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-4xl mx-auto">
       
-      {/* 1. 精简头部与紧凑横向小胶囊 Banner（专家敏感期解读） */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#2C221E] tracking-tight">活动宝库 ({activities.length})</h2>
+      {/* 1. 顶部直接渲染搜索栏、分类 Tabs 与可折叠专家解读（无大标题挤占首屏） */}
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <div className="relative grow">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#786F6A]/60" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索活动名称、所需材料或技能..."
+              className="w-full h-11 pl-10 pr-4 rounded-2xl bg-white border border-[#F3EDE2] text-xs text-[#2C221E] placeholder-[#786F6A]/60 focus:outline-none focus:border-orange-400 shadow-xs"
+            />
+          </div>
           {!isVip && (
             <button
               onClick={onUpgradeVip}
-              className="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold shadow-xs flex items-center gap-1 shrink-0 hover:opacity-95 transition-all cursor-pointer"
+              className="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold shadow-xs flex items-center gap-1 shrink-0 hover:opacity-95 transition-all cursor-pointer whitespace-nowrap"
             >
-              <Crown className="w-3.5 h-3.5 fill-amber-200 text-amber-200" /> 解锁 VIP
+              <Crown className="w-3.5 h-3.5 fill-amber-200 text-amber-200" /> VIP
             </button>
           )}
-        </div>
-
-        {/* 紧凑可折叠的专家解读小胶囊 Banner */}
-        <div className="bg-amber-50/80 border border-amber-200/70 rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2 shadow-xs cursor-pointer" onClick={() => setShowExpertTip(!showExpertTip)}>
-          <div className="flex items-center gap-2 min-w-0">
-            <Lightbulb className="w-4 h-4 text-amber-600 fill-amber-300 shrink-0" />
-            <span className="text-xs font-bold text-[#2C221E] truncate">💡 育儿专家敏感期解读：7-12月龄大动作与精细动作飞跃</span>
-          </div>
-          <span className="text-[11px] text-amber-800 font-bold shrink-0 flex items-center gap-0.5">
-            {showExpertTip ? '收起' : '详情'} <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showExpertTip ? 'rotate-90' : ''}`} />
-          </span>
-        </div>
-
-        {showExpertTip && (
-          <div className="bg-amber-50/50 border border-amber-200/50 rounded-2xl p-3.5 text-xs text-[#786F6A] leading-relaxed animate-in fade-in">
-            此阶段宝宝正处于坐姿独立、爬行萌芽及手指捏取发育的关键期。通过适度的趣味亲子互动游戏，能有效刺激前庭觉与神经髓鞘发育，为独立行走和手眼协调奠定坚实基础。
-          </div>
-        )}
-
-        {/* Search input */}
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#786F6A]/60" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索活动名称、所需材料或技能..."
-            className="w-full h-11 pl-10 pr-4 rounded-2xl bg-white border border-[#F3EDE2] text-xs text-[#2C221E] placeholder-[#786F6A]/60 focus:outline-none focus:border-orange-400 shadow-xs"
-          />
         </div>
 
         {/* Category Filter Pills */}
@@ -122,15 +102,32 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             </button>
           ))}
         </div>
+
+        {/* 紧凑可折叠的专家解读小胶囊 Banner */}
+        <div className="bg-amber-50/80 border border-amber-200/70 rounded-2xl px-3 py-2 flex items-center justify-between gap-2 shadow-xs cursor-pointer" onClick={() => setShowExpertTip(!showExpertTip)}>
+          <div className="flex items-center gap-2 min-w-0">
+            <Lightbulb className="w-4 h-4 text-amber-600 fill-amber-300 shrink-0" />
+            <span className="text-xs font-bold text-[#2C221E] truncate">💡 专家敏感期解读：7-12月龄大动作与精细动作飞跃</span>
+          </div>
+          <span className="text-[11px] text-amber-800 font-bold shrink-0 flex items-center gap-0.5">
+            {showExpertTip ? '收起' : '详情'} <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showExpertTip ? 'rotate-90' : ''}`} />
+          </span>
+        </div>
+
+        {showExpertTip && (
+          <div className="bg-amber-50/50 border border-amber-200/50 rounded-2xl p-3 text-xs text-[#786F6A] leading-relaxed animate-in fade-in">
+            此阶段宝宝正处于坐姿独立、爬行萌芽及手指捏取发育的关键期。通过适度的趣味亲子互动游戏，能有效刺激前庭觉与神经髓鞘发育，为独立行走和手眼协调奠定坚实基础。
+          </div>
+        )}
       </div>
 
-      {/* 2. Activity Cards Grid (无冗余详情按钮，首屏露出 1.5+ 张) */}
+      {/* 2. Activity Cards Grid (首屏直接露出 1.5+ 张卡片) */}
       {filteredActivities.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-3xl border border-[#F3EDE2] p-6 shadow-xs">
           <p className="text-xs text-[#786F6A]">未找到相关活动，请尝试更换关键词</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
           {filteredActivities.map((act) => {
             const isLocked = act.isVip && !isVip;
             const cfg = categoryConfig[act.category] || { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' };

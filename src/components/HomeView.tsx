@@ -86,7 +86,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     } else {
       return {
         filteredPool: reviewedActivities,
-        ageNotice: `暂无完全匹配 ${profile.currentMonths} 个月龄的专属活动，已为您展示精选已审核活动`,
+        ageNotice: `暂无完全匹配 ${profile.currentMonths}个月龄的专属活动，已为您展示精选已审核活动`,
       };
     }
   }, [reviewedActivities, profile]);
@@ -119,8 +119,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   return (
     <div className="space-y-4 pb-24 md:pb-16 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-3xl mx-auto">
       
-      {/* 1. Profile Status / Customized Gift Package Card (定制礼包卡) */}
-      {profile === null ? (
+      {/* 1. Unregistered Gift Package Banner (Only when unregistered) */}
+      {profile === null && (
         <section className="bg-gradient-to-br from-[#FFF5EE] via-[#FFF9F3] to-[#FDF6F0] rounded-3xl p-5 sm:p-6 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(234,138,92,0.08)] flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/10 rounded-full blur-2xl pointer-events-none" />
           <div className="flex items-center gap-3.5 min-w-0">
@@ -142,32 +142,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
             立即去建档 →
           </button>
         </section>
-      ) : (
-        <section className="bg-white rounded-3xl px-4 py-3 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(44,34,30,0.05)] flex items-center justify-between gap-2 overflow-hidden">
-          <div 
-            onClick={() => onSelectTab('profile')}
-            className="flex items-center gap-2.5 cursor-pointer group shrink-0 min-w-0"
-            title="点击修改宝宝档案"
-          >
-            <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shadow-xs shrink-0">
-              <Baby className="w-3.5 h-3.5" />
-            </div>
-            <div className="truncate">
-              <span className="text-xs font-bold text-[#2C221E] group-hover:text-orange-600 transition-colors truncate block shrink-0 whitespace-nowrap">
-                {profile.name} · {profile.currentMonths}个月
-              </span>
-              <div className="text-[10px] text-[#786F6A] shrink-0 whitespace-nowrap">黄金发育期</div>
-            </div>
-          </div>
+      )}
 
-          <div 
-            onClick={() => onSelectTab('history')}
-            className="bg-[#FAF8F5] px-3 py-1.5 rounded-2xl border border-[#F3EDE2] text-[11px] font-semibold text-[#786F6A] cursor-pointer hover:bg-[#F3EDE2] transition-colors shrink-0 whitespace-nowrap"
-            title="查看陪玩历史记录"
-          >
-            今日已陪伴 <span className="font-bold text-[#2C221E] font-mono">{todayTotalMinutes}</span> 分钟
+      {/* 右下角悬浮亲子能量挂件（Floating Capsule Widget for Registered Users） */}
+      {profile !== null && (
+        <div
+          onClick={() => onSelectTab('profile')}
+          className="fixed right-4 bottom-20 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 backdrop-blur-md shadow-[0_4px_16px_rgba(251,146,60,0.25)] border border-orange-100 cursor-pointer transition-transform hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          title="点击查看宝宝档案与陪伴能量"
+        >
+          <div className="w-7 h-7 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center justify-center font-bold shrink-0 shadow-xs overflow-hidden">
+            <Baby className="w-4 h-4 text-emerald-700" />
           </div>
-        </section>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">⏰</span>
+            <span className="text-xs font-extrabold text-orange-600 font-mono">
+              {todayTotalMinutes}m
+            </span>
+          </div>
+        </div>
       )}
 
       {/* 适龄降级提示横幅（如有） */}
@@ -178,7 +171,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       )}
 
-      {/* 2. Above-the-Fold Core: Today's Featured Activity Card */}
+      {/* 2. Above-the-Fold Core: Today's Featured Activity Card (Directly at top) */}
       {currentActivity && (
         <section className="bg-white rounded-3xl p-4 sm:p-6 border border-[#F3EDE2] shadow-[0_12px_35px_-12px_rgba(44,34,30,0.07)] relative overflow-hidden">
           {/* 顶部标签栏（严格防挤压、禁止折行） */}
@@ -303,12 +296,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   {cfg.icon}
                 </div>
 
-                {/* 中间信息区：层级重构（标题行 -> 辅助属性行 -> 教育价值行） */}
+                {/* 中间信息区：层级重构 */}
                 <div className="grow min-w-0 space-y-1">
-                  {/* 第一行：标题行（加粗，支持最多2行，杜绝突兀硬截断） */}
                   <h4 className="text-sm font-bold text-[#2C221E] line-clamp-2 leading-snug">{act.title}</h4>
 
-                  {/* 第二行：辅助属性行（分类标签、适龄、耗时以小字号弱化展示） */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${cfg.bg} ${cfg.text} border ${cfg.border} shrink-0 whitespace-nowrap`}>
                       {act.category}
@@ -321,13 +312,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     </span>
                   </div>
 
-                  {/* 第三行：教育价值行（一句话育儿价值，柔和暖灰） */}
                   <p className="text-[11px] text-[#786F6A] line-clamp-1 leading-tight">
                     💡 价值：{act.subtitle}
                   </p>
                 </div>
 
-                {/* 右侧按钮：固定垂直居中，药丸胶囊按钮，位置不跳动 */}
+                {/* 右侧按钮 */}
                 <div className="shrink-0 self-center">
                   <span className="px-4 py-2 rounded-full bg-orange-50 border border-orange-200 text-xs font-bold text-orange-600 flex items-center gap-1 shadow-xs whitespace-nowrap">
                     去看看

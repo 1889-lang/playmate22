@@ -84,17 +84,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     : records;
 
   return (
-    <div className="space-y-4 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-3xl mx-auto">
+    <div className="space-y-4 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-3xl mx-auto pt-1">
       
-      {/* Header title */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#2C221E] tracking-tight">成长足迹</h2>
-          <p className="text-xs text-[#786F6A]">真实记录亲子陪伴反馈与手帐打卡</p>
-        </div>
-      </div>
-
-      {/* 1. Two-in-One Compact Weekly Desk Calendar Card (周打卡台历卡) */}
+      {/* 1. Two-in-One Compact Weekly Desk Calendar Card (周打卡台历卡 - 页面顶部直接展示) */}
       <div className="bg-white rounded-3xl p-4 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(44,34,30,0.05)] space-y-3">
         {/* Top bar of desk calendar card: Streak & Total Stats */}
         <div className="flex items-center justify-between text-xs pb-2 border-b border-[#F3EDE2]">
@@ -148,7 +140,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
       </div>
 
-      {/* 2. History Footprint Stream (Compact & Eliminating empty quote boxes) */}
+      {/* 2. History Footprint Stream */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-[#786F6A] uppercase tracking-wider flex items-center gap-1.5">
