@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { PlayRecord } from '../types';
-import { History as HistoryIcon, Calendar, Flame, ArrowRight, Trash2, AlertTriangle, Clock } from 'lucide-react';
+import { History as HistoryIcon, Calendar, Flame, ArrowRight, AlertTriangle, Clock } from 'lucide-react';
 import { getLocalDateStr } from '../utils/date';
 
 interface HistoryViewProps {
@@ -84,30 +84,30 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     : records;
 
   return (
-    <div className="space-y-4 pb-24 md:pb-12 animate-in fade-in duration-200">
+    <div className="space-y-4 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-3xl mx-auto">
       
       {/* Header title */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#45433F] tracking-tight">成长足迹</h2>
-          <p className="text-xs text-[#858078]">真实记录亲子陪伴反馈与手帐打卡</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#2C221E] tracking-tight">成长足迹</h2>
+          <p className="text-xs text-[#786F6A]">真实记录亲子陪伴反馈与手帐打卡</p>
         </div>
       </div>
 
       {/* 1. Two-in-One Compact Weekly Desk Calendar Card (周打卡台历卡) */}
-      <div className="bg-white rounded-3xl p-4 border border-[#F1EAE0] shadow-xs space-y-3">
+      <div className="bg-white rounded-3xl p-4 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(44,34,30,0.05)] space-y-3">
         {/* Top bar of desk calendar card: Streak & Total Stats */}
-        <div className="flex items-center justify-between text-xs pb-2 border-b border-[#F1EAE0]">
-          <div className="flex items-center gap-1.5 font-bold text-[#F28C45]">
-            <Flame className="w-4 h-4 fill-[#F28C45]" />
+        <div className="flex items-center justify-between text-xs pb-2 border-b border-[#F3EDE2]">
+          <div className="flex items-center gap-1.5 font-bold text-orange-600">
+            <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
             <span>连续陪伴 {streak} 天</span>
           </div>
-          <div className="flex items-center gap-2 text-[#858078]">
+          <div className="flex items-center gap-2 text-[#786F6A]">
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-[#F28C45]" /> 累计 <strong className="text-[#45433F] font-mono">{totalPlayTime}</strong> 分钟
+              <Clock className="w-3.5 h-3.5 text-orange-500" /> 累计 <strong className="text-[#2C221E] font-mono">{totalPlayTime}</strong> 分钟
             </span>
             <span>·</span>
-            <span>打卡 <strong className="text-[#45433F] font-mono">{completedCount}</strong> 次</span>
+            <span>打卡 <strong className="text-[#2C221E] font-mono">{completedCount}</strong> 次</span>
           </div>
         </div>
 
@@ -121,21 +121,21 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 onClick={() => setSelectedDate((prev) => (prev === wd.dateStr ? null : wd.dateStr))}
                 className={`rounded-2xl py-2 px-1 text-center flex flex-col items-center justify-center gap-1 transition-all border cursor-pointer ${
                   isSelected
-                    ? 'bg-orange-100 border-2 border-[#F28C45] shadow-xs scale-105'
+                    ? 'bg-orange-100 border-2 border-orange-500 shadow-xs scale-105'
                     : wd.isToday
-                    ? 'bg-orange-50 border-[#F28C45] shadow-xs'
-                    : 'bg-[#FAF7F2] border-[#F1EAE0] hover:border-orange-200'
+                    ? 'bg-orange-50 border-orange-400 shadow-xs'
+                    : 'bg-[#FAF8F5] border-[#F3EDE2] hover:border-orange-200'
                 }`}
               >
-                <span className={`text-[10px] font-semibold ${isSelected || wd.isToday ? 'text-[#F28C45]' : 'text-[#858078]'}`}>
+                <span className={`text-[10px] font-semibold ${isSelected || wd.isToday ? 'text-orange-600' : 'text-[#786F6A]'}`}>
                   {wd.dayName}
                 </span>
-                <span className={`text-xs font-bold font-mono ${isSelected || wd.isToday ? 'text-[#F28C45]' : 'text-[#45433F]'}`}>
+                <span className={`text-xs font-bold font-mono ${isSelected || wd.isToday ? 'text-orange-600' : 'text-[#2C221E]'}`}>
                   {wd.dateNum}
                 </span>
                 <div className="h-5 flex items-center justify-center">
                   {wd.hasCheckedIn ? (
-                    <div className="w-5 h-5 rounded-full bg-[#F28C45] text-white flex items-center justify-center shadow-xs text-xs" title="已打卡">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 text-white flex items-center justify-center shadow-xs text-xs" title="已打卡">
                       🐾
                     </div>
                   ) : (
@@ -148,13 +148,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
       </div>
 
-      {/* 2. History Footprint Stream */}
+      {/* 2. History Footprint Stream (Compact & Eliminating empty quote boxes) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-[#858078] uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-xs font-bold text-[#786F6A] uppercase tracking-wider flex items-center gap-1.5">
             {selectedDate ? (
               <>
-                <span className="text-[#F28C45]">{selectedDate}</span> 打卡足迹
+                <span className="text-orange-600">{selectedDate}</span> 打卡足迹
               </>
             ) : (
               '历史足迹'
@@ -163,7 +163,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           {selectedDate && (
             <button
               onClick={() => setSelectedDate(null)}
-              className="text-xs text-[#F28C45] hover:underline font-semibold bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200 transition-colors"
+              className="text-xs text-orange-600 hover:underline font-semibold bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200 transition-colors"
             >
               查看全部
             </button>
@@ -171,76 +171,83 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
 
         {records.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-3xl border border-[#F1EAE0] p-6 shadow-xs">
-            <HistoryIcon className="w-10 h-10 text-[#858078]/40 mx-auto mb-2.5" />
-            <h3 className="text-sm font-bold text-[#45433F] mb-1">暂无陪玩记录</h3>
-            <p className="text-xs text-[#858078]">点击“今日推荐”或“活动宝库”开始第一次亲子陪伴吧！</p>
+          <div className="text-center py-12 bg-white rounded-3xl border border-[#F3EDE2] p-6 shadow-xs">
+            <HistoryIcon className="w-10 h-10 text-[#786F6A]/40 mx-auto mb-2.5" />
+            <h3 className="text-sm font-bold text-[#2C221E] mb-1">暂无陪玩记录</h3>
+            <p className="text-xs text-[#786F6A]">点击“今日推荐”或“活动宝库”开始第一次亲子陪伴吧！</p>
           </div>
         ) : filteredRecords.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-3xl border border-[#F1EAE0] p-6 shadow-xs space-y-2">
-            <Calendar className="w-10 h-10 text-[#F28C45]/60 mx-auto mb-1" />
-            <h3 className="text-sm font-bold text-[#45433F]">这天还没有陪玩记录，去完成今天的陪伴吧~</h3>
-            <p className="text-xs text-[#858078]">点击上方其他日期或点此返回查看全部足迹。</p>
+          <div className="text-center py-12 bg-white rounded-3xl border border-[#F3EDE2] p-6 shadow-xs space-y-2">
+            <Calendar className="w-10 h-10 text-orange-500/60 mx-auto mb-1" />
+            <h3 className="text-sm font-bold text-[#2C221E]">这天还没有陪玩记录，去完成今天的陪伴吧~</h3>
+            <p className="text-xs text-[#786F6A]">点击上方其他日期或点此返回查看全部足迹。</p>
             <div className="pt-2">
               <button
                 onClick={() => setSelectedDate(null)}
-                className="px-4 py-2 rounded-2xl bg-orange-100 text-[#B86834] text-xs font-bold hover:bg-orange-200 transition-colors shadow-xs"
+                className="px-4 py-2 rounded-2xl bg-orange-100 text-orange-800 text-xs font-bold hover:bg-orange-200 transition-colors shadow-xs"
               >
                 查看全部记录
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredRecords.map((rec) => (
-              <div
-                key={rec.id}
-                className="bg-white rounded-3xl p-4.5 sm:p-5 border border-[#F1EAE0] shadow-xs space-y-3 border-l-4 border-l-[#F28C45] relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FAF7F2] text-[#45433F] border border-[#F1EAE0]">
-                      {rec.category}
-                    </span>
-                    <span className="text-xs text-[#858078] flex items-center gap-1 font-mono">
-                      <Calendar className="w-3.5 h-3.5 text-[#F28C45]" /> {rec.date}
+          <div className="space-y-2.5">
+            {filteredRecords.map((rec) => {
+              const hasNotes = rec.notes && rec.notes.trim().length > 0;
+              return (
+                <div
+                  key={rec.id}
+                  className="bg-white rounded-3xl p-4 border border-[#F3EDE2] shadow-[0_6px_20px_rgba(44,34,30,0.03)] space-y-2 border-l-4 border-l-orange-500 relative overflow-hidden"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF8F5] text-[#2C221E] border border-[#F3EDE2] shrink-0 whitespace-nowrap">
+                        {rec.category}
+                      </span>
+                      <span className="text-[11px] text-[#786F6A] flex items-center gap-1 font-mono shrink-0 whitespace-nowrap">
+                        <Calendar className="w-3.5 h-3.5 text-orange-500" /> {rec.date}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 shrink-0 whitespace-nowrap">
+                      {rec.reaction}
                     </span>
                   </div>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-[#B86834] border border-orange-200">
-                    {rec.reaction}
-                  </span>
-                </div>
 
-                <div>
-                  <h4 
-                    onClick={() => onSelectActivityById(rec.activityId)}
-                    className="text-base font-bold text-[#45433F] hover:text-[#F28C45] cursor-pointer transition-colors flex items-center justify-between"
-                  >
-                    <span>{rec.activityTitle}</span>
-                    <ArrowRight className="w-4 h-4 text-[#858078]" />
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#45433F]/90 mt-1.5 bg-[#FAF7F2] p-3 rounded-2xl border border-[#F1EAE0] leading-relaxed font-serif">
-                    “{rec.notes}”
-                  </p>
-                </div>
+                  <div className="pt-0.5">
+                    <h4 
+                      onClick={() => onSelectActivityById(rec.activityId)}
+                      className="text-sm font-bold text-[#2C221E] hover:text-orange-600 cursor-pointer transition-colors flex items-center justify-between gap-2"
+                    >
+                      <span className="truncate">{rec.activityTitle}</span>
+                      <ArrowRight className="w-4 h-4 text-[#786F6A] shrink-0" />
+                    </h4>
 
-                <div className="flex items-center justify-between text-[11px] text-[#858078] pt-1.5 border-t border-[#F1EAE0]">
-                  <span>陪玩时长：约 {rec.durationMinutes} 分钟</span>
-                  <span>难度：{rec.difficulty}</span>
-                  <span className="text-emerald-700 font-semibold">{rec.completed ? '✓ 完整打卡' : '部分完成'}</span>
+                    {/* 仅在存在有效随手记时渲染笔记容器，彻底消除空引号框 */}
+                    {hasNotes && (
+                      <p className="text-xs text-[#2C221E]/90 mt-1.5 bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#F3EDE2] leading-relaxed font-serif">
+                        “{rec.notes}”
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-[#786F6A] pt-1 border-t border-[#F3EDE2]">
+                    <span>时长：约 {rec.durationMinutes} 分钟</span>
+                    <span>难度：{rec.difficulty}</span>
+                    <span className="text-emerald-700 font-semibold">{rec.completed ? '✓ 完整打卡' : '部分完成'}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* 3. Footer Clear History Link (Safely tucked away at bottom in tiny gray text to prevent elderly mis-taps) */}
+      {/* 3. Footer Clear History Link */}
       {records.length > 0 && (
-        <div className="pt-4 text-center">
+        <div className="pt-2 text-center">
           <button
             onClick={() => setShowConfirmModal(true)}
-            className="text-[11px] text-[#858078]/70 hover:text-[#A85C52] transition-colors underline decoration-dotted underline-offset-4"
+            className="text-[11px] text-[#786F6A]/70 hover:text-rose-600 transition-colors underline decoration-dotted underline-offset-4 cursor-pointer"
           >
             清空历史打卡记录
           </button>
@@ -251,25 +258,25 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 text-[#A85C52]">
-              <div className="w-10 h-10 rounded-2xl bg-[#DFA39A]/20 flex items-center justify-center">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-[#45433F]">清空历史记录确认</h3>
+              <h3 className="text-base font-bold text-[#2C221E]">清空历史记录确认</h3>
             </div>
-            <p className="text-xs text-[#858078] leading-relaxed">
+            <p className="text-xs text-[#786F6A] leading-relaxed">
               确定要清空所有陪玩记录吗？此操作不可撤销，并将同时重置日历打卡与陪伴统计数据。
             </p>
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="flex-1 h-11 rounded-2xl bg-[#FAF7F2] text-xs font-semibold text-[#45433F] hover:bg-[#F1EAE0] transition-colors"
+                className="flex-1 h-11 rounded-2xl bg-[#FAF8F5] text-xs font-semibold text-[#2C221E] hover:bg-[#F3EDE2] transition-colors cursor-pointer"
               >
                 取消
               </button>
               <button
                 onClick={handleConfirmClear}
-                className="flex-1 h-11 rounded-2xl bg-[#A85C52] text-xs font-bold text-white hover:bg-[#924d45] transition-colors shadow-xs"
+                className="flex-1 h-11 rounded-2xl bg-rose-600 text-xs font-bold text-white hover:bg-rose-700 transition-colors shadow-xs cursor-pointer"
               >
                 确认清空
               </button>

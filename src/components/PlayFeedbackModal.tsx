@@ -82,96 +82,109 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
     }
   };
 
-  // 使用原生 Canvas 生成真实拍立得海报
+  // 1. 仅保存足迹（主按钮逻辑）
+  const handleSaveOnly = () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    triggerInstantSave();
+    onClose();
+  };
+
+  // 2. 生成拍立得海报并分享（次按钮逻辑）
   const generatePolaroidImage = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
-    // 核心：打卡即时生效
-    triggerInstantSave();
+    try {
+      // 确保打卡即时生效
+      triggerInstantSave();
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 600;
-    canvas.height = 840;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 840;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Canvas context not available');
+      }
+
+      // 1. 拍立得白色卡纸外框
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, 600, 840);
+
+      ctx.strokeStyle = '#EAE2D7';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(4, 4, 592, 832);
+
+      // 2. 拍立得内部照片区域（夏目米纸色背景）
+      ctx.fillStyle = '#FAF8F5';
+      ctx.fillRect(40, 40, 520, 560);
+      ctx.strokeStyle = '#F3EDE2';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(40, 40, 520, 560);
+
+      // 装饰圆与图标
+      ctx.fillStyle = status === 'interrupted' ? '#E8B58D' : '#F28C45';
+      ctx.beginPath();
+      ctx.arc(300, 200, 50, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 44px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(status === 'interrupted' ? '🧸' : '🐾', 300, 215);
+
+      // 照片区域顶部标签
+      ctx.fillStyle = '#786F6A';
+      ctx.font = 'bold 22px sans-serif';
+      const localDateStr = getLocalDateString().replace(/-/g, '.');
+      const babyNameStr = profile?.name ? `${profile.name} · ${profile.currentMonths}个月` : '亲子陪伴手帐';
+      ctx.fillText(`${localDateStr} · ${babyNameStr}`, 300, 110);
+
+      // 照片区域活动大标题
+      ctx.fillStyle = '#2C221E';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText(activity.title, 300, 310);
+
+      // 分类与时长徽标
+      ctx.fillStyle = '#B86834';
+      ctx.font = 'bold 24px sans-serif';
+      const durationLabel = status === 'interrupted' ? `[${activity.category}]  •  温馨陪伴 ${durationMinutes} 分钟（中途小憩）` : `[${activity.category}]  •  专注陪伴 ${durationMinutes} 分钟`;
+      ctx.fillText(durationLabel, 300, 370);
+
+      // 状态标签
+      ctx.fillStyle = status === 'interrupted' ? '#B86834' : '#54704B';
+      ctx.font = '22px sans-serif';
+      const reactionText = status === 'interrupted' 
+        ? '陪伴状态：🧸 片刻温馨陪伴（顺应宝宝节奏）' 
+        : reaction === 'happy' ? '宝宝状态：😍 开心专注' : reaction === 'calm' ? '宝宝状态：😊 平静探索' : '宝宝状态：🥱 适度放松';
+      ctx.fillText(reactionText, 300, 430);
+
+      // 用户笔记（若有）
+      if (note.trim()) {
+        ctx.fillStyle = '#6B665F';
+        ctx.font = 'italic 20px sans-serif';
+        ctx.fillText(`“${note.trim().slice(0, 22)}${note.length > 22 ? '...' : ''}”`, 300, 490);
+      }
+
+      // 3. 拍立得留白手写区域（底部）
+      ctx.fillStyle = '#F28C45';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(status === 'interrupted' ? '✨ 虽然提前休息，但陪伴同样珍贵 ✨' : '✨ 陪伴小宝健康快乐成长每一天 ✨', 300, 680);
+
+      ctx.fillStyle = '#786F6A';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('爱是高质量的专注陪伴 · 玩伴日历', 300, 730);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      setPosterImageUrl(dataUrl);
+      setIsPosterGenerated(true);
+    } catch (e) {
+      console.warn('[Polaroid] Canvas generation error, falling back', e);
+      setIsPosterGenerated(true);
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    // 1. 拍立得白色卡纸外框
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 600, 840);
-
-    ctx.strokeStyle = '#EAE2D7';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(4, 4, 592, 832);
-
-    // 2. 拍立得内部照片区域（夏目米纸色背景）
-    ctx.fillStyle = '#FAF8F5';
-    ctx.fillRect(40, 40, 520, 560);
-    ctx.strokeStyle = '#F3EDE2';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(40, 40, 520, 560);
-
-    // 装饰圆与图标
-    ctx.fillStyle = status === 'interrupted' ? '#E8B58D' : '#F28C45';
-    ctx.beginPath();
-    ctx.arc(300, 200, 50, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 44px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(status === 'interrupted' ? '🧸' : '🐾', 300, 215);
-
-    // 照片区域顶部标签
-    ctx.fillStyle = '#786F6A';
-    ctx.font = 'bold 22px sans-serif';
-    const localDateStr = getLocalDateString().replace(/-/g, '.');
-    const babyNameStr = profile?.name ? `${profile.name} · ${profile.currentMonths}个月` : '亲子陪伴手帐';
-    ctx.fillText(`${localDateStr} · ${babyNameStr}`, 300, 110);
-
-    // 照片区域活动大标题
-    ctx.fillStyle = '#2C221E';
-    ctx.font = 'bold 36px sans-serif';
-    ctx.fillText(activity.title, 300, 310);
-
-    // 分类与时长徽标
-    ctx.fillStyle = '#B86834';
-    ctx.font = 'bold 24px sans-serif';
-    const durationLabel = status === 'interrupted' ? `[${activity.category}]  •  温馨陪伴 ${durationMinutes} 分钟（中途小憩）` : `[${activity.category}]  •  专注陪伴 ${durationMinutes} 分钟`;
-    ctx.fillText(durationLabel, 300, 370);
-
-    // 状态标签
-    ctx.fillStyle = status === 'interrupted' ? '#B86834' : '#54704B';
-    ctx.font = '22px sans-serif';
-    const reactionText = status === 'interrupted' 
-      ? '陪伴状态：🧸 片刻温馨陪伴（顺应宝宝节奏）' 
-      : reaction === 'happy' ? '宝宝状态：😍 开心专注' : reaction === 'calm' ? '宝宝状态：😊 平静探索' : '宝宝状态：🥱 适度放松';
-    ctx.fillText(reactionText, 300, 430);
-
-    // 用户笔记（若有）
-    if (note.trim()) {
-      ctx.fillStyle = '#6B665F';
-      ctx.font = 'italic 20px sans-serif';
-      ctx.fillText(`“${note.trim().slice(0, 22)}${note.length > 22 ? '...' : ''}”`, 300, 490);
-    }
-
-    // 3. 拍立得留白手写区域（底部）
-    ctx.fillStyle = '#F28C45';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(status === 'interrupted' ? '✨ 虽然提前休息，但陪伴同样珍贵 ✨' : '✨ 陪伴小宝健康快乐成长每一天 ✨', 300, 680);
-
-    ctx.fillStyle = '#786F6A';
-    ctx.font = '20px sans-serif';
-    ctx.fillText('爱是高质量的专注陪伴 · 玩伴日历', 300, 730);
-
-    const dataUrl = canvas.toDataURL('image/png');
-    setPosterImageUrl(dataUrl);
-    setIsPosterGenerated(true);
-    setIsSubmitting(false);
   };
 
   // 触发真实文件下载
@@ -186,7 +199,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
     document.body.removeChild(downloadLink);
   };
 
-  // 分享给好友（非强制，副操作）
+  // 分享给好友
   const handleShare = async () => {
     if (navigator.share && posterImageUrl) {
       try {
@@ -196,17 +209,11 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
           url: window.location.href,
         });
       } catch (e) {
-        // Fallback or user cancel
+        // user cancel
       }
     } else {
       alert('已为您准备好专属陪伴海报，点击“保存海报到相册”即可发送给好友或家人哦！');
     }
-  };
-
-  // 关闭弹窗并返回首页（状态已即时保存）
-  const handleDone = () => {
-    triggerInstantSave();
-    onClose();
   };
 
   return (
@@ -221,17 +228,18 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
               {isPosterGenerated ? '成长拍立得已生成' : (status === 'interrupted' ? '本次陪伴小结（中途休息）' : '记录今天的亲子时光')}
             </h3>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleDone}
-              className="px-3 py-1 rounded-full bg-white border border-[#F3EDE2] text-xs font-bold text-[#2C221E] hover:bg-[#F3EDE2] shadow-xs cursor-pointer"
-            >
-              完成 / ✕
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              triggerInstantSave();
+              onClose();
+            }}
+            className="px-3 py-1 rounded-full bg-white border border-[#F3EDE2] text-xs font-bold text-[#2C221E] hover:bg-[#F3EDE2] shadow-xs cursor-pointer"
+          >
+            完成 / ✕
+          </button>
         </div>
 
-        {/* 阶段 1：打卡记录表单 */}
+        {/* 阶段 1：打卡记录表单与双按钮改造 */}
         {!isPosterGenerated ? (
           <div className="p-5 space-y-4">
             {status === 'interrupted' ? (
@@ -283,41 +291,55 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
               />
             </div>
 
-            {/* 下一步：生成海报按钮（打卡即时生效） */}
-            <button
-              onClick={generatePolaroidImage}
-              disabled={isSubmitting}
-              className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 cursor-pointer transition-transform active:scale-[0.98] disabled:opacity-50"
-            >
-              <Sparkles className="w-4 h-4 fill-white"/>
-              生成今日成长拍立得
-            </button>
+            {/* 拆分为双按钮布局：主按钮“仅保存足迹”与次按钮“生成拍立得海报并分享” */}
+            <div className="pt-1 space-y-2">
+              <button
+                onClick={handleSaveOnly}
+                disabled={isSubmitting}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-orange-400 to-amber-500 hover:opacity-95 text-white font-bold text-sm shadow-md shadow-orange-500/25 cursor-pointer transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4 fill-white text-orange-500" />
+                仅保存足迹（打卡即时生效）
+              </button>
+
+              <button
+                onClick={generatePolaroidImage}
+                disabled={isSubmitting}
+                className="w-full py-2.5 rounded-2xl border border-orange-200 text-orange-600 bg-orange-50/50 hover:bg-orange-100/60 font-bold text-xs shadow-xs cursor-pointer transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4 text-orange-500"/>
+                {isSubmitting ? '生成中...' : '✨ 生成拍立得海报并分享'}
+              </button>
+            </div>
           </div>
         ) : (
-          /* 阶段 2：真实拍立得海报展示与下载保存（降压操作，无强制分享） */
+          /* 阶段 2：真实拍立得海报预览与下载 */
           <div className="p-5 space-y-4 flex flex-col items-center">
-            <div className="w-full max-w-[280px] bg-white p-2.5 rounded-2xl shadow-md border border-[#EAE2D7] transition-transform hover:scale-[1.01]">
-              {posterImageUrl && (
+            <div className="w-full max-w-[280px] bg-white p-2.5 rounded-2xl shadow-md border border-[#EAE2D7] transition-transform hover:scale-[1.01] relative">
+              {posterImageUrl ? (
                 <img
                   src={posterImageUrl}
                   alt="成长拍立得海报"
                   className="w-full h-auto rounded-xl object-contain select-none"
                 />
+              ) : (
+                <div className="h-[360px] flex items-center justify-center text-xs text-[#786F6A]">
+                  海报生成中或已直接保存足迹
+                </div>
               )}
             </div>
 
             <p className="text-[11px] text-[#786F6A] text-center">
-              💡 <strong className="text-[#2C221E]">打卡已即时生效</strong>，足迹与连续天数已点亮
+              💡 <strong className="text-[#2C221E]">打卡已即时生效</strong> · 手机端可<strong className="text-[#2C221E]">长按图片</strong>保存到相册
             </p>
 
-            {/* 核心操作按钮组（降压：主按钮保存，副链接分享） */}
             <div className="w-full space-y-2 pt-1">
               <button
                 onClick={handleDownloadImage}
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 cursor-pointer transition-transform active:scale-[0.98]"
+                className="w-full h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 cursor-pointer transition-transform active:scale-[0.98]"
               >
                 <Download className="w-4 h-4"/>
-                保存海报到相册
+                保存海报到手机 / 相册
               </button>
 
               <div className="flex items-center justify-between pt-1">
@@ -329,7 +351,10 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
                 </button>
 
                 <button
-                  onClick={handleDone}
+                  onClick={() => {
+                    triggerInstantSave();
+                    onClose();
+                  }}
                   className="text-xs text-[#786F6A] hover:text-[#2C221E] font-semibold cursor-pointer py-1"
                 >
                   完成并返回足迹 →

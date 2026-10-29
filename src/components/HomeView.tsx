@@ -107,13 +107,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const todayRecords = records.filter((r) => r.date === todayStr);
   const todayTotalMinutes = todayRecords.reduce((acc, curr) => acc + curr.durationMinutes, 0);
 
-  // 马卡龙微透胶囊色体系
+  // 多元化马卡龙微透胶囊色体系
   const categoryConfig: Record<string, { icon: string; bg: string; text: string; border: string }> = {
-    '感官认知': { icon: '🎨', bg: 'bg-emerald-50/80', text: 'text-emerald-700', border: 'border-emerald-200/70' },
-    '大运动': { icon: '✈️', bg: 'bg-amber-50/85', text: 'text-amber-700', border: 'border-amber-200/70' },
-    '精细动作': { icon: '🧸', bg: 'bg-rose-50/80', text: 'text-rose-700', border: 'border-rose-200/70' },
-    '语言交流': { icon: '💬', bg: 'bg-purple-50/80', text: 'text-purple-700', border: 'border-purple-200/70' },
-    '社会情绪': { icon: '🌟', bg: 'bg-indigo-50/80', text: 'text-indigo-700', border: 'border-indigo-200/70' },
+    '语言交流': { icon: '💬', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200/70' },
+    '社会情绪': { icon: '🌟', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200/70' },
+    '感官认知': { icon: '🎨', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200/70' },
+    '大运动': { icon: '✈️', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200/70' },
+    '精细动作': { icon: '🧸', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200/70' },
   };
 
   return (
@@ -288,22 +288,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {backupActivities.map((act) => {
-            const cfg = categoryConfig[act.category] || { icon: '🎈', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' };
+            const cfg = categoryConfig[act.category] || { icon: '🎈', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200/70' };
 
             return (
               <div
                 key={act.id}
                 onClick={() => onSelectActivity(act)}
-                className="bg-white rounded-3xl p-3.5 border border-[#F3EDE2] shadow-[0_8px_25px_-10px_rgba(44,34,30,0.04)] hover:shadow-md hover:border-orange-300/50 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]"
+                className="bg-white rounded-3xl p-4 border border-[#F3EDE2] shadow-[0_8px_25px_-10px_rgba(44,34,30,0.04)] hover:shadow-md hover:border-orange-300/50 transition-all cursor-pointer flex items-center justify-between gap-3.5 active:scale-[0.99]"
               >
-                <div className={`w-11 h-11 rounded-2xl ${cfg.bg} border ${cfg.border} flex items-center justify-center text-xl shrink-0 shadow-xs`}>
+                {/* 左侧图标容器 */}
+                <div className={`w-12 h-12 rounded-2xl ${cfg.bg} border ${cfg.border} flex items-center justify-center text-xl shrink-0 shadow-xs`}>
                   {cfg.icon}
                 </div>
 
-                <div className="grow min-w-0 space-y-0.5">
-                  <div className="flex items-center gap-1.5 flex-wrap">
+                {/* 中间信息区：层级重构（标题行 -> 辅助属性行 -> 教育价值行） */}
+                <div className="grow min-w-0 space-y-1">
+                  {/* 第一行：标题行（加粗，支持最多2行，杜绝突兀硬截断） */}
+                  <h4 className="text-sm font-bold text-[#2C221E] line-clamp-2 leading-snug">{act.title}</h4>
+
+                  {/* 第二行：辅助属性行（分类标签、适龄、耗时以小字号弱化展示） */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${cfg.bg} ${cfg.text} border ${cfg.border} shrink-0 whitespace-nowrap`}>
                       {act.category}
                     </span>
@@ -314,12 +320,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                       · 适龄 {act.ageRange}
                     </span>
                   </div>
-                  <h4 className="text-sm font-bold text-[#2C221E] truncate">{act.title}</h4>
-                  <p className="text-[11px] text-[#786F6A] truncate leading-tight">{act.subtitle}</p>
+
+                  {/* 第三行：教育价值行（一句话育儿价值，柔和暖灰） */}
+                  <p className="text-[11px] text-[#786F6A] line-clamp-1 leading-tight">
+                    💡 价值：{act.subtitle}
+                  </p>
                 </div>
 
-                <div className="shrink-0">
-                  <span className="px-3.5 py-1.5 rounded-2xl bg-[#FFF5EE] border border-orange-200 text-xs font-bold text-orange-600 flex items-center gap-1 shadow-xs whitespace-nowrap">
+                {/* 右侧按钮：固定垂直居中，药丸胶囊按钮，位置不跳动 */}
+                <div className="shrink-0 self-center">
+                  <span className="px-4 py-2 rounded-full bg-orange-50 border border-orange-200 text-xs font-bold text-orange-600 flex items-center gap-1 shadow-xs whitespace-nowrap">
                     去看看
                   </span>
                 </div>
