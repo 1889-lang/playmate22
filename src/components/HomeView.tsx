@@ -93,13 +93,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }
   }, [reviewedActivities, profile]);
 
-  // 3. 首页独立洗牌算法（顶栏大卡片与底部灵感彻底解耦）
-  const [featuredShuffleKey, setFeaturedShuffleKey] = useState(0);
+  // 3. 首页玩法呈现（主推活动确立为今日专属精选，备选列表支持独立换一批）
   const [inspirationsShuffleKey, setInspirationsShuffleKey] = useState(0);
 
   const featuredShuffled = useMemo(() => {
     return fisherYatesShuffle(filteredPool);
-  }, [filteredPool, featuredShuffleKey]);
+  }, [filteredPool]);
 
   const inspirationsShuffled = useMemo(() => {
     return fisherYatesShuffle(filteredPool);
@@ -114,10 +113,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   const [isRefreshingInspirations, setIsRefreshingInspirations] = useState(false);
   const [rotationCount, setRotationCount] = useState(0);
-
-  const handleRefreshFeatured = () => {
-    setFeaturedShuffleKey((prev) => prev + 1);
-  };
 
   const handleRefreshInspirations = () => {
     if (isRefreshingInspirations) return;
@@ -216,26 +211,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
           
           {/* 插画区通栏贴顶（无内嵌小盒子与独立外部标签行） */}
           <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-amber-100/70 via-orange-50/50 to-amber-50/30 relative overflow-hidden flex items-center justify-center border-b border-orange-100/50">
-            {/* 左上角轻盈自然融入式状态文本（去线框化，告别按钮假象） */}
+            {/* 左上角轻盈自然融入式状态文本（一体化微标签，强化今日专属精选） */}
             <div className="absolute top-3 left-3.5 z-10 flex items-center gap-1 text-xs font-medium text-amber-800/80 select-none">
               <span className="text-amber-500">✨</span>
               <span>今日精选 · {currentActivity.category}</span>
             </div>
 
-            {/* 右上角悬浮操作小机关（强化点击属性，磨砂微透白底） */}
-            <button
-              onClick={handleRefreshFeatured}
-              className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs text-stone-700 shadow-sm border border-stone-200/50 hover:bg-white active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
-              title="换一个玩法"
-            >
-              <span>🎲</span>
-              <span>换一个</span>
-            </button>
-
             {/* 装饰微光星星 */}
-            <div className="absolute top-3.5 right-24 text-amber-400 text-xs animate-pulse select-none pointer-events-none">✨</div>
+            <div className="absolute top-3.5 right-4 text-amber-400 text-xs animate-pulse select-none pointer-events-none">✨</div>
             <div className="absolute bottom-4 left-6 text-amber-300 text-[10px] select-none pointer-events-none">✨</div>
-            <div className="absolute bottom-6 right-20 text-amber-400 text-xs select-none pointer-events-none">⭐</div>
+            <div className="absolute bottom-6 right-16 text-amber-400 text-xs select-none pointer-events-none">⭐</div>
 
             <svg viewBox="0 0 320 200" className="w-full h-full object-contain" aria-label="亲子活动插画">
               <rect x="0" y="0" width="320" height="200" fill="transparent" />
@@ -296,20 +281,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </span>
               </span>
             </div>
-
-            {/* 育儿核心价值板块化（发育微贴士小卡） */}
-            <div className="bg-gradient-to-r from-amber-50/90 to-orange-50/50 rounded-xl p-2.5 border border-amber-100/60 my-2.5">
-              <div className="text-[11px] font-bold text-amber-800 flex items-center gap-1">
-                <span>🌱</span>
-                <span>本次启蒙重点</span>
-              </div>
-              <p className="text-xs text-stone-600 mt-0.5 leading-relaxed">
-                {currentActivity.developmentalDomain}
-              </p>
-            </div>
-
             {/* 主操作按钮（CTA）与底部标语 */}
-            <div className="mt-3">
+            <div className="mt-3.5">
               <button
                 onClick={() => onStartPlay(currentActivity)}
                 className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 hover:opacity-95 active:scale-[0.98] transition-all text-white shadow-lg shadow-orange-300/40 cursor-pointer flex items-center justify-center gap-2 font-bold text-sm tracking-wide"
