@@ -23,6 +23,11 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [lastSubmission, setLastSubmission] = useState<{ activityId: string; time: number } | null>(null);
 
+  // Quick onboarding modal state for unregistered users clicking start play
+  const [quickProfileModalAct, setQuickProfileModalAct] = useState<Activity | null>(null);
+  const [quickName, setQuickName] = useState('宝宝');
+  const [quickMonths, setQuickMonths] = useState(6);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -81,6 +86,31 @@ export default function App() {
   const [playingActivity, setPlayingActivity] = useState<Activity | null>(null);
   const [pendingFeedback, setPendingFeedback] = useState<{ activity: Activity; durationMinutes: number; status: 'completed' | 'interrupted' } | null>(null);
 
+  const handleStartPlayAttempt = (act: Activity) => {
+    if (profile === null) {
+      setQuickProfileModalAct(act);
+    } else {
+      setPlayingActivity(act);
+    }
+  };
+
+  const handleQuickProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newProfile: BabyProfile = {
+      name: quickName.trim() || '宝宝',
+      birthMonth: '2025-08',
+      currentMonths: Number(quickMonths) || 6,
+      favoriteCategories: ['感官认知', '大运动'],
+    };
+    setProfile(newProfile);
+    const actToPlay = quickProfileModalAct;
+    setQuickProfileModalAct(null);
+    if (actToPlay) {
+      setPlayingActivity(actToPlay);
+    }
+    showToast('✨ 宝宝档案已建立，为您匹配专属适龄游戏！');
+  };
+
   const handleSaveRecord = (record: PlayRecord) => {
     // 防重提交与幂等性校验
     if (!record.activityTitle || !record.date || !record.activityId) {
@@ -123,7 +153,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#45433F] font-sans antialiased selection:bg-[#A8B9A0]/30 selection:text-[#45433F]">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#2C221E] font-sans antialiased selection:bg-orange-100 selection:text-orange-900">
       
       {/* Top Navbar */}
       <Navbar
@@ -142,7 +172,7 @@ export default function App() {
             profile={profile}
             onSelectTab={setCurrentTab}
             onSelectActivity={(act) => setSelectedActivity(act)}
-            onStartPlay={(act) => setPlayingActivity(act)}
+            onStartPlay={(act) => handleStartPlayAttempt(act)}
           />
         )}
 
@@ -150,7 +180,7 @@ export default function App() {
           <LibraryView
             activities={INITIAL_ACTIVITIES}
             onSelectActivity={(act) => setSelectedActivity(act)}
-            onStartPlay={(act) => setPlayingActivity(act)}
+            onStartPlay={(act) => handleStartPlayAttempt(act)}
             isVip={isVip}
             onUpgradeVip={() => setShowMembershipModal(true)}
           />
@@ -188,7 +218,7 @@ export default function App() {
           onClose={() => setSelectedActivity(null)}
           onStartPlay={(act) => {
             setSelectedActivity(null);
-            setPlayingActivity(act);
+            handleStartPlayAttempt(act);
           }}
         />
       )}
@@ -217,31 +247,94 @@ export default function App() {
         />
       )}
 
-      {/* Global Lightweight Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-[#45433F] text-[#FAF7F2] px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* VIP Membership Upgrade Modal (Copy converged & Demo state explicit) */}
-      {showMembershipModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border border-[#F1EAE0] shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+      {/* Quick Profile Semi-Modal Modal for Unregistered Users Clicking Start Play */}
+      {quickProfileModalAct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border border-[#F3EDE2] shadow-[0_20px_40px_-15px_rgba(44,34,30,0.15)] space-y-4 animate-in zoom-in-95 duration-200">
             
             {/* Top Title Bar */}
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#FFF5EE] text-[#F28C45]">
-                <Crown className="w-3.5 h-3.5"/> 【内测体验版已激活】特权专区
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600">
+                ✨ 完善宝宝档案
               </span>
-              <button onClick={() => setShowMembershipModal(false)} className="text-[#858078] hover:text-[#45433F] cursor-pointer">
+              <button onClick={() => setQuickProfileModalAct(null)} className="text-[#786F6A] hover:text-[#2C221E] cursor-pointer">
                 <X className="w-4 h-4"/>
               </button>
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-[#45433F]">解锁玩伴日历全部专家特权</h3>
-              <p className="text-xs text-[#858078]">已为您解锁当前全部进阶全脑互动与专家锦囊，开启高质量专注陪伴。</p>
+              <h3 className="text-lg font-bold text-[#2C221E]">请先填入宝宝信息</h3>
+              <p className="text-xs text-[#786F6A] leading-relaxed">
+                请先填入宝宝信息，以便为你匹配适龄玩法与生成打卡海报
+              </p>
+            </div>
+
+            <form onSubmit={handleQuickProfileSubmit} className="space-y-4 pt-1">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#2C221E]">宝宝小名（可选填）</label>
+                <input
+                  type="text"
+                  value={quickName}
+                  onChange={(e) => setQuickName(e.target.value)}
+                  placeholder="例如：小宝 / 汤圆"
+                  className="w-full h-12 px-4 rounded-2xl bg-[#FAF8F5] border border-[#F3EDE2] text-xs text-[#2C221E] placeholder-[#786F6A]/50 focus:outline-none focus:border-orange-400"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#2C221E]">宝宝月龄（快速选择）</label>
+                <select
+                  value={quickMonths}
+                  onChange={(e) => setQuickMonths(Number(e.target.value))}
+                  className="w-full h-12 px-4 rounded-2xl bg-[#FAF8F5] border border-[#F3EDE2] text-xs text-[#2C221E] focus:outline-none focus:border-orange-400"
+                >
+                  {[...Array(36)].map((_, i) => {
+                    const m = i + 1;
+                    return (
+                      <option key={m} value={m}>
+                        {m} 个月 {m === 6 ? '(黄金发育期)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 to-amber-500 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-orange-500/25 cursor-pointer transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 mt-2"
+              >
+                完成并开始今日陪玩
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Global Lightweight Toast */}
+      {toastMessage && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-[#2C221E] text-[#FAF8F5] px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* VIP Membership Upgrade Modal */}
+      {showMembershipModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border border-[#F3EDE2] shadow-[0_20px_40px_-15px_rgba(44,34,30,0.15)] space-y-4 animate-in zoom-in-95 duration-200">
+            
+            {/* Top Title Bar */}
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600">
+                <Crown className="w-3.5 h-3.5"/> 【内测体验版已激活】特权专区
+              </span>
+              <button onClick={() => setShowMembershipModal(false)} className="text-[#786F6A] hover:text-[#2C221E] cursor-pointer">
+                <X className="w-4 h-4"/>
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-[#2C221E]">解锁玩伴日历全部专家特权</h3>
+              <p className="text-xs text-[#786F6A]">已为您解锁当前全部进阶全脑互动与专家锦囊，开启高质量专注陪伴。</p>
             </div>
 
             {/* Pricing Tiers */}
@@ -249,47 +342,47 @@ export default function App() {
               <div 
                 onClick={() => setSelectedTier('monthly')}
                 className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                  selectedTier === 'monthly' ? 'bg-[#FFF9F3] border-[#F28C45] ring-1 ring-[#F28C45]/30' : 'bg-[#FAF7F2] border-[#F1EAE0]'
+                  selectedTier === 'monthly' ? 'bg-orange-50/60 border-orange-400 ring-1 ring-orange-400/30' : 'bg-[#FAF8F5] border-[#F3EDE2]'
                 }`}
               >
                 <div>
-                  <div className="text-xs font-bold text-[#45433F]">月度陪伴体验版</div>
-                  <div className="text-[10px] text-[#858078]">体验期全功能解锁</div>
+                  <div className="text-xs font-bold text-[#2C221E]">月度陪伴体验版</div>
+                  <div className="text-[10px] text-[#786F6A]">体验期全功能解锁</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-extrabold text-[#F28C45]">内测免费</div>
+                  <div className="text-sm font-extrabold text-orange-600">内测免费</div>
                 </div>
               </div>
 
               <div 
                 onClick={() => setSelectedTier('yearly')}
                 className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between relative overflow-hidden ${
-                  selectedTier === 'yearly' ? 'bg-[#FFF9F3] border-[#F28C45] ring-1 ring-[#F28C45]/30' : 'bg-[#FAF7F2] border-[#F1EAE0]'
+                  selectedTier === 'yearly' ? 'bg-orange-50/60 border-orange-400 ring-1 ring-orange-400/30' : 'bg-[#FAF8F5] border-[#F3EDE2]'
                 }`}
               >
-                <div className="absolute top-0 right-0 bg-[#F28C45] text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-xl">
+                <div className="absolute top-0 right-0 bg-orange-500 text-white text-[9px] font-bold px-2.5 py-0.5 rounded-bl-xl">
                   推荐 · 内测专享
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-[#45433F]">年度陪伴尊享版</div>
-                  <div className="text-[10px] text-[#858078]">全月龄 0-3岁畅玩 · 专家指导</div>
+                  <div className="text-xs font-bold text-[#2C221E]">年度陪伴尊享版</div>
+                  <div className="text-[10px] text-[#786F6A]">全月龄 0-3岁畅玩 · 专家指导</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-extrabold text-[#F28C45]">内测免费</div>
+                  <div className="text-sm font-extrabold text-orange-600">内测免费</div>
                 </div>
               </div>
             </div>
 
-            {/* Perks bullet list (converged copy without unreleased claims) */}
-            <div className="bg-[#FAF7F2] rounded-2xl p-3 space-y-1.5 text-[11px] text-[#45433F]">
-              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-[#F28C45]" /> 进阶动作库随心选（0-3岁全覆盖）</div>
-              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-[#F28C45]" /> 儿科专家敏感期解读与陪伴锦囊</div>
-              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-[#F28C45]" /> 高清拍立得海报无限制本地导出</div>
+            {/* Perks bullet list */}
+            <div className="bg-[#FAF8F5] rounded-2xl p-3 space-y-1.5 text-[11px] text-[#2C221E]">
+              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-orange-500" /> 进阶动作库随心选（0-3岁全覆盖）</div>
+              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-orange-500" /> 儿科专家敏感期解读与陪伴锦囊</div>
+              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-orange-500" /> 高清拍立得海报无限制本地导出</div>
             </div>
 
             <button
               onClick={handleUpgradeVip}
-              className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#F28C45] to-[#E07B36] text-white text-xs font-bold shadow-md shadow-[#F28C45]/30 hover:opacity-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 to-amber-500 text-white text-xs font-bold shadow-md shadow-orange-500/25 hover:opacity-95 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4 fill-white" /> 立即激活内测特权版
             </button>

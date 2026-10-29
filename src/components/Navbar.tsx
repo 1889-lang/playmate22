@@ -15,35 +15,35 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab, isVip, onOpenMembership }) => {
   return (
-    <header className="sticky top-0 z-30 bg-[#FAF7F2]/90 backdrop-blur-md border-b border-[#F1EAE0] px-4 py-2.5 flex items-center justify-between">
-      <div className="flex items-center gap-2 cursor-pointer" onClick={() => onSelectTab('today')}>
-        <div className="w-8 h-8 rounded-xl bg-[#A8B9A0] flex items-center justify-center text-white shadow-xs">
+    <header className="sticky top-0 z-30 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#F3EDE2] px-4 py-3 flex items-center justify-between shadow-[0_4px_20px_-4px_rgba(44,34,30,0.03)]">
+      <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onSelectTab('today')}>
+        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
           <Calendar className="w-4 h-4" />
         </div>
         <div>
-          <h1 className="text-sm font-bold text-[#45433F] tracking-tight flex items-center gap-1.5">
-            玩伴日历 <span className="text-[10px] font-normal px-1.5 py-0.2 rounded-md bg-[#F1EAE0] text-[#45433F]">V1.0</span>
+          <h1 className="text-sm font-bold text-[#2C221E] tracking-tight flex items-center gap-1.5">
+            玩伴日历 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">V1.0</span>
           </h1>
         </div>
       </div>
 
-      <div className="hidden md:flex items-center gap-6 text-sm font-medium text-[#45433F]/80">
-        <button onClick={() => onSelectTab('today')} className={`hover:text-[#45433F] transition-colors cursor-pointer ${currentTab === 'today' ? 'font-bold text-[#45433F]' : ''}`}>今日推荐</button>
-        <button onClick={() => onSelectTab('library')} className={`hover:text-[#45433F] transition-colors cursor-pointer ${currentTab === 'library' ? 'font-bold text-[#45433F]' : ''}`}>活动库</button>
-        <button onClick={() => onSelectTab('history')} className={`hover:text-[#45433F] transition-colors cursor-pointer ${currentTab === 'history' ? 'font-bold text-[#45433F]' : ''}`}>成长足迹</button>
-        <button onClick={() => onSelectTab('profile')} className={`hover:text-[#45433F] transition-colors cursor-pointer ${currentTab === 'profile' ? 'font-bold text-[#45433F]' : ''}`}>宝宝档案</button>
+      <div className="hidden md:flex items-center gap-6 text-sm font-medium text-[#786F6A]">
+        <button onClick={() => onSelectTab('today')} className={`hover:text-[#2C221E] transition-colors cursor-pointer ${currentTab === 'today' ? 'font-bold text-[#2C221E]' : ''}`}>今日推荐</button>
+        <button onClick={() => onSelectTab('library')} className={`hover:text-[#2C221E] transition-colors cursor-pointer ${currentTab === 'library' ? 'font-bold text-[#2C221E]' : ''}`}>活动宝库</button>
+        <button onClick={() => onSelectTab('history')} className={`hover:text-[#2C221E] transition-colors cursor-pointer ${currentTab === 'history' ? 'font-bold text-[#2C221E]' : ''}`}>成长足迹</button>
+        <button onClick={() => onSelectTab('profile')} className={`hover:text-[#2C221E] transition-colors cursor-pointer ${currentTab === 'profile' ? 'font-bold text-[#2C221E]' : ''}`}>宝宝档案</button>
       </div>
 
       <div className="flex items-center gap-2">
         {isVip ? (
-          <div className="px-3 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold flex items-center gap-1 shadow-xs">
+          <div className="px-3.5 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-xs">
             <Crown className="w-3.5 h-3.5 fill-amber-300 text-amber-600" />
             <span>VIP年卡尊享中</span>
           </div>
         ) : (
           <button
             onClick={onOpenMembership}
-            className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm hover:opacity-95 transition-all cursor-pointer animate-pulse"
+            className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all cursor-pointer animate-pulse"
           >
             <Crown className="w-3.5 h-3.5 fill-amber-200 text-amber-200" />
             <span>开通VIP年卡</span>

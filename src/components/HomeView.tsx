@@ -107,97 +107,112 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const todayRecords = records.filter((r) => r.date === todayStr);
   const todayTotalMinutes = todayRecords.reduce((acc, curr) => acc + curr.durationMinutes, 0);
 
-  const accentBgMap = {
-    sage: 'bg-[#A8B9A0]/20 text-[#54704B] border-[#A8B9A0]/30',
-    apricot: 'bg-[#E8B58D]/20 text-[#B86834] border-[#E8B58D]/30',
-    coral: 'bg-[#DFA39A]/20 text-[#A85C52] border-[#DFA39A]/30',
-    blue: 'bg-[#A9BFCC]/20 text-[#4D6E82] border-[#A9BFCC]/30',
+  // 马卡龙微透胶囊色体系
+  const categoryConfig: Record<string, { icon: string; bg: string; text: string; border: string }> = {
+    '感官认知': { icon: '🎨', bg: 'bg-emerald-50/80', text: 'text-emerald-700', border: 'border-emerald-200/70' },
+    '大运动': { icon: '✈️', bg: 'bg-amber-50/85', text: 'text-amber-700', border: 'border-amber-200/70' },
+    '精细动作': { icon: '🧸', bg: 'bg-rose-50/80', text: 'text-rose-700', border: 'border-rose-200/70' },
+    '语言交流': { icon: '💬', bg: 'bg-purple-50/80', text: 'text-purple-700', border: 'border-purple-200/70' },
+    '社会情绪': { icon: '🌟', bg: 'bg-indigo-50/80', text: 'text-indigo-700', border: 'border-indigo-200/70' },
   };
 
   return (
-    <div className="space-y-4 pb-24 md:pb-16 animate-in fade-in duration-200">
+    <div className="space-y-5 pb-24 md:pb-16 animate-in fade-in duration-200">
       
-      {/* 1. Profile Status / Guidance Header */}
+      {/* 1. Profile Status / Customized Gift Package Card (定制礼包卡) */}
       {profile === null ? (
-        <section className="bg-gradient-to-br from-[#FFF5EE] to-[#FFF9F3] rounded-3xl p-5 border border-[#F28C45]/30 shadow-xs flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#F28C45]/20 text-[#F28C45] flex items-center justify-center font-bold shrink-0">
-              <Baby className="w-5 h-5" />
+        <section className="bg-gradient-to-br from-[#FFF5EE] via-[#FFF9F3] to-[#FDF6F0] rounded-3xl p-6 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(234,138,92,0.08)] flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 text-white flex items-center justify-center font-bold shadow-md shadow-orange-500/20 shrink-0">
+              <Sparkles className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="text-xs font-bold text-[#45433F]">还没有建立宝宝档案</h3>
-              <p className="text-[11px] text-[#858078]">点击建立档案，解锁个性化陪伴与适龄推荐</p>
+            <div className="space-y-0.5">
+              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 mb-1">
+                ✨ 定制专属成长方案
+              </span>
+              <h3 className="text-sm font-bold text-[#2C221E]">还没有建立宝宝档案</h3>
+              <p className="text-xs text-[#786F6A]">填入宝宝信息，立即开启全周期脑发育科学陪伴</p>
             </div>
           </div>
           <button
             onClick={() => onSelectTab('profile')}
-            className="px-4 py-2 rounded-full bg-[#F28C45] hover:bg-[#e07b36] text-white text-xs font-bold shadow-sm shrink-0 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-orange-500/25 shrink-0 cursor-pointer transition-transform active:scale-95"
           >
-            去建档 →
+            立即去建档 →
           </button>
         </section>
       ) : (
-        <section className="bg-white rounded-2xl px-3.5 py-2.5 border border-[#F1EAE0] shadow-xs flex items-center justify-between">
+        <section className="bg-white rounded-3xl px-5 py-3.5 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(44,34,30,0.05)] flex items-center justify-between">
           <div 
             onClick={() => onSelectTab('profile')}
-            className="flex items-center gap-2 cursor-pointer group"
+            className="flex items-center gap-2.5 cursor-pointer group"
             title="点击修改宝宝档案"
           >
-            <div className="w-7 h-7 rounded-xl bg-[#A8B9A0]/20 text-[#54704B] flex items-center justify-center font-bold shadow-xs group-hover:bg-[#A8B9A0]/30 transition-colors">
-              <Baby className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shadow-xs group-hover:bg-emerald-200 transition-colors">
+              <Baby className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold text-[#45433F] group-hover:text-[#B86834] transition-colors">
-              {profile.name} · {profile.currentMonths}个月
-            </span>
+            <div>
+              <span className="text-xs font-bold text-[#2C221E] group-hover:text-orange-600 transition-colors">
+                {profile.name} · {profile.currentMonths}个月
+              </span>
+              <div className="text-[10px] text-[#786F6A]">全脑发育黄金期</div>
+            </div>
           </div>
 
           <div 
             onClick={() => onSelectTab('history')}
-            className="bg-[#FAF7F2] px-3 py-1 rounded-xl border border-[#F1EAE0] text-xs font-semibold text-[#858078] cursor-pointer hover:bg-[#F1EAE0] transition-colors"
+            className="bg-[#FAF8F5] px-3.5 py-1.5 rounded-2xl border border-[#F3EDE2] text-xs font-semibold text-[#786F6A] cursor-pointer hover:bg-[#F3EDE2] transition-colors"
             title="查看陪玩历史记录"
           >
-            今日 <span className="font-bold text-[#45433F] font-mono">{todayTotalMinutes}</span> 分钟
+            今日已陪伴 <span className="font-bold text-[#2C221E] font-mono text-sm">{todayTotalMinutes}</span> 分钟
           </div>
         </section>
       )}
 
       {/* 适龄降级提示横幅（如有） */}
       {ageNotice && (
-        <div className="bg-[#FFF9F3] border border-[#E8B58D]/40 rounded-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-[#B86834]">
-          <AlertCircle className="w-4 h-4 text-[#F28C45] shrink-0" />
+        <div className="bg-[#FFF9F3] border border-orange-200/60 rounded-2xl px-4 py-3 flex items-center gap-2.5 text-xs text-[#B86834]">
+          <AlertCircle className="w-4 h-4 text-orange-500 shrink-0" />
           <span>{ageNotice}</span>
         </div>
       )}
 
       {/* 2. Above-the-Fold Core: Today's Featured Activity Card */}
       {currentActivity && (
-        <section className="bg-white rounded-3xl p-4 sm:p-5 border border-[#F1EAE0] shadow-sm relative overflow-hidden">
-          <div className="flex items-center justify-between mb-2.5">
+        <section className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F3EDE2] shadow-[0_12px_35px_-12px_rgba(44,34,30,0.07)] relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3.5">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF7F2] text-[#45433F] border border-[#F1EAE0] flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#E8B58D]" /> 今日专业推荐
+              <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-[#FAF8F5] text-[#2C221E] border border-[#F3EDE2] flex items-center gap-1 shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 今日专业推荐
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${accentBgMap[currentActivity.accentColor] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                {currentActivity.category}
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#FAF7F2] text-[#858078] border border-[#F1EAE0]">
-                适龄: {currentActivity.ageRange}
+              {(() => {
+                const cfg = categoryConfig[currentActivity.category] || { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' };
+                return (
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                    {currentActivity.category}
+                  </span>
+                );
+              })()}
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-[#FAF8F5] text-[#786F6A] border border-[#F3EDE2]">
+                适龄 {currentActivity.ageRange}
               </span>
             </div>
             <button
               onClick={handleShuffle}
-              className="px-3 py-1 rounded-full bg-[#FAF7F2] hover:bg-[#F1EAE0] text-xs font-medium text-[#45433F] flex items-center gap-1 transition-colors border border-[#F1EAE0] shadow-xs cursor-pointer"
+              className="px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#F3EDE2] text-xs font-medium text-[#2C221E] flex items-center gap-1 transition-colors border border-[#F3EDE2] shadow-xs cursor-pointer"
               title="换一个玩法"
             >
               🔄 换个玩法
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center">
-            <div className="md:col-span-5 w-full h-[150px] sm:h-[160px] rounded-2xl bg-gradient-to-b from-[#F1EAE0]/60 via-[#FAF7F2] to-[#F1EAE0] p-2 relative overflow-hidden flex flex-col items-center justify-center border border-[#E8B58D]/20">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+            {/* 场景感插画容器 */}
+            <div className="md:col-span-5 w-full h-[160px] sm:h-[175px] rounded-2xl bg-gradient-to-b from-[#FAF8F5] via-white to-[#F7F2EC] p-3 relative overflow-hidden flex flex-col items-center justify-center border border-[#F3EDE2] shadow-inner">
               <svg viewBox="0 0 320 180" className="w-full h-full object-contain" aria-label="亲子活动插画">
-                <rect x="0" y="0" width="320" height="180" fill="#FAF7F2" />
-                <rect x="0" y="140" width="320" height="40" fill="#EFE5D8" />
+                <rect x="0" y="0" width="320" height="180" fill="#FAF8F5" />
+                <rect x="0" y="140" width="320" height="40" fill="#EFE5D8" rx="8" />
                 <ellipse cx="160" cy="152" rx="100" ry="10" fill="#E2D4C3" opacity="0.6" />
                 <path d="M70 120 Q160 100 250 120 L270 150 Q160 165 50 150 Z" fill="#A8B9A0" opacity="0.25" />
                 
@@ -213,32 +228,44 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </svg>
             </div>
 
-            <div className="md:col-span-7 space-y-2">
+            <div className="md:col-span-7 space-y-3">
               <div>
                 <h3 
                   onClick={() => onSelectActivity(currentActivity)}
-                  className="text-base sm:text-lg font-bold text-[#45433F] hover:text-[#F28C45] transition-colors cursor-pointer mb-0.5"
+                  className="text-lg sm:text-xl font-bold text-[#2C221E] hover:text-orange-600 transition-colors cursor-pointer mb-1"
                 >
                   {currentActivity.title}
                 </h3>
-                <p className="text-xs text-[#858078] leading-relaxed line-clamp-2">{currentActivity.subtitle}</p>
+                <p className="text-xs text-[#786F6A] leading-relaxed line-clamp-2">{currentActivity.subtitle}</p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[#45433F]/75">
-                <span className="flex items-center gap-1 bg-[#FAF7F2] px-2.5 py-0.5 rounded-lg border border-[#F1EAE0]">
-                  <Clock className="w-3.5 h-3.5 text-[#858078]" /> {currentActivity.duration}
+              {/* 游戏属性与所需材料（胶囊小图标） */}
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="flex items-center gap-1 bg-[#FAF8F5] px-3 py-1 rounded-xl border border-[#F3EDE2] text-[#2C221E] font-medium">
+                  <Clock className="w-3.5 h-3.5 text-orange-500" /> {currentActivity.duration}
                 </span>
-                <span className="bg-[#FAF7F2] px-2.5 py-0.5 rounded-lg border border-[#F1EAE0] truncate max-w-[180px]">
-                  材料：{currentActivity.materials[0]}
+                <span className="bg-[#FAF8F5] px-3 py-1 rounded-xl border border-[#F3EDE2] text-[#786F6A] truncate max-w-[200px]">
+                  📦 材料：{currentActivity.materials[0]}
                 </span>
               </div>
 
-              <div className="pt-0.5">
+              {/* 核心亮点标签 */}
+              <div className="text-[11px] text-orange-700 bg-orange-50/70 border border-orange-200/50 rounded-xl px-3 py-1.5 font-medium flex items-center gap-1.5">
+                <span>🌟 核心价值：{currentActivity.developmentalDomain}</span>
+              </div>
+
+              {/* CTA 按钮（暖日落橙微渐变 + 柔和光影 + 双行排版） */}
+              <div className="pt-1">
                 <button
                   onClick={() => onStartPlay(currentActivity)}
-                  className="w-full h-12 rounded-2xl bg-[#F28C45] hover:bg-[#e07b36] active:scale-[0.98] transition-all text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-[#F28C45]/25 cursor-pointer"
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 hover:opacity-95 active:scale-[0.98] transition-all text-white shadow-md shadow-orange-500/25 cursor-pointer flex flex-col items-center justify-center gap-0.5"
                 >
-                  <Play className="w-4 h-4 fill-white" /> ▶ 直接开玩
+                  <div className="flex items-center gap-1.5 font-bold text-sm">
+                    <Play className="w-4 h-4 fill-white" /> 开始 {currentActivity.duration} 互动游戏
+                  </div>
+                  <span className="text-[10px] text-white/90 font-medium tracking-wide">
+                    免准备 · 随手即玩 · 专业专家指导
+                  </span>
                 </button>
               </div>
             </div>
@@ -247,58 +274,51 @@ export const HomeView: React.FC<HomeViewProps> = ({
       )}
 
       {/* 童趣灵感推荐区 */}
-      <section className="space-y-2.5 pt-1">
+      <section className="space-y-3 pt-1">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold text-[#858078] flex items-center gap-1.5">
+          <h3 className="text-xs font-bold text-[#786F6A] flex items-center gap-1.5 uppercase tracking-wider">
             <span>✨ 更多专业陪伴灵感</span>
           </h3>
           <button
             onClick={handleShuffle}
-            className="text-xs text-[#F28C45] hover:text-[#e07b36] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-orange-600 hover:text-orange-700 font-bold flex items-center gap-1 transition-colors cursor-pointer"
           >
             <span>换一批</span>
           </button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {backupActivities.map((act) => {
-            const categoryConfig: Record<string, { icon: string; bg: string; text: string; badge: string }> = {
-              '感官认知': { icon: '🎨', bg: 'bg-[#A8B9A0]/20', text: 'text-[#54704B]', badge: 'bg-[#A8B9A0]/15 text-[#54704B]' },
-              '大运动': { icon: '✈️', bg: 'bg-[#E8B58D]/25', text: 'text-[#B86834]', badge: 'bg-[#E8B58D]/15 text-[#B86834]' },
-              '精细动作': { icon: '🧸', bg: 'bg-[#A9BFCC]/25', text: 'text-[#4D6E82]', badge: 'bg-[#A9BFCC]/15 text-[#4D6E82]' },
-              '语言交流': { icon: '💬', bg: 'bg-[#DFA39A]/25', text: 'text-[#A85C52]', badge: 'bg-[#DFA39A]/15 text-[#A85C52]' },
-              '社会情绪': { icon: '🌟', bg: 'bg-[#F28C45]/20', text: 'text-[#F28C45]', badge: 'bg-[#F28C45]/15 text-[#F28C45]' },
-            };
-            const cfg = categoryConfig[act.category] || { icon: '🎈', bg: 'bg-[#FAF7F2]', text: 'text-[#F28C45]', badge: 'bg-orange-50 text-orange-600' };
+            const cfg = categoryConfig[act.category] || { icon: '🎈', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' };
 
             return (
               <div
                 key={act.id}
                 onClick={() => onSelectActivity(act)}
-                className="bg-white rounded-2xl p-3 border border-[#F1EAE0] shadow-xs hover:shadow-sm hover:border-[#E8B58D]/50 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]"
+                className="bg-white rounded-3xl p-4 border border-[#F3EDE2] shadow-[0_8px_25px_-10px_rgba(44,34,30,0.04)] hover:shadow-md hover:border-orange-300/50 transition-all cursor-pointer flex items-center justify-between gap-3.5 active:scale-[0.99]"
               >
-                <div className={`w-11 h-11 rounded-2xl ${cfg.bg} flex items-center justify-center text-xl shrink-0 shadow-xs`}>
+                <div className={`w-12 h-12 rounded-2xl ${cfg.bg} border ${cfg.border} flex items-center justify-center text-xl shrink-0 shadow-xs`}>
                   {cfg.icon}
                 </div>
 
-                <div className="grow min-w-0 space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${cfg.badge}`}>
+                <div className="grow min-w-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold ${cfg.bg} ${cfg.text} border ${cfg.border}`}>
                       {act.category}
                     </span>
-                    <span className="text-[10px] text-[#858078] font-mono">
+                    <span className="text-[10px] text-[#786F6A] font-mono">
                       ⏱ {act.duration}
                     </span>
-                    <span className="text-[10px] text-[#858078] font-mono">
+                    <span className="text-[10px] text-[#786F6A] font-mono">
                       · 适龄 {act.ageRange}
                     </span>
                   </div>
-                  <h4 className="text-sm font-bold text-[#45433F] truncate">{act.title}</h4>
-                  <p className="text-[11px] text-[#858078] truncate leading-tight">{act.subtitle}</p>
+                  <h4 className="text-sm font-bold text-[#2C221E] truncate">{act.title}</h4>
+                  <p className="text-[11px] text-[#786F6A] truncate leading-tight">{act.subtitle}</p>
                 </div>
 
                 <div className="shrink-0">
-                  <span className="px-3 py-1.5 rounded-full bg-[#FFF5EE] border border-[#F28C45]/30 text-xs font-bold text-[#F28C45] flex items-center gap-1">
+                  <span className="px-4 py-2 rounded-2xl bg-[#FFF5EE] border border-orange-200 text-xs font-bold text-orange-600 flex items-center gap-1 shadow-xs">
                     去看看
                   </span>
                 </div>
