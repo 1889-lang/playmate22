@@ -1,0 +1,1133 @@
+Markdown
+
+
+请全面修复「玩伴日历」当前前端代码中核验确认的 12 项问题（涵盖：新用户档案引导初始化、会员体验版真实文案收敛、活动库安全审核与适龄过滤、UTC 时间彻底清零、陪玩计时器暂停与提前中断状态机、防连击与防重复提交校验、存储异常 Toast 弱提示、老年人字号可读性增强），代码必须完整且可直接运行：
+
+---
+
+### 一、 修改数据类型定义（`src/types.ts`）
+在原有类型基础上，补全活动审核状态、完成状态标记及月龄范围：
+```ts
+export type BabyReaction = 'happy' | 'calm' | 'tired';
+
+export interface ActivityStep {
+  title: string;
+  description: string;
+}
+
+export interface Activity {
+  id: string;
+  title: string;
+  category: '感官认知' | '大运动' | '精细动作' | '语言交流';
+  duration: string;
+  materials: string;
+  minAgeMonths: number;
+  maxAgeMonths: number;
+  isVerified: boolean; // 是否通过安全审核
+  isVipExclusive?: boolean;
+  steps: ActivityStep[];
+  safetyNotice?: string;
+  expertTips?: string;
+}
+
+export interface PlayRecord {
+  id: string;
+  activityId: string;
+  activityTitle: string;
+  category: string;
+  date: string; // YYYY-MM-DD 本地日期
+  durationMinutes: number;
+  status: 'completed' | 'interrupted'; // 区分正常完成还是提前中断
+  babyReaction: BabyReaction;
+  note: string;
+}
+
+export interface BabyProfile {
+  name: string;
+  birthDate: string; // YYYY-MM-DD
+  isInitialized: boolean; // 是否由用户主动设置过档案
+}
+二、 升级日期与本地计算工具（src/utils/date.ts）
+增加根据出生日期计算当前宝宝总月龄的纯数值函数，杜绝任何 UTC 漂移：
+
+TypeScript
+
+
+/**
+ * 获取本地 YYYY-MM-DD 字符串（杜绝东八区晚上8点后时间漂移）
+ */
+export const getLocalDateString = (d: Date = new Date()): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * 计算宝宝当前的绝对自然月龄（用于精准过滤适龄活动）
+ */
+export const getBabyAgeMonths = (birthDateStr: string): number => {
+  if (!birthDateStr) return 7;
+  const birth = new Date(birthDateStr);
+  const now = new Date();
+  if (isNaN(birth.getTime()) || birth > now) return 0;
+  
+  let months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  if (now.getDate() < birth.getDate()) {
+    months -= 1;
+  }
+  return Math.max(0, months);
+};
+
+/**
+ * 界面友好月龄展示
+ */
+export const calculateBabyAge = (birthDateStr: string): string => {
+  if (!birthDateStr) return '7个月';
+  const birth = new Date(birthDateStr);
+  const now = new Date();
+  
+  if (isNaN(birth.getTime()) || birth > now) return '新生儿';
+
+  let months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  let days = now.getDate() - birth.getDate();
+
+  if (days < 0) {
+    months -= 1;
+    const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    days += prevMonthDays;
+  }
+
+  if (months <= 0) {
+    return `${Math.max(1, days)}天`;
+  }
+  if (days === 0) {
+    return `${months}个月`;
+  }
+  return `${months}个月零${days}天`;
+};
+三、 新增新用户档案录入引导弹窗（新建 src/components/ProfileInitModal.tsx）
+解决新用户默认硬编码“小宝”和假生日的问题：
+
+TypeScript
+
+
+import React, { useState } from 'react';
+import { BabyProfile } from '../types';
+import { getLocalDateString } from '../utils/date';
+import { Heart, Sparkles } from 'lucide-react';
+
+interface ProfileInitModalProps {
+  onSave: (profile: BabyProfile) => void;
+}
+
+export const ProfileInitModal: React.FC<ProfileInitModalProps> = ({ onSave }) => {
+  const [name, setName] = useState('');
+  const [birthDate, setBirthDate] = useState('2026-03-15');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError('请输入宝宝的昵称哦');
+      return;
+    }
+    const today = getLocalDateString();
+    if (birthDate > today) {
+      setError('宝宝生日不能晚于今天哦');
+      return;
+    }
+    onSave({
+      name: name.trim(),
+      birthDate,
+      isInitialized: true,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl p-6 border border-[#F1EAE0] shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+        <div className="text-center space-y-1.5">
+          <div className="w-12 h-12 rounded-full bg-[#FFF5EE] border border-[#F28C45]/20 flex items-center justify-center mx-auto text-2xl">
+            🌱
+          </div>
+          <h3 className="text-base font-bold text-[#45433F]">建立宝宝专属手帐</h3>
+          <p className="text-xs text-[#858078]">根据月龄，为您量身推荐今天的适龄游戏</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#45433F]">宝宝昵称</label>
+            <input
+              type="text"
+              placeholder="例如：糖糖、小汤圆"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError('');
+              }}
+              className="w-full h-11 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#F1EAE0] text-sm text-[#45433F] focus:outline-none focus:border-[#F28C45]"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#45433F]">出生日期</label>
+            <input
+              type="date"
+              value={birthDate}
+              max={getLocalDateString()}
+              onChange={(e) => {
+                setBirthDate(e.target.value);
+                setError('');
+              }}
+              className="w-full h-11 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#F1EAE0] text-sm text-[#45433F] focus:outline-none focus:border-[#F28C45]"
+            />
+          </div>
+
+          {error && (
+            <p className="text-xs text-red-500 font-bold text-center">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            className="w-full h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] text-white font-bold text-sm shadow-md shadow-[#F28C45]/30 hover:opacity-95 cursor-pointer transition-transform active:scale-[0.98]"
+          >
+            开启温馨陪伴
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+四、 完善陪玩计时器与中断状态机（src/components/CoachModeModal.tsx）
+加入暂停/继续按钮，以及区分“正常完成”与“提前中断”的双路径退出流：
+
+TypeScript
+
+
+import React, { useState, useEffect } from 'react';
+import { Activity } from '../types';
+import { Clock, Play, Pause, CheckCircle2, X, AlertTriangle } from 'lucide-react';
+
+interface CoachModeModalProps {
+  activity: Activity;
+  onClose: () => void;
+  onComplete: (durationMinutes: number, status: 'completed' | 'interrupted') => void;
+}
+
+export const CoachModeModal: React.FC<CoachModeModalProps> = ({
+  activity,
+  onClose,
+  onComplete,
+}) => {
+  const [seconds, setSeconds] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!isPaused) {
+      timer = setInterval(() => setSeconds(s => s + 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
+  const formatTime = (totalSec: number) => {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const renderIllustration = (category: string) => {
+    switch (category) {
+      case '大运动':
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            <path d="M40 145 C120 140 220 140 300 145" stroke="#EFE5D8" strokeWidth="4" strokeLinecap="round"/>
+            <path d="M120 135 C140 110 160 110 180 125" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <path d="M220 135 C200 110 180 110 160 125" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <ellipse cx="170" cy="100" rx="36" ry="18" fill="#F28C45" stroke="#45433F" strokeWidth="2" transform="rotate(-6 170 100)"/>
+            <circle cx="212" cy="85" r="16" fill="#FFF2E8" stroke="#45433F" strokeWidth="2"/>
+            <ellipse cx="214" cy="88" rx="3.5" ry="2" fill="#FFAA9E" opacity="0.6"/>
+            <path d="M185 86 C195 72 205 76 200 88" stroke="#45433F" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <path d="M142 98 C130 90 128 100 138 106" stroke="#45433F" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <path d="M236 78 Q250 76 256 82" stroke="#A8B9A0" strokeWidth="2" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case '语言交流':
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            <circle cx="110" cy="85" r="26" fill="#F6EDE2" stroke="#45433F" strokeWidth="2"/>
+            <path d="M102 78 Q110 74 118 78" stroke="#45433F" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <path d="M120 90 Q126 92 120 96" stroke="#F28C45" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <circle cx="230" cy="95" r="20" fill="#FFF2E8" stroke="#45433F" strokeWidth="2"/>
+            <ellipse cx="224" cy="98" rx="3.5" ry="2" fill="#FFAA9E" opacity="0.6"/>
+            <circle cx="224" cy="92" r="2" fill="#45433F"/>
+            <path d="M145 80 C155 70 170 70 180 80" stroke="#F28C45" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" fill="none"/>
+            <text x="175" y="65" fill="#F28C45" fontSize="16" fontWeight="bold">♪</text>
+            <text x="195" y="78" fill="#54704B" fontSize="14" fontWeight="bold">♫</text>
+          </svg>
+        );
+      case '精细动作':
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            <rect x="130" y="95" width="80" height="45" rx="10" fill="#FFF8E7" stroke="#45433F" strokeWidth="2"/>
+            <circle cx="150" cy="115" r="8" fill="#F28C45"/>
+            <circle cx="170" cy="115" r="8" fill="#A8B9A0"/>
+            <circle cx="190" cy="115" r="8" fill="#E8B58D"/>
+            <path d="M245 70 C225 80 200 95 174 110" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <circle cx="173" cy="110" r="4" fill="#FFAA9E"/>
+            <path d="M162 82 L166 88 L172 88 L168 93 L170 99 L164 95 L158 99 L160 93 L156 88 L162 88 Z" fill="#F28C45"/>
+          </svg>
+        );
+      case '感官认知':
+      default:
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            <path d="M90 60 C120 70 140 40 170 65" stroke="#F28C45" strokeWidth="3" strokeLinecap="round" fill="none"/>
+            <path d="M100 80 C130 90 150 60 180 85" stroke="#A8B9A0" strokeWidth="3" strokeLinecap="round" fill="none"/>
+            <path d="M95 100 C125 110 145 80 175 105" stroke="#B8860B" strokeWidth="3" strokeLinecap="round" fill="none"/>
+            <circle cx="230" cy="105" r="22" fill="#FFF2E8" stroke="#45433F" strokeWidth="2"/>
+            <ellipse cx="222" cy="110" rx="4" ry="2.5" fill="#FFAA9E" opacity="0.6"/>
+            <path d="M215 100 C200 90 185 85 178 86" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <circle cx="177" cy="86" r="3.5" fill="#FFF2E8" stroke="#45433F" strokeWidth="1.5"/>
+          </svg>
+        );
+    }
+  };
+
+  const handleFinish = () => {
+    onComplete(Math.max(1, Math.round(seconds / 60)), 'completed');
+  };
+
+  const handleInterrupt = () => {
+    onComplete(Math.max(1, Math.round(seconds / 60)), 'interrupted');
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-[#F1EAE0] overflow-hidden flex flex-col max-h-[92vh]">
+        
+        {/* 顶部标题栏（增强老人阅读字号与对比度） */}
+        <div className="px-5 py-3.5 border-b border-[#F1EAE0] flex items-center justify-between bg-[#FAF7F2]">
+          <div className="space-y-0.5">
+            <span className="text-xs font-bold text-[#F28C45]">{activity.category} 模式</span>
+            <h3 className="text-base font-bold text-[#45433F] truncate max-w-[240px]">{activity.title}</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#858078] hover:text-[#45433F] shadow-xs cursor-pointer"
+          >
+            <X className="w-5 h-5"/>
+          </button>
+        </div>
+
+        {/* 中间内容区 */}
+        <div className="p-5 overflow-y-auto space-y-4">
+          <div className="w-full h-44 rounded-2xl overflow-hidden border border-[#F1EAE0]">
+            {renderIllustration(activity.category)}
+          </div>
+
+          {/* 计时器 + 暂停/继续控制按钮 */}
+          <div className="py-2.5 px-4 rounded-2xl bg-[#FFF9F3] border border-[#E8B58D]/30 flex items-center justify-between">
+            <span className="text-xs font-bold text-[#858078] flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[#F28C45]"/> 陪伴时长
+            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-black font-mono text-[#F28C45] tracking-wider">
+                {formatTime(seconds)}
+              </span>
+              <button
+                onClick={() => setIsPaused(!isPaused)}
+                className="px-2.5 py-1 rounded-full bg-white border border-[#E8B58D]/40 text-xs font-bold text-[#45433F] flex items-center gap-1 shadow-xs cursor-pointer hover:bg-[#FAF7F2]"
+              >
+                {isPaused ? <Play className="w-3 h-3 fill-[#45433F]"/> : <Pause className="w-3 h-3"/>}
+                <span>{isPaused ? '继续' : '暂停'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 核心步骤排版 */}
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-[#45433F]">指引动作</span>
+            <div className="space-y-2">
+              {activity.steps.map((step, idx) => (
+                <div key={idx} className="p-3 rounded-2xl bg-[#FAF7F2] border border-[#F1EAE0] flex gap-3 items-start">
+                  <span className="w-6 h-6 rounded-full bg-white text-[#F28C45] border border-[#F28C45]/20 font-bold text-xs flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </span>
+                  <div className="space-y-0.5">
+                    <h5 className="text-sm font-bold text-[#45433F]">{step.title}</h5>
+                    <p className="text-xs text-[#6B665F] leading-relaxed">{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 底部按钮组（区分正常完成与提前中断） */}
+        <div className="p-4 border-t border-[#F1EAE0] bg-white space-y-2">
+          <button
+            onClick={handleFinish}
+            className="w-full h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm shadow-[#F28C45]/30 cursor-pointer"
+          >
+            <CheckCircle2 className="w-4 h-4"/> 愉快完成，去打卡记录
+          </button>
+          <button
+            onClick={handleInterrupt}
+            className="w-full h-9 rounded-full bg-[#FAF7F2] hover:bg-[#F5EFE6] text-xs font-bold text-[#858078] flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-[#E8B58D]"/> 宝宝累了/有事中断，记录片刻
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+五、 首页推荐安全性与适龄过滤（src/components/HomeView.tsx）
+过滤掉未审核活动、不适龄活动，并支持重选宝宝档案：
+
+TypeScript
+
+
+import React, { useState, useMemo } from 'react';
+import { Activity, BabyProfile } from '../types';
+import { Sparkles, RefreshCw, Clock, Box, Play, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
+import { calculateBabyAge, getBabyAgeMonths } from '../utils/date';
+
+interface HomeViewProps {
+  babyProfile: BabyProfile;
+  allActivities: Activity[];
+  onStartPlay: (activity: Activity) => void;
+  onOpenDetail: (activity: Activity) => void;
+  onEditProfile: () => void;
+}
+
+export const HomeView: React.FC<HomeViewProps> = ({
+  babyProfile,
+  allActivities,
+  onStartPlay,
+  onOpenDetail,
+  onEditProfile,
+}) => {
+  const currentMonths = getBabyAgeMonths(babyProfile.birthDate);
+
+  // 安全过滤：必须已审核 (isVerified === true)，且月龄匹配 (minAge <= months <= maxAge)
+  const safeActivities = useMemo(() => {
+    const list = allActivities.filter(a => a.isVerified && currentMonths >= a.minAgeMonths && currentMonths <= a.maxAgeMonths);
+    return list.length > 0 ? list : allActivities.filter(a => a.isVerified);
+  }, [allActivities, currentMonths]);
+
+  // 今日主推荐
+  const currentActivity = safeActivities[0] || allActivities[0];
+
+  const getShuffledBackups = (excludeId: string): Activity[] => {
+    const candidates = safeActivities.filter(a => a.id !== excludeId);
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+    return candidates.slice(0, 3);
+  };
+
+  const [backupActivities, setBackupActivities] = useState<Activity[]>(() => 
+    getShuffledBackups(currentActivity.id)
+  );
+  const [isRotating, setIsRotating] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRotating(true);
+    setBackupActivities(getShuffledBackups(currentActivity.id));
+    setTimeout(() => setIsRotating(false), 500);
+  };
+
+  const getCategoryBadge = (cat: string) => {
+    switch (cat) {
+      case '感官认知': return { icon: '🎨', bg: 'bg-[#FFF2E8]', text: 'text-[#F28C45]' };
+      case '大运动': return { icon: '✈️', bg: 'bg-[#EBF5ED]', text: 'text-[#54704B]' };
+      case '精细动作': return { icon: '🧸', bg: 'bg-[#FFF8E7]', text: 'text-[#B8860B]' };
+      case '语言交流': return { icon: '💬', bg: 'bg-[#F0F4FF]', text: 'text-[#4B6BB8]' };
+      default: return { icon: '🌱', bg: 'bg-[#FAF7F2]', text: 'text-[#858078]' };
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* 顶部宝宝问候条 */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-[#45433F]">早安，{babyProfile.name}的家属</h2>
+            <button
+              onClick={onEditProfile}
+              className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFF5EE] text-[#F28C45] border border-[#F28C45]/20 hover:bg-[#F28C45] hover:text-white transition-colors cursor-pointer"
+            >
+              {calculateBabyAge(babyProfile.birthDate)} ✎
+            </button>
+          </div>
+          <p className="text-xs text-[#858078]">已为您筛选适龄安全玩法，每天陪玩一会儿吧</p>
+        </div>
+      </div>
+
+      {/* 今日主推活动大卡片 */}
+      <div className="relative bg-white rounded-3xl p-5 shadow-sm border border-[#F1EAE0] overflow-hidden space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#FAF7F2] text-[#B86834] border border-[#E8B58D]/30">
+            <Sparkles className="w-3.5 h-3.5 text-[#F28C45]"/> 今日专属推荐
+          </span>
+          <div className="flex items-center gap-3 text-xs text-[#858078]">
+            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#F28C45]"/> {currentActivity.duration}</span>
+            <span className="flex items-center gap-1"><Box className="w-3.5 h-3.5 text-[#A8B9A0]"/> {currentActivity.materials}</span>
+          </div>
+        </div>
+
+        <div className="space-y-1.5 cursor-pointer" onClick={() => onOpenDetail(currentActivity)}>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold text-[#45433F] hover:text-[#F28C45] transition-colors">
+              {currentActivity.title}
+            </h3>
+            <span className="inline-flex items-center text-[10px] text-[#54704B] font-bold gap-0.5">
+              <ShieldCheck className="w-3 h-3 text-[#54704B]"/> 已安全核验
+            </span>
+          </div>
+          <p className="text-xs text-[#858078] leading-relaxed line-clamp-2">
+            {currentActivity.steps[0]?.description || '跟随温柔的节奏，唤醒宝宝的全身感知与专注力。'}
+          </p>
+        </div>
+
+        <div className="pt-1 flex items-center gap-3">
+          <button
+            onClick={() => onStartPlay(currentActivity)}
+            className="flex-1 h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm shadow-[#F28C45]/30 cursor-pointer"
+          >
+            <Play className="w-4 h-4 fill-white"/> 立即开始陪伴
+          </button>
+          <button
+            onClick={() => onOpenDetail(currentActivity)}
+            className="px-4 h-11 rounded-full bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#45433F] font-bold text-xs flex items-center justify-center transition-colors cursor-pointer"
+          >
+            查看指南
+          </button>
+        </div>
+      </div>
+
+      {/* 备选灵感列表 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-[#45433F] flex items-center gap-1.5">
+            <span>更多适龄灵感</span>
+            <span className="text-[11px] font-normal text-[#858078]">换个玩法试试</span>
+          </h3>
+          <button
+            onClick={handleRefresh}
+            className="flex items-center gap-1 text-xs text-[#858078] hover:text-[#F28C45] cursor-pointer transition-colors"
+          >
+            <RefreshCw ${isRotating ''}`} 'animate-spin' : ? className="{`w-3.5" h-3.5/>
+            换一批
+          </button>
+        </div>
+
+        <div className="space-y-2.5">
+          {backupActivities.map(act => {
+            const badge = getCategoryBadge(act.category);
+            return (
+              <div
+                key={act.id}
+                onClick={() => onOpenDetail(act)}
+                className="p-3.5 bg-white rounded-2xl border border-[#F1EAE0] flex items-center justify-between hover:border-[#E8B58D]/40 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl ${badge.bg} flex items-center justify-center text-lg shadow-xs`}>
+                    {badge.icon}
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-[#45433F] group-hover:text-[#F28C45] transition-colors">
+                      {act.title}
+                    </h4>
+                    <div className="flex items-center gap-2 text-[11px] text-[#858078]">
+                      <span className={badge.text}>{act.category}</span>
+                      <span>•</span>
+                      <span>{act.duration}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-7 h-7 rounded-full bg-[#FAF7F2] group-hover:bg-[#FFF5EE] flex items-center justify-center text-[#858078] group-hover:text-[#F28C45] transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5"/>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+六、 打卡反馈弹窗：修复 UTC 文件名与防连击（src/components/PlayFeedbackModal.tsx）
+彻底去除 toISOString() 导致的相纸海报文件名日期漂移，增加提交防连击：
+
+TypeScript
+
+
+import React, { useState, useRef } from 'react';
+import { Activity, BabyReaction } from '../types';
+import { getLocalDateString } from '../utils/date';
+import { Download, Sparkles, X, Heart, Clock, Award } from 'lucide-react';
+
+interface PlayFeedbackModalProps {
+  activity: Activity;
+  durationMinutes: number;
+  status: 'completed' | 'interrupted';
+  onClose: () => void;
+  onSubmit: (data: {
+    activityId: string;
+    activityTitle: string;
+    category: string;
+    durationMinutes: number;
+    status: 'completed' | 'interrupted';
+    babyReaction: BabyReaction;
+    note: string;
+  }) => void;
+}
+
+export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
+  activity,
+  durationMinutes,
+  status,
+  onClose,
+  onSubmit,
+}) => {
+  const [babyReaction, setBabyReaction] = useState<BabyReaction>('happy');
+  const [note, setNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement null |>(null);
+
+  const handleDownloadPoster = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 绘制 600x840 原生高质相纸
+    canvas.width = 600;
+    canvas.height = 840;
+
+    // 相纸底色
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 600, 840);
+
+    // 装饰手帐边框
+    ctx.strokeStyle = '#FAF7F2';
+    ctx.lineWidth = 16;
+    ctx.strokeRect(16, 16, 568, 808);
+
+    // 顶部日期（使用本地日期）
+    const localToday = getLocalDateString();
+    ctx.fillStyle = '#858078';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText(`🐾 玩伴手帐 ｜ ${localToday}`, 50, 70);
+
+    // 绘制照片内框
+    ctx.fillStyle = '#FAF7F2';
+    ctx.fillRect(50, 100, 500, 480);
+    ctx.strokeStyle = '#EFE5D8';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(50, 100, 500, 480);
+
+    // 绘制活动主题与表情
+    ctx.fillStyle = '#45433F';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillText(activity.title, 80, 240);
+
+    ctx.fillStyle = '#F28C45';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(`分类: ${activity.category}  |  陪伴: ${durationMinutes} 分钟`, 80, 290);
+
+    ctx.fillStyle = '#858078';
+    ctx.font = '22px sans-serif';
+    ctx.fillText(status === 'completed' ? '✨ 顺利完成高质量陪伴' : '🌿 虽提前休息，但陪伴很温暖', 80, 340);
+
+    // 宝宝反应大表情
+    ctx.font = '72px sans-serif';
+    const emoji = babyReaction === 'happy' ? '😍' : babyReaction === 'calm' ? '😊' : '🥱';
+    ctx.fillText(emoji, 80, 450);
+
+    // 底部随手记
+    if (note.trim()) {
+      ctx.fillStyle = '#6B665F';
+      ctx.font = 'italic 22px sans-serif';
+      ctx.fillText(`“${note.trim().slice(0, 20)}...”`, 50, 640);
+    }
+
+    // 底部私域裂变文案
+    ctx.fillStyle = '#B8860B';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('扫码进「21天高质量陪伴营」· 与千位妈妈共成长', 50, 760);
+
+    // 生成本地相册下载，文件名使用本地日期，彻底杜绝 UTC 漂移
+    const link = document.createElement('a');
+    link.download = `玩伴日历-${localToday}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const handleSubmit = () => {
+    if (isSubmitting) return; // 防连击
+    setIsSubmitting(true);
+    onSubmit({
+      activityId: activity.id,
+      activityTitle: activity.title,
+      category: activity.category,
+      durationMinutes,
+      status,
+      babyReaction,
+      note: note.trim(),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl p-5 border border-[#F1EAE0] shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-[#F1EAE0] pb-3">
+          <div className="flex items-center gap-1.5 font-bold text-sm text-[#45433F]">
+            <Award className="w-4 h-4 text-[#F28C45]"/> 陪伴打卡记
+          </div>
+          <button onClick={onClose} className="text-[#858078] hover:text-[#45433F] cursor-pointer">
+            <X className="w-4 h-4"/>
+          </button>
+        </div>
+
+        <div className="text-center space-y-1">
+          <span className="text-xs text-[#858078]">
+            {status === 'completed' ? '✨ 陪伴圆满完成' : '🌿 虽提前停止，但陪伴同样珍贵'}
+          </span>
+          <h4 className="text-base font-bold text-[#45433F]">{activity.title}</h4>
+          <span className="text-xs font-mono font-bold text-[#F28C45]">{durationMinutes} 分钟</span>
+        </div>
+
+        {/* 宝宝反应三选一 */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-[#45433F]">宝宝此时的状态：</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: 'happy', label: '很开心', emoji: '😍' },
+              { key: 'calm', label: '平静专注', emoji: '😊' },
+              { key: 'tired', label: '有点疲劳', emoji: '🥱' },
+            ].map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => setBabyReaction(r.key as BabyReaction)}
+                className={`py-2 rounded-2xl border text-center transition-all cursor-pointer ${
+                  babyReaction === r.key
+                    ? 'border-[#F28C45] bg-[#FFF5EE] shadow-xs'
+                    : 'border-[#F1EAE0] bg-[#FAF7F2]'
+                }`}
+              >
+                <div className="text-xl">{r.emoji}</div>
+                <div className="text-[11px] font-bold text-[#45433F] mt-0.5">{r.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 随手记短文本 */}
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-[#45433F]">写一句手帐小记（选填）：</label>
+          <input
+            type="text"
+            placeholder="例如：今天小宝抓着小球笑得好开心~"
+            value={note}
+            maxLength={30}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full h-10 px-3 rounded-xl bg-[#FAF7F2] border border-[#F1EAE0] text-xs text-[#45433F] focus:outline-none focus:border-[#F28C45]"
+          />
+        </div>
+
+        {/* 隐藏 Canvas 用于渲染 */}
+        <canvas ref={canvasRef} className="hidden" />
+
+        {/* 按钮组 */}
+        <div className="pt-2 space-y-2">
+          <button
+            onClick={handleDownloadPoster}
+            className="w-full h-10 rounded-full bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#45433F] font-bold text-xs flex items-center justify-center gap-1.5 border border-[#F1EAE0] cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-[#F28C45]"/> 保存拍立得相纸到相册
+          </button>
+
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] text-white font-bold text-sm shadow-md shadow-[#F28C45]/30 hover:opacity-95 cursor-pointer disabled:opacity-50"
+          >
+            {isSubmitting ? '保存中...' : '沉淀到成长足迹'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+七、 主程序全状态总装（src/App.tsx）
+串联：档案录入初始化弹窗、Toast 弱提示兜底、多档阶梯定价及防连击去重：
+
+TypeScript
+
+
+import React, { useState } from 'react';
+import { HomeView } from './components/HomeView';
+import { LibraryView } from './components/LibraryView';
+import { HistoryView } from './components/HistoryView';
+import { CoachModeModal } from './components/CoachModeModal';
+import { PlayFeedbackModal } from './components/PlayFeedbackModal';
+import { ActivityDetailModal } from './components/ActivityDetailModal';
+import { ProfileInitModal } from './components/ProfileInitModal';
+import { ACTIVITIES } from './data/activities';
+import { Activity, PlayRecord, BabyProfile, BabyReaction } from './types';
+import { safeStorage } from './utils/storage';
+import { calculateBabyAge, getLocalDateString } from './utils/date';
+import { Sparkles, Calendar, BookOpen, Crown, X, Check, AlertCircle } from 'lucide-react';
+
+export const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'home' | 'library' | 'history'>('home');
+  const [activities] = useState<Activity[]>(ACTIVITIES);
+  
+  // 会员状态与多档选择
+  const [isVip, setIsVip] = useState<boolean>(() => safeStorage.get('playmate_is_vip', false));
+  const [selectedTier, setSelectedTier] = useState<'monthly' | 'yearly' | 'family'>('yearly');
+  const [showVipModal, setShowVipModal] = useState<boolean>(false);
+  const [showVipSuccessModal, setShowVipSuccessModal] = useState<boolean>(false);
+
+  // 全局弱提示 Toast
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  // 宝宝档案状态（支持首次初始化引导）
+  const [babyProfile, setBabyProfile] = useState<BabyProfile>(() => 
+    safeStorage.get('playmate_baby_profile', {
+      name: '',
+      birthDate: '',
+      isInitialized: false,
+    })
+  );
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(() => !babyProfile.isInitialized);
+
+  // 打卡记录列表
+  const [records, setRecords] = useState<PlayRecord[]>(() =>
+    safeStorage.get('playmate_play_records', [])
+  );
+
+  // 弹窗状态管理
+  const [selectedActivity, setSelectedActivity] = useState<Activity null |>(null);
+  const [coachingActivity, setCoachingActivity] = useState<Activity null |>(null);
+  const [feedbackActivity, setFeedbackActivity] = useState<Activity null |>(null);
+  const [coachingDuration, setCoachingDuration] = useState<number>(5);
+  const [coachingStatus, setCoachingStatus] = useState<'completed' | 'interrupted'>('completed');
+
+  // 保存档案
+  const handleSaveProfile = (profile: BabyProfile) => {
+    setBabyProfile(profile);
+    const success = safeStorage.set('playmate_baby_profile', profile);
+    if (!success) showToast('本地存储受限，仅当次有效');
+    setShowProfileModal(false);
+  };
+
+  // 会员体验开通演示
+  const handleUpgradeVip = () => {
+    setIsVip(true);
+    safeStorage.set('playmate_is_vip', true);
+    setShowVipModal(false);
+    setShowVipSuccessModal(true);
+  };
+
+  // 打卡提交与防重校验
+  const handleRecordSubmit = (data: {
+    activityId: string;
+    activityTitle: string;
+    category: string;
+    durationMinutes: number;
+    status: 'completed' | 'interrupted';
+    babyReaction: BabyReaction;
+    note: string;
+  }) => {
+    // 幂等防重：检查是否 3 秒内在同一活动重复打卡
+    const isDuplicate = records.some(
+      r => r.activityId === data.activityId && 
+           r.date === getLocalDateString() && 
+           Date.now() - Number(r.id) < 3000
+    );
+    if (isDuplicate) return;
+
+    const newRecord: PlayRecord = {
+      id: Date.now().toString(),
+      activityId: data.activityId,
+      activityTitle: data.activityTitle,
+      category: data.category,
+      date: getLocalDateString(),
+      durationMinutes: data.durationMinutes,
+      status: data.status,
+      babyReaction: data.babyReaction,
+      note: data.note,
+    };
+
+    const updated = [newRecord, ...records];
+    setRecords(updated);
+    const ok = safeStorage.set('playmate_play_records', updated);
+    if (!ok) {
+      showToast('⚠️ 存储空间不足，足迹可能未永久保存');
+    }
+    setFeedbackActivity(null);
+    setActiveTab('history');
+  };
+
+  const handleClearRecords = () => {
+    setRecords([]);
+    safeStorage.remove('playmate_play_records');
+    showToast('足迹已安全清空');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FAF7F2] text-[#45433F] flex flex-col justify-between">
+      {/* 顶部弱提示 Toast */}
+      {toastMsg && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#45433F]/90 backdrop-blur-xs text-white text-xs px-4 py-2 rounded-full shadow-lg animate-in fade-in">
+          {toastMsg}
+        </div>
+      )}
+
+      {/* 首次打开/编辑档案弹窗 */}
+      {showProfileModal && (
+        <ProfileInitModal onSave="{handleSaveProfile}"/>
+      )}
+
+      {/* 全局顶部导航 */}
+      <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 backdrop-blur-md border-b border-[#F1EAE0] px-5 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#FFF5EE] border border-[#F28C45]/20 flex items-center justify-center text-lg">
+            🐾
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-sm text-[#45433F]">
+                {babyProfile.name ? `${babyProfile.name}的玩伴日历` : '玩伴日历'}
+              </span>
+              {isVip && (
+                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-[#F28C45] to-[#E5762F] text-white shadow-xs">
+                  <Crown className="w-2.5 h-2.5"/> VIP 会员
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] text-[#858078]">{calculateBabyAge(babyProfile.birthDate)}</span>
+          </div>
+        </div>
+
+        {!isVip && (
+          <button
+            onClick={() => setShowVipModal(true)}
+            className="px-3 py-1.5 rounded-full bg-[#FFF5EE] border border-[#F28C45]/30 text-[#F28C45] font-bold text-xs flex items-center gap-1 hover:bg-[#F28C45] hover:text-white transition-colors cursor-pointer"
+          >
+            <Crown className="w-3.5 h-3.5"/> 体验 VIP
+          </button>
+        )}
+      </header>
+
+      {/* 核心主视图 */}
+      <main className="flex-1 max-w-lg mx-auto w-full px-5 py-5 pb-24">
+        {activeTab === 'home' && (
+          <HomeView '2026-03-15', '小宝', : ? allActivities="{activities}" babyProfile birthDate: false isInitialized: name: onStartPlay="{(act)" { }}> setCoachingActivity(act)}
+            onOpenDetail={(act) => setSelectedActivity(act)}
+            onEditProfile={() => setShowProfileModal(true)}
+          />
+        )}
+
+        {activeTab === 'library' && (
+          <LibraryView activities="{activities}" isVip="{isVip}" onOpenDetail="{(act)"> setSelectedActivity(act)}
+            onOpenVipModal={() => setShowVipModal(true)}
+          />
+        )}
+
+        {activeTab === 'history' && (
+          <HistoryView onClearRecords="{handleClearRecords}" records="{records}"/>
+        )}
+      </main>
+
+      {/* 底部导航条 */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#F1EAE0] py-2 px-6 flex justify-around items-center max-w-lg mx-auto">
+        <button
+          onClick={() => setActiveTab('home')}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
+            activeTab === 'home' ? 'text-[#F28C45] font-bold' : 'text-[#858078]'
+          }`}
+        >
+          <Sparkles className="w-5 h-5"/>
+          <span className="text-[11px]">今日推荐</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('library')}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
+            activeTab === 'library' ? 'text-[#F28C45] font-bold' : 'text-[#858078]'
+          }`}
+        >
+          <BookOpen className="w-5 h-5"/>
+          <span className="text-[11px]">活动宝库</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
+            activeTab === 'history' ? 'text-[#F28C45] font-bold' : 'text-[#858078]'
+          }`}
+        >
+          <Calendar className="w-5 h-5"/>
+          <span className="text-[11px]">成长足迹</span>
+        </button>
+      </nav>
+
+      {/* 弹窗链路 */}
+      {selectedActivity && (
+        <ActivityDetailModal activity="{selectedActivity}" onClose="{()"> setSelectedActivity(null)}
+          onStartPlay={() => {
+            setCoachingActivity(selectedActivity);
+            setSelectedActivity(null);
+          }}
+        />
+      )}
+
+      {coachingActivity && (
+        <CoachModeModal activity="{coachingActivity}" onClose="{()"> setCoachingActivity(null)}
+          onComplete={(min, status) => {
+            setCoachingDuration(min);
+            setCoachingStatus(status);
+            setFeedbackActivity(coachingActivity);
+            setCoachingActivity(null);
+          }}
+        />
+      )}
+
+      {feedbackActivity && (
+        <PlayFeedbackModal activity="{feedbackActivity}" durationMinutes="{coachingDuration}" onClose="{()" status="{coachingStatus}"> setFeedbackActivity(null)}
+          onSubmit={handleRecordSubmit}
+        />
+      )}
+
+      {/* 会员多档阶梯选择弹窗 */}
+      {showVipModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-5 border border-[#F1EAE0] shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#FFF5EE] text-[#F28C45]">
+                <Crown className="w-3.5 h-3.5"/> 会员陪伴权益
+              </span>
+              <button onClick={() => setShowVipModal(false)} className="text-[#858078] hover:text-[#45433F] cursor-pointer">
+                <X className="w-4 h-4"/>
+              </button>
+            </div>
+
+            <div className="space-y-0.5">
+              <h3 className="text-base font-bold text-[#45433F]">解锁全周期进阶全脑互动</h3>
+              <p className="text-xs text-[#858078]">每天 5 分钟生活游戏，让陪伴更专业</p>
+            </div>
+
+            {/* 三档价格卡片 */}
+            <div className="grid grid-cols-3 gap-2">
+              <div 
+                onClick={() => setSelectedTier('monthly')}
+                className={`p-2.5 rounded-2xl border text-center cursor-pointer transition-all ${
+                  selectedTier === 'monthly'
+                    ? 'border-[#F28C45] bg-[#FFF5EE] shadow-xs'
+                    : 'border-[#F1EAE0] bg-[#FAF7F2]'
+                }`}
+              >
+                <div className="text-[11px] text-[#858078] font-bold">尝鲜月卡</div>
+                <div className="text-base font-black text-[#45433F] my-0.5">¥19.9</div>
+                <div className="text-[10px] text-[#858078]">按月体验</div>
+              </div>
+
+              <div 
+                onClick={() => setSelectedTier('yearly')}
+                className={`p-2.5 rounded-2xl border-2 text-center cursor-pointer relative transition-all ${
+                  selectedTier === 'yearly'
+                    ? 'border-[#F28C45] bg-[#FFF5EE] shadow-xs'
+                    : 'border-[#E8B58D]/40 bg-[#FAF7F2]'
+                }`}
+              >
+                <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#F28C45] text-white whitespace-nowrap">
+                  爆款推荐
+                </span>
+                <div className="text-[11px] text-[#F28C45] font-bold">陪伴年卡</div>
+                <div className="text-base font-black text-[#F28C45] my-0.5">¥99</div>
+                <div className="text-[10px] text-[#858078]">0.27元/天</div>
+              </div>
+
+              <div 
+                onClick={() => setSelectedTier('family')}
+                className={`p-2.5 rounded-2xl border text-center cursor-pointer transition-all ${
+                  selectedTier === 'family'
+                    ? 'border-[#B8860B] bg-[#FFFBF0] shadow-xs'
+                    : 'border-[#F1EAE0] bg-[#FAF7F2]'
+                }`}
+              >
+                <div className="text-[11px] text-[#B8860B] font-bold">家庭尊享</div>
+                <div className="text-base font-black text-[#45433F] my-0.5">¥199</div>
+                <div className="text-[10px] text-[#858078]">3年买断</div>
+              </div>
+            </div>
+
+            {/* 实事求是的特权清单 */}
+            <div className="p-3 bg-[#FAF7F2] rounded-2xl space-y-1.5 text-xs text-[#6B665F]">
+              <div className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-[#54704B] shrink-0"/> 
+                <span>解锁全部进阶大动作、精细动作与语言库</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-[#54704B] shrink-0"/> 
+                <span>独享敏感期脑发育机理解读小锦囊</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-[#54704B] shrink-0"/> 
+                <span>成长足迹无限制导出相纸海报</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleUpgradeVip}
+              className="w-full h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] text-white font-bold text-sm shadow-md shadow-[#F28C45]/30 hover:opacity-95 cursor-pointer"
+            >
+              体验开通（演示环境直接激活）
+            </button>
+            <p className="text-[10px] text-[#858078] text-center">内测演示版无需真实扣款，点击即可体验全量特权</p>
+          </div>
+        </div>
+      )}
+
+      {/* 会员开通成功大礼包 */}
+      {showVipSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm bg-[#FAF7F2] rounded-3xl p-6 border border-[#F1EAE0] shadow-2xl space-y-4 text-center animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-full bg-[#FFF5EE] border border-[#F28C45]/30 flex items-center justify-center mx-auto text-3xl">
+              👑
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-[#45433F]">已为您激活会员特权</h3>
+              <p className="text-xs text-[#858078]">所有锁头玩法已全部解锁，开启温馨陪伴吧</p>
+            </div>
+
+            <button
+              onClick={() => setShowVipSuccessModal(false)}
+              className="w-full h-10 rounded-full bg-[#F28C45] text-white font-bold text-xs hover:bg-[#e07b36] shadow-sm shadow-[#F28C45]/30 cursor-pointer"
+            >
+              开启陪伴之旅
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

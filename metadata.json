@@ -1,0 +1,6 @@
+{
+  "name": "玩伴日历 V0.1",
+  "description": "6-8个月宝宝亲子陪玩活动与成长反馈助手",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

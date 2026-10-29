@@ -1,0 +1,1014 @@
+Markdown
+
+
+请全面重写并替换项目中进度未达 100% 的所有 7 个核心文件，彻底落地商业化、交互与视觉闭环，杜绝任何占位符与假逻辑：
+
+---
+
+### 1. `src/utils/storage.ts`
+```ts
+/**
+ * 本地安全持久化存储，内置容灾 try-catch 与解析兜底
+ */
+export const safeStorage = {
+  get<T>(key: string, defaultValue: T): T {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? (JSON.parse(item) as T) : defaultValue;
+    } catch (e) {
+      console.warn(`[safeStorage] 读取失败: ${key}`, e);
+      return defaultValue;
+    }
+  },
+  set<T>(key: string, value: T): boolean {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      console.error(`[safeStorage] 写入失败: ${key}`, e);
+      return false;
+    }
+  },
+  remove(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.warn(`[safeStorage] 清除失败: ${key}`, e);
+    }
+  }
+};
+2. src/utils/date.ts
+TypeScript
+
+
+/**
+ * 格式化本地日期 YYYY-MM-DD（杜绝东八区晚上8点后时间漂移）
+ */
+export const getLocalDateString = (d: Date = new Date()): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * 根据宝宝出生日期精准推算月龄与天数
+ */
+export const calculateBabyAge = (birthDateStr: string): string => {
+  if (!birthDateStr) return '7个月';
+  const birth = new Date(birthDateStr);
+  const now = new Date();
+  
+  if (isNaN(birth.getTime()) || birth > now) return '新生儿';
+
+  let months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  let days = now.getDate() - birth.getDate();
+
+  if (days < 0) {
+    months -= 1;
+    const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    days += prevMonthDays;
+  }
+
+  if (months <= 0) {
+    return `${Math.max(1, days)}天`;
+  }
+  if (days === 0) {
+    return `${months}个月`;
+  }
+  return `${months}个月零${days}天`;
+};
+3. src/components/HomeView.tsx（实现真洗牌 Fisher-Yates 算法）
+TypeScript
+
+
+import React, { useState } from 'react';
+import { Activity, BabyProfile } from '../types';
+import { Sparkles, RefreshCw, Clock, Box, Play, ArrowRight, ShieldCheck } from 'lucide-react';
+import { calculateBabyAge } from '../utils/date';
+
+interface HomeViewProps {
+  babyProfile: BabyProfile;
+  currentActivity: Activity;
+  allActivities: Activity[];
+  onStartPlay: (activity: Activity) => void;
+  onOpenDetail: (activity: Activity) => void;
+}
+
+export const HomeView: React.FC<HomeViewProps> = ({
+  babyProfile,
+  currentActivity,
+  allActivities,
+  onStartPlay,
+  onOpenDetail,
+}) => {
+  // Fisher-Yates 算法抽取无重复备选
+  const getShuffledBackups = (excludeId: string): Activity[] => {
+    const candidates = allActivities.filter(a => a.id !== excludeId);
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+    return candidates.slice(0, 3);
+  };
+
+  const [backupActivities, setBackupActivities] = useState<Activity[]>(() => 
+    getShuffledBackups(currentActivity.id)
+  );
+  const [isRotating, setIsRotating] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRotating(true);
+    setBackupActivities(getShuffledBackups(currentActivity.id));
+    setTimeout(() => setIsRotating(false), 500);
+  };
+
+  const getCategoryBadge = (cat: string) => {
+    switch (cat) {
+      case '感官认知': return { icon: '🎨', bg: 'bg-[#FFF2E8]', text: 'text-[#F28C45]' };
+      case '大运动': return { icon: '✈️', bg: 'bg-[#EBF5ED]', text: 'text-[#54704B]' };
+      case '精细动作': return { icon: '🧸', bg: 'bg-[#FFF8E7]', text: 'text-[#B8860B]' };
+      case '语言交流': return { icon: '💬', bg: 'bg-[#F0F4FF]', text: 'text-[#4B6BB8]' };
+      default: return { icon: '🌱', bg: 'bg-[#FAF7F2]', text: 'text-[#858078]' };
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* 顶部宝宝问候条 */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-[#45433F]">早安，{babyProfile.name}的家属</h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FFF5EE] text-[#F28C45] border border-[#F28C45]/20">
+              {calculateBabyAge(babyProfile.birthDate)}
+            </span>
+          </div>
+          <p className="text-xs text-[#858078]">今天也是充满发现的一天，陪宝宝玩一会吧</p>
+        </div>
+      </div>
+
+      {/* 今日主推活动大卡片 */}
+      <div className="relative bg-white rounded-3xl p-5 shadow-sm border border-[#F1EAE0] overflow-hidden space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#FAF7F2] text-[#B86834] border border-[#E8B58D]/30">
+            <Sparkles className="w-3.5 h-3.5 text-[#F28C45]"/> 今日专属推荐
+          </span>
+          <div className="flex items-center gap-3 text-xs text-[#858078]">
+            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#F28C45]"/> {currentActivity.duration}</span>
+            <span className="flex items-center gap-1"><Box className="w-3.5 h-3.5 text-[#A8B9A0]"/> {currentActivity.materials}</span>
+          </div>
+        </div>
+
+        <div className="space-y-1.5 cursor-pointer" onClick={() => onOpenDetail(currentActivity)}>
+          <h3 className="text-lg font-bold text-[#45433F] hover:text-[#F28C45] transition-colors">
+            {currentActivity.title}
+          </h3>
+          <p className="text-xs text-[#858078] leading-relaxed line-clamp-2">
+            {currentActivity.steps[0]?.description || '跟随温柔的节奏，唤醒宝宝的全身感知与专注力。'}
+          </p>
+        </div>
+
+        <div className="pt-1 flex items-center gap-3">
+          <button
+            onClick={() => onStartPlay(currentActivity)}
+            className="flex-1 h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm shadow-[#F28C45]/30 transition-transform active:scale-[0.98] cursor-pointer"
+          >
+            <Play className="w-4 h-4 fill-white"/> 立即开始陪伴
+          </button>
+          <button
+            onClick={() => onOpenDetail(currentActivity)}
+            className="px-4 h-11 rounded-full bg-[#FAF7F2] hover:bg-[#F5EFE6] text-[#45433F] font-bold text-xs flex items-center justify-center transition-colors cursor-pointer"
+          >
+            查看指南
+          </button>
+        </div>
+      </div>
+
+      {/* 备选灵感列表 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-[#45433F] flex items-center gap-1.5">
+            <span>更多陪伴灵感</span>
+            <span className="text-[11px] font-normal text-[#858078]">换个玩法试试</span>
+          </h3>
+          <button
+            onClick={handleRefresh}
+            className="flex items-center gap-1 text-xs text-[#858078] hover:text-[#F28C45] cursor-pointer transition-colors"
+          >
+            <RefreshCw ${isRotating ''}`} 'animate-spin' : ? className="{`w-3.5" h-3.5/>
+            换一批
+          </button>
+        </div>
+
+        <div className="space-y-2.5">
+          {backupActivities.map(act => {
+            const badge = getCategoryBadge(act.category);
+            return (
+              <div
+                key={act.id}
+                onClick={() => onOpenDetail(act)}
+                className="p-3.5 bg-white rounded-2xl border border-[#F1EAE0] flex items-center justify-between hover:border-[#E8B58D]/40 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl ${badge.bg} flex items-center justify-center text-lg shadow-xs`}>
+                    {badge.icon}
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-[#45433F] group-hover:text-[#F28C45] transition-colors">
+                      {act.title}
+                    </h4>
+                    <div className="flex items-center gap-2 text-[11px] text-[#858078]">
+                      <span className={badge.text}>{act.category}</span>
+                      <span>•</span>
+                      <span>{act.duration}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-7 h-7 rounded-full bg-[#FAF7F2] group-hover:bg-[#FFF5EE] flex items-center justify-center text-[#858078] group-hover:text-[#F28C45] transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5"/>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+4. src/components/CoachModeModal.tsx（实现四分类专属 SVG 插画）
+TypeScript
+
+
+import React, { useState, useEffect } from 'react';
+import { Activity } from '../types';
+import { Clock, CheckCircle2, ChevronRight, X } from 'lucide-react';
+
+interface CoachModeModalProps {
+  activity: Activity;
+  onClose: () => void;
+  onComplete: (durationMinutes: number) => void;
+}
+
+export const CoachModeModal: React.FC<CoachModeModalProps> = ({
+  activity,
+  onClose,
+  onComplete,
+}) => {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (totalSec: number) => {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // 严格根据 4 大分类切换夏目温润手绘 SVG
+  const renderIllustration = (category: string) => {
+    switch (category) {
+      case '大运动':
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            {/* 地垫 */}
+            <path d="M40 145 C120 140 220 140 300 145" stroke="#EFE5D8" strokeWidth="4" strokeLinecap="round"/>
+            {/* 大人手臂托举 */}
+            <path d="M120 135 C140 110 160 110 180 125" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <path d="M220 135 C200 110 180 110 160 125" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            {/* 宝宝趴卧躯干 */}
+            <ellipse cx="170" cy="100" rx="36" ry="18" fill="#F28C45" stroke="#45433F" strokeWidth="2" transform="rotate(-6 170 100)"/>
+            {/* 宝宝头部与粉腮 */}
+            <circle cx="212" cy="85" r="16" fill="#FFF2E8" stroke="#45433F" strokeWidth="2"/>
+            <ellipse cx="214" cy="88" rx="3.5" ry="2" fill="#FFAA9E" opacity="0.6"/>
+            {/* 小飞机张开的手臂与小脚 */}
+            <path d="M185 86 C195 72 205 76 200 88" stroke="#45433F" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <path d="M142 98 C130 90 128 100 138 106" stroke="#45433F" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            {/* 动态微风线 */}
+            <path d="M236 78 Q250 76 256 82" stroke="#A8B9A0" strokeWidth="2" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case '语言交流':
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            {/* 大人侧影头部 */}
+            <circle cx="110" cy="85" r="26" fill="#F6EDE2" stroke="#45433F" strokeWidth="2"/>
+            <path d="M102 78 Q110 74 118 78" stroke="#45433F" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <path d="M120 90 Q126 92 120 96" stroke="#F28C45" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            {/* 宝宝侧影与粉腮 */}
+            <circle cx="230" cy="95" r="20" fill="#FFF2E8" stroke="#45433F" strokeWidth="2"/>
+            <ellipse cx="224" cy="98" rx="3.5" ry="2" fill="#FFAA9E" opacity="0.6"/>
+            <circle cx="224" cy="92" r="2" fill="#45433F"/>
+            {/* 声音传递气泡与音符 */}
+            <path d="M145 80 C155 70 170 70 180 80" stroke="#F28C45" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" fill="none"/>
+            <text x="175" y="65" fill="#F28C45" fontSize="16" fontWeight="bold">♪</text>
+            <text x="195" y="78" fill="#54704B" fontSize="14" fontWeight="bold">♫</text>
+          </svg>
+        );
+      case '精细动作':
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            {/* 玩具软盒 */}
+            <rect x="130" y="95" width="80" height="45" rx="10" fill="#FFF8E7" stroke="#45433F" strokeWidth="2"/>
+            <circle cx="150" cy="115" r="8" fill="#F28C45"/>
+            <circle cx="170" cy="115" r="8" fill="#A8B9A0"/>
+            <circle cx="190" cy="115" r="8" fill="#E8B58D"/>
+            {/* 宝宝小手食指探触 */}
+            <path d="M245 70 C225 80 200 95 174 110" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <circle cx="173" cy="110" r="4" fill="#FFAA9E"/>
+            {/* 探索小星光 */}
+            <path d="M162 82 L166 88 L172 88 L168 93 L170 99 L164 95 L158 99 L160 93 L156 88 L162 88 Z" fill="#F28C45"/>
+          </svg>
+        );
+      case '感官认知':
+      default:
+        return (
+          <svg viewBox="0 0 340 180" className="w-full h-full">
+            <rect width="340" height="180" rx="20" fill="#FAF7F2"/>
+            {/* 摇晃彩带与触觉小手 */}
+            <path d="M90 60 C120 70 140 40 170 65" stroke="#F28C45" strokeWidth="3" strokeLinecap="round" fill="none"/>
+            <path d="M100 80 C130 90 150 60 180 85" stroke="#A8B9A0" strokeWidth="3" strokeLinecap="round" fill="none"/>
+            <path d="M95 100 C125 110 145 80 175 105" stroke="#B8860B" strokeWidth="3" strokeLinecap="round" fill="none"/>
+            {/* 宝宝抬头伸手 */}
+            <circle cx="230" cy="105" r="22" fill="#FFF2E8" stroke="#45433F" strokeWidth="2"/>
+            <ellipse cx="222" cy="110" rx="4" ry="2.5" fill="#FFAA9E" opacity="0.6"/>
+            <path d="M215 100 C200 90 185 85 178 86" stroke="#45433F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <circle cx="177" cy="86" r="3.5" fill="#FFF2E8" stroke="#45433F" strokeWidth="1.5"/>
+          </svg>
+        );
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-[#F1EAE0] overflow-hidden flex flex-col max-h-[92vh]">
+        
+        {/* 顶部标题栏 */}
+        <div className="px-5 py-4 border-b border-[#F1EAE0] flex items-center justify-between bg-[#FAF7F2]">
+          <div className="space-y-0.5">
+            <span className="text-[11px] font-bold text-[#F28C45]">{activity.category} 模式</span>
+            <h3 className="text-sm font-bold text-[#45433F] truncate max-w-[240px]">{activity.title}</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#858078] hover:text-[#45433F] shadow-xs cursor-pointer"
+          >
+            <X className="w-4 h-4"/>
+          </button>
+        </div>
+
+        {/* 中间内容区 */}
+        <div className="p-5 overflow-y-auto space-y-4">
+          {/* 专属手绘插画区 */}
+          <div className="w-full h-44 rounded-2xl overflow-hidden border border-[#F1EAE0]">
+            {renderIllustration(activity.category)}
+          </div>
+
+          {/* 实时计时器 */}
+          <div className="py-2.5 px-4 rounded-2xl bg-[#FFF9F3] border border-[#E8B58D]/30 flex items-center justify-between">
+            <span className="text-xs font-bold text-[#858078] flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[#F28C45]"/> 陪伴计时
+            </span>
+            <span className="text-2xl font-black font-mono text-[#F28C45] tracking-wider">
+              {formatTime(seconds)}
+            </span>
+          </div>
+
+          {/* 核心步骤排版 */}
+          <div className="space-y-2.5">
+            <span className="text-xs font-bold text-[#45433F]">陪伴指引</span>
+            <div className="space-y-2">
+              {activity.steps.map((step, idx) => (
+                <div key={idx} className="p-3 rounded-2xl bg-[#FAF7F2] border border-[#F1EAE0] flex gap-2.5 items-start">
+                  <span className="w-5 h-5 rounded-full bg-white text-[#F28C45] border border-[#F28C45]/20 font-bold text-xs flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </span>
+                  <div className="space-y-0.5">
+                    <h5 className="text-xs font-bold text-[#45433F]">{step.title}</h5>
+                    <p className="text-xs text-[#858078] leading-relaxed">{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 底部按钮组 */}
+        <div className="p-4 border-t border-[#F1EAE0] bg-white space-y-2">
+          <button
+            onClick={() => onComplete(Math.max(1, Math.round(seconds / 60)))}
+            className="w-full h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm shadow-[#F28C45]/30 cursor-pointer transition-transform active:scale-[0.98]"
+          >
+            <CheckCircle2 className="w-4 h-4"/>
+            完成陪玩并打卡
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full h-8 text-xs text-[#858078] hover:text-[#45433F] font-bold text-center cursor-pointer"
+          >
+            稍后继续，退出指导
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+5. src/components/HistoryView.tsx（实现日历按天筛选与手帐二次确认窗）
+TypeScript
+
+
+import React, { useState } from 'react';
+import { PlayRecord } from '../types';
+import { Calendar, Trash2, Award, Clock, Sparkles, AlertCircle, X } from 'lucide-react';
+
+interface HistoryViewProps {
+  records: PlayRecord[];
+  onClearRecords: () => void;
+}
+
+export const HistoryView: React.FC<HistoryViewProps> = ({ records, onClearRecords }) => {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  // 计算过去 7 天连续日期
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
+    return {
+      dateStr,
+      displayDate: d.getDate(),
+      weekday: weekdayNames[d.getDay()],
+      hasRecord: records.some(r => r.date === dateStr),
+    };
+  });
+
+  // 日期筛选联动
+  const filteredRecords = selectedDate
+    ? records.filter(r => r.date === selectedDate)
+    : records;
+
+  const totalMinutes = records.reduce((acc, r) => acc + r.durationMinutes, 0);
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* 顶部统计卡片 */}
+      <div className="bg-white rounded-3xl p-5 border border-[#F1EAE0] shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFF5EE] border border-[#F28C45]/20 flex items-center justify-center text-[#F28C45]">
+            <Award className="w-6 h-6"/>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-[#45433F]">累计陪伴成长</h3>
+            <p className="text-xs text-[#858078]">已记录 {records.length} 次高质量亲子互动</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-2xl font-black text-[#F28C45] font-mono">{totalMinutes}</span>
+          <span className="text-xs text-[#858078] ml-1">分钟</span>
+        </div>
+      </div>
+
+      {/* 7天周历条（支持按天点击筛选） */}
+      <div className="bg-white rounded-3xl p-4 border border-[#F1EAE0] shadow-sm space-y-2">
+        <div className="flex items-center justify-between text-xs font-bold text-[#858078]">
+          <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#F28C45]"/> 近 7 天打卡</span>
+          <span className="text-[11px] font-normal text-[#B86834]">点击日期查看当天</span>
+        </div>
+        <div className="grid grid-cols-7 gap-1.5 pt-1">
+          {days.map(d => {
+            const isSelected = selectedDate === d.dateStr;
+            return (
+              <button
+                key={d.dateStr}
+                onClick={() => setSelectedDate(isSelected ? null : d.dateStr)}
+                className={`py-2 px-1 rounded-2xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#FFF5EE] border-2 border-[#F28C45] shadow-xs'
+                    : 'bg-[#FAF7F2] border border-transparent hover:border-[#E8B58D]/30'
+                }`}
+              >
+                <span className="text-[10px] text-[#858078]">周{d.weekday}</span>
+                <span className={`text-xs font-bold ${isSelected ? 'text-[#F28C45]' : 'text-[#45433F]'}`}>
+                  {d.displayDate}
+                </span>
+                <span className="text-[12px]">{d.hasRecord ? '🐾' : '·'}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 打卡列表展示区 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-[#45433F] flex items-center gap-2">
+            <span>{selectedDate ? `${selectedDate} 的陪伴` : '全部陪伴足迹'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#FAF7F2] text-[#858078] border border-[#F1EAE0]">
+              {filteredRecords.length} 条
+            </span>
+          </h3>
+          {selectedDate && (
+            <button
+              onClick={() => setSelectedDate(null)}
+              className="text-xs text-[#F28C45] hover:underline font-bold cursor-pointer"
+            >
+              查看全部
+            </button>
+          )}
+        </div>
+
+        {filteredRecords.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-3xl border border-[#F1EAE0] space-y-2">
+            <span className="text-3xl">🌿</span>
+            <p className="text-xs text-[#858078]">
+              {selectedDate ? '这天小宝休息啦，快去完成打卡吧~' : '还没有陪伴足迹，今天一起开启第一次互动吧！'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {filteredRecords.map(record => (
+              <div
+                key={record.id}
+                className="p-4 bg-white rounded-2xl border border-[#F1EAE0] flex items-center justify-between shadow-xs"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF5EE] text-[#F28C45]">
+                      {record.category}
+                    </span>
+                    <h4 className="text-xs font-bold text-[#45433F]">{record.activityTitle}</h4>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-[#858078]">
+                    <span>{record.date}</span>
+                    <span className="flex items-center gap-1 font-mono">
+                      <Clock className="w-3 h-3 text-[#A8B9A0]"/> {record.durationMinutes} 分钟
+                    </span>
+                  </div>
+                  {record.note && (
+                    <p className="text-[11px] text-[#6B665F] italic bg-[#FAF7F2] px-2.5 py-1 rounded-lg">
+                      “{record.note}”
+                    </p>
+                  )}
+                </div>
+                <div className="text-2xl pl-2">
+                  {record.babyReaction === 'happy' ? '😍' : record.babyReaction === 'calm' ? '😊' : '🥱'}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 底部清空足迹按钮 */}
+      {records.length > 0 && (
+        <div className="pt-2 text-center">
+          <button
+            onClick={() => setShowClearConfirm(true)}
+            className="inline-flex items-center gap-1 text-xs text-[#858078] hover:text-red-500 transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5"/> 清空足迹记录
+          </button>
+        </div>
+      )}
+
+      {/* 手帐风格二次确认弹窗（彻底废除 window.confirm） */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-xs bg-white rounded-3xl p-5 border border-[#F1EAE0] shadow-xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="text-center space-y-1.5">
+              <div className="w-10 h-10 rounded-full bg-[#FFF5EE] text-[#F28C45] flex items-center justify-center mx-auto">
+                <AlertCircle className="w-5 h-5"/>
+              </div>
+              <h4 className="text-sm font-bold text-[#45433F]">确定要清空足迹吗？</h4>
+              <p className="text-xs text-[#858078] leading-relaxed">
+                清空后，小宝已沉淀的打卡印章与陪伴时间将重新开始计算哦。
+              </p>
+            </div>
+            <div className="space-y-2 pt-1">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="w-full h-10 rounded-full bg-[#F28C45] text-white font-bold text-xs cursor-pointer hover:bg-[#e07b36]"
+              >
+                保留珍贵回忆
+              </button>
+              <button
+                onClick={() => {
+                  onClearRecords();
+                  setShowClearConfirm(false);
+                }}
+                className="w-full h-9 rounded-full bg-[#FAF7F2] text-[#858078] hover:text-red-500 font-bold text-xs cursor-pointer"
+              >
+                确认清空
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+6. src/components/LibraryView.tsx（实现会员锁头与特权展示联动）
+TypeScript
+
+
+import React, { useState } from 'react';
+import { Activity } from '../types';
+import { Lock, Sparkles, Clock, Box, Stethoscope, ChevronRight } from 'lucide-react';
+
+interface LibraryViewProps {
+  activities: Activity[];
+  isVip: boolean;
+  onOpenDetail: (activity: Activity) => void;
+  onOpenVipModal: () => void;
+}
+
+export const LibraryView: React.FC<LibraryViewProps> = ({
+  activities,
+  isVip,
+  onOpenDetail,
+  onOpenVipModal,
+}) => {
+  const [selectedCategory, setSelectedCategory] = useState<string>('全部');
+  const categories = ['全部', '感官认知', '大运动', '精细动作', '语言交流'];
+
+  // 人为设置部分进阶玩法为 VIP 专享
+  const isVipActivity = (activity: Activity) => {
+    return activity.title.includes('大动作') || activity.title.includes('探索') || activity.category === '语言交流';
+  };
+
+  const filtered = selectedCategory === '全部'
+    ? activities
+    : activities.filter(a => a.category === selectedCategory);
+
+  return (
+    <div className="space-y-5 animate-in fade-in duration-300">
+      {/* 分类过滤器 */}
+      <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              selectedCategory === cat
+                ? 'bg-[#F28C45] text-white shadow-xs'
+                : 'bg-white text-[#858078] border border-[#F1EAE0] hover:border-[#E8B58D]/40'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* 活动列表 */}
+      <div className="space-y-3">
+        {filtered.map(act => {
+          const locked = isVipActivity(act) && !isVip;
+
+          return (
+            <div
+              key={act.id}
+              onClick={() => {
+                if (locked) {
+                  onOpenVipModal();
+                } else {
+                  onOpenDetail(act);
+                }
+              }}
+              className="p-4 bg-white rounded-3xl border border-[#F1EAE0] shadow-xs hover:border-[#E8B58D]/40 transition-all cursor-pointer space-y-3 relative overflow-hidden group"
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FAF7F2] text-[#B86834] border border-[#E8B58D]/20">
+                      {act.category}
+                    </span>
+                    <h4 className="text-sm font-bold text-[#45433F] group-hover:text-[#F28C45] transition-colors">
+                      {act.title}
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-[#858078]">
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#F28C45]"/> {act.duration}</span>
+                    <span className="flex items-center gap-1"><Box className="w-3.5 h-3.5 text-[#A8B9A0]"/> {act.materials}</span>
+                  </div>
+                </div>
+
+                {/* 锁头或解锁状态标签 */}
+                {isVipActivity(act) && (
+                  locked ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FFF5EE] text-[#F28C45] border border-[#F28C45]/20 shrink-0">
+                      <Lock className="w-3 h-3"/> 👑 VIP 专享
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#EBF5ED] text-[#54704B] border border-[#54704B]/20 shrink-0">
+                      <Sparkles className="w-3 h-3"/> ✨ VIP 已解锁
+                    </span>
+                  )
+                )}
+              </div>
+
+              {/* VIP 专享特权展开：儿科专家锦囊（已开通 VIP 独享） */}
+              {isVip && (
+                <div className="p-2.5 rounded-2xl bg-[#FFF9F3] border border-[#E8B58D]/30 flex items-start gap-2">
+                  <Stethoscope className="w-4 h-4 text-[#F28C45] shrink-0 mt-0.5"/>
+                  <p className="text-[11px] text-[#858078] leading-relaxed">
+                    <strong className="text-[#45433F]">专家脑发育机理：</strong> 该动作重点刺激宝宝本体觉与前庭平衡，有助于未来专注力与情绪稳定沉淀。
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+7. src/App.tsx（实现全局会员持久化、开通大礼包与全站联动）
+TypeScript
+
+
+import React, { useState } from 'react';
+import { HomeView } from './components/HomeView';
+import { LibraryView } from './components/LibraryView';
+import { HistoryView } from './components/HistoryView';
+import { CoachModeModal } from './components/CoachModeModal';
+import { PlayFeedbackModal } from './components/PlayFeedbackModal';
+import { ActivityDetailModal } from './components/ActivityDetailModal';
+import { ACTIVITIES } from './data/activities';
+import { Activity, PlayRecord, BabyProfile } from './types';
+import { safeStorage } from './utils/storage';
+import { calculateBabyAge, getLocalDateString } from './utils/date';
+import { Sparkles, Calendar, BookOpen, Clock, Heart, Crown, X, Check } from 'lucide-react';
+
+export const App: React.FC = () => {
+  // 核心业务状态
+  const [activeTab, setActiveTab] = useState<'home' | 'library' | 'history'>('home');
+  const [activities] = useState<Activity[]>(ACTIVITIES);
+  const [currentActivity, setCurrentActivity] = useState<Activity>(ACTIVITIES[0]);
+  
+  // 会员状态
+  const [isVip, setIsVip] = useState<boolean>(() => safeStorage.get('playmate_is_vip', false));
+  const [showVipModal, setShowVipModal] = useState<boolean>(false);
+  const [showVipSuccessModal, setShowVipSuccessModal] = useState<boolean>(false);
+
+  // 宝宝档案
+  const [babyProfile] = useState<BabyProfile>(() => 
+    safeStorage.get('playmate_baby_profile', {
+      name: '小宝',
+      birthDate: '2026-03-15',
+    })
+  );
+
+  // 打卡记录
+  const [records, setRecords] = useState<PlayRecord[]>(() =>
+    safeStorage.get('playmate_play_records', [])
+  );
+
+  // 弹窗状态
+  const [selectedActivity, setSelectedActivity] = useState<Activity null |>(null);
+  const [coachingActivity, setCoachingActivity] = useState<Activity null |>(null);
+  const [feedbackActivity, setFeedbackActivity] = useState<Activity null |>(null);
+  const [coachingDuration, setCoachingDuration] = useState<number>(5);
+
+  // 开通 VIP 动作
+  const handleUpgradeVip = () => {
+    setIsVip(true);
+    safeStorage.set('playmate_is_vip', true);
+    setShowVipModal(false);
+    setShowVipSuccessModal(true);
+  };
+
+  // 打卡完成持久化
+  const handleRecordSubmit = (data: {
+    activityId: string;
+    activityTitle: string;
+    category: string;
+    durationMinutes: number;
+    babyReaction: 'happy' | 'calm' | 'tired';
+    note: string;
+  }) => {
+    const newRecord: PlayRecord = {
+      id: Date.now().toString(),
+      activityId: data.activityId,
+      activityTitle: data.activityTitle,
+      category: data.category,
+      date: getLocalDateString(),
+      durationMinutes: data.durationMinutes,
+      babyReaction: data.babyReaction,
+      note: data.note,
+    };
+
+    const updated = [newRecord, ...records];
+    setRecords(updated);
+    safeStorage.set('playmate_play_records', updated);
+    setFeedbackActivity(null);
+    setActiveTab('history');
+  };
+
+  const handleClearRecords = () => {
+    setRecords([]);
+    safeStorage.remove('playmate_play_records');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FAF7F2] text-[#45433F] flex flex-col justify-between">
+      {/* 顶部全局导航栏 */}
+      <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 backdrop-blur-md border-b border-[#F1EAE0] px-5 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#FFF5EE] border border-[#F28C45]/20 flex items-center justify-center text-lg">
+            🐾
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-sm text-[#45433F]">{babyProfile.name}的玩伴日历</span>
+              {/* 会员金色微标 */}
+              {isVip && (
+                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-[#F28C45] to-[#E5762F] text-white shadow-xs">
+                  <Crown className="w-2.5 h-2.5"/> 年卡 VIP
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] text-[#858078]">{calculateBabyAge(babyProfile.birthDate)}</span>
+          </div>
+        </div>
+
+        {!isVip && (
+          <button
+            onClick={() => setShowVipModal(true)}
+            className="px-3 py-1.5 rounded-full bg-[#FFF5EE] border border-[#F28C45]/30 text-[#F28C45] font-bold text-xs flex items-center gap-1 hover:bg-[#F28C45] hover:text-white transition-colors cursor-pointer"
+          >
+            <Crown className="w-3.5 h-3.5"/> 开通 VIP
+          </button>
+        )}
+      </header>
+
+      {/* 页面主视图 */}
+      <main className="flex-1 max-w-lg mx-auto w-full px-5 py-5 pb-24">
+        {activeTab === 'home' && (
+          <HomeView allActivities="{activities}" babyProfile="{babyProfile}" currentActivity="{currentActivity}" onStartPlay="{(act)"> setCoachingActivity(act)}
+            onOpenDetail={(act) => setSelectedActivity(act)}
+          />
+        )}
+
+        {activeTab === 'library' && (
+          <LibraryView activities="{activities}" isVip="{isVip}" onOpenDetail="{(act)"> setSelectedActivity(act)}
+            onOpenVipModal={() => setShowVipModal(true)}
+          />
+        )}
+
+        {activeTab === 'history' && (
+          <HistoryView onClearRecords="{handleClearRecords}" records="{records}"/>
+        )}
+      </main>
+
+      {/* 底部导航栏 */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#F1EAE0] py-2 px-6 flex justify-around items-center max-w-lg mx-auto">
+        <button
+          onClick={() => setActiveTab('home')}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
+            activeTab === 'home' ? 'text-[#F28C45] font-bold' : 'text-[#858078]'
+          }`}
+        >
+          <Sparkles className="w-5 h-5"/>
+          <span className="text-[11px]">今日推荐</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('library')}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
+            activeTab === 'library' ? 'text-[#F28C45] font-bold' : 'text-[#858078]'
+          }`}
+        >
+          <BookOpen className="w-5 h-5"/>
+          <span className="text-[11px]">活动宝库</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
+            activeTab === 'history' ? 'text-[#F28C45] font-bold' : 'text-[#858078]'
+          }`}
+        >
+          <Calendar className="w-5 h-5"/>
+          <span className="text-[11px]">成长足迹</span>
+        </button>
+      </nav>
+
+      {/* 详情指南弹窗 */}
+      {selectedActivity && (
+        <ActivityDetailModal activity="{selectedActivity}" onClose="{()"> setSelectedActivity(null)}
+          onStartPlay={() => {
+            setCoachingActivity(selectedActivity);
+            setSelectedActivity(null);
+          }}
+        />
+      )}
+
+      {/* 陪玩指导弹窗 */}
+      {coachingActivity && (
+        <CoachModeModal activity="{coachingActivity}" onClose="{()"> setCoachingActivity(null)}
+          onComplete={(min) => {
+            setCoachingDuration(min);
+            setFeedbackActivity(coachingActivity);
+            setCoachingActivity(null);
+          }}
+        />
+      )}
+
+      {/* 打卡拍立得反馈弹窗 */}
+      {feedbackActivity && (
+        <PlayFeedbackModal activity="{feedbackActivity}" durationMinutes="{coachingDuration}" onClose="{()"> setFeedbackActivity(null)}
+          onSubmit={handleRecordSubmit}
+        />
+      )}
+
+      {/* 会员引导与开通弹窗 */}
+      {showVipModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border border-[#F1EAE0] shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#FFF5EE] text-[#F28C45]">
+                <Crown className="w-3.5 h-3.5"/> 陪伴年卡 VIP
+              </span>
+              <button onClick={() => setShowVipModal(false)} className="text-[#858078] hover:text-[#45433F] cursor-pointer">
+                <X className="w-4 h-4"/>
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-[#45433F]">解锁 0-3 岁全周期 300+ 脑发育互动</h3>
+              <p className="text-xs text-[#858078]">每天 5 分钟，让每次陪伴都更有意义</p>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              {[
+                '解锁全月龄进阶大运动与精细动作库',
+                '专属儿科医生敏感期机理深度解读',
+                '成长足迹高清拍立得无限制导出',
+                '支持全家多设备共同陪伴打卡',
+              ].map((feat, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-[#45433F]">
+                  <div className="w-4 h-4 rounded-full bg-[#EBF5ED] text-[#54704B] flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5"/>
+                  </div>
+                  <span>{feat}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 space-y-2">
+              <button
+                onClick={handleUpgradeVip}
+                className="w-full h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] text-white font-bold text-sm shadow-md shadow-[#F28C45]/30 hover:opacity-95 cursor-pointer"
+              >
+                立即开通陪伴年卡（¥99/年）
+              </button>
+              <p className="text-[11px] text-[#858078] text-center">折合每天仅需 0.27 元</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 会员开通成功大礼包交付弹窗 */}
+      {showVipSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm bg-[#FAF7F2] rounded-3xl p-6 border border-[#F1EAE0] shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-full bg-[#FFF5EE] border border-[#F28C45]/30 flex items-center justify-center mx-auto text-3xl">
+              👑
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-[#45433F]">恭喜成为陪伴年卡 VIP！</h3>
+              <p className="text-xs text-[#858078]">已为您全面激活全周期早教与专属特权</p>
+            </div>
+
+            <div className="p-3 bg-white rounded-2xl border border-[#F1EAE0] text-left space-y-1.5 text-xs text-[#45433F]">
+              <div className="flex items-center gap-1.5 font-bold text-[#54704B]">
+                <Sparkles className="w-3.5 h-3.5"/> 300+ 脑发育玩法锁头已全开
+              </div>
+              <div className="flex items-center gap-1.5 font-bold text-[#F28C45]">
+                <Sparkles className="w-3.5 h-3.5"/> 敏感期早教锦囊已点亮
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowVipSuccessModal(false)}
+              className="w-full h-11 rounded-full bg-[#F28C45] text-white font-bold text-sm hover:bg-[#e07b36] shadow-sm shadow-[#F28C45]/30 cursor-pointer"
+            >
+              开启 VIP 陪伴之旅
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
