@@ -65,7 +65,7 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
       case '大运动':
         return (
           <svg viewBox="0 0 340 180" className="w-full h-full object-contain overflow-visible" aria-label="大运动插画">
-            <rect x="0" y="0" width="340" height="180" fill="#FAF7F2" rx="16" />
+            <rect x="0" y="0" width="340" height="180" fill="#FAF8F5" rx="16" />
             <rect x="10" y="130" width="320" height="40" fill="#EFE5D8" rx="12" />
             <ellipse cx="170" cy="142" rx="120" ry="10" fill="#E2D4C3" opacity="0.6" />
             <g transform="translate(100, 40)">
@@ -82,7 +82,7 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
       case '语言交流':
         return (
           <svg viewBox="0 0 340 180" className="w-full h-full object-contain overflow-visible" aria-label="语言交流插画">
-            <rect x="0" y="0" width="340" height="180" fill="#FAF7F2" rx="16" />
+            <rect x="0" y="0" width="340" height="180" fill="#FAF8F5" rx="16" />
             <rect x="10" y="130" width="320" height="40" fill="#EFE5D8" rx="12" />
             <ellipse cx="170" cy="142" rx="120" ry="10" fill="#E2D4C3" opacity="0.6" />
             <g transform="translate(90, 45)">
@@ -99,7 +99,7 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
       case '精细动作':
         return (
           <svg viewBox="0 0 340 180" className="w-full h-full object-contain overflow-visible" aria-label="精细动作插画">
-            <rect x="0" y="0" width="340" height="180" fill="#FAF7F2" rx="16" />
+            <rect x="0" y="0" width="340" height="180" fill="#FAF8F5" rx="16" />
             <rect x="10" y="130" width="320" height="40" fill="#EFE5D8" rx="12" />
             <ellipse cx="170" cy="142" rx="120" ry="10" fill="#E2D4C3" opacity="0.6" />
             <g transform="translate(130, 60)">
@@ -112,7 +112,7 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
       default:
         return (
           <svg viewBox="0 0 340 180" className="w-full h-full object-contain overflow-visible" aria-label="感官认知插画">
-            <rect x="0" y="0" width="340" height="180" fill="#FAF7F2" rx="16" />
+            <rect x="0" y="0" width="340" height="180" fill="#FAF8F5" rx="16" />
             <rect x="10" y="130" width="320" height="40" fill="#EFE5D8" rx="12" />
             <ellipse cx="170" cy="142" rx="120" ry="10" fill="#E2D4C3" opacity="0.6" />
             <g transform="translate(145, 105)">
@@ -134,21 +134,21 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-hidden">
-      <div className="w-full max-w-md bg-[#FAF7F2] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[#F1EAE0] animate-in fade-in zoom-in-95 duration-200 max-h-[92vh]">
+      <div className="w-full max-w-md bg-[#FAF8F5] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[#F3EDE2] animate-in fade-in zoom-in-95 duration-200 max-h-[86vh] h-[86vh]">
         
-        {/* 1. 顶部 Header 状态栏 */}
-        <div className="px-5 py-3.5 bg-[#FAF7F2] flex items-center justify-between border-b border-[#F1EAE0] shrink-0">
+        {/* 1. 顶部 Header 状态栏 (Sticky Header) */}
+        <div className="px-5 py-3 bg-[#FAF8F5] flex items-center justify-between border-b border-[#F3EDE2] shrink-0">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#E8B58D]/25 text-[#B86834] border border-[#E8B58D]/40">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200/60">
               {activity.category}
             </span>
-            <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-[#F1EAE0] shadow-xs">
+            <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-[#F3EDE2] shadow-xs">
               <button
                 onClick={() => setIsPaused(!isPaused)}
-                className="flex items-center gap-1 text-xs font-bold text-[#45433F] hover:text-[#F28C45] cursor-pointer"
+                className="flex items-center gap-1 text-xs font-bold text-[#2C221E] hover:text-orange-600 cursor-pointer"
                 title={isPaused ? "点击继续计时" : "点击暂停计时"}
               >
-                {isPaused ? <Play className="w-3.5 h-3.5 text-amber-600 fill-amber-600" /> : <Pause className="w-3.5 h-3.5 text-[#F28C45] fill-[#F28C45]" />}
+                {isPaused ? <Play className="w-3.5 h-3.5 text-amber-600 fill-amber-600" /> : <Pause className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />}
                 <span className="font-mono">{formatTimer(elapsedSeconds)}</span>
                 {isPaused && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">【已暂停】</span>}
               </button>
@@ -157,13 +157,13 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowGuide(true)}
-              className="px-3 py-1 rounded-full bg-white hover:bg-[#F1EAE0] text-xs font-bold text-[#45433F] flex items-center gap-1 border border-[#F1EAE0] shadow-xs transition-colors cursor-pointer"
+              className="px-3 py-1 rounded-full bg-white hover:bg-[#FAF8F5] text-xs font-bold text-[#2C221E] flex items-center gap-1 border border-[#F3EDE2] shadow-xs transition-colors cursor-pointer"
             >
-              <BookOpen className="w-3.5 h-3.5 text-[#F28C45]" /> 指南
+              <BookOpen className="w-3.5 h-3.5 text-orange-500" /> 指南
             </button>
             <button
               onClick={handleCloseX}
-              className="w-8 h-8 rounded-full bg-white hover:bg-[#F1EAE0] flex items-center justify-center text-[#45433F] shadow-xs transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-white hover:bg-[#FAF8F5] flex items-center justify-center text-[#2C221E] shadow-xs transition-colors cursor-pointer"
               aria-label="关闭"
             >
               <X className="w-4 h-4" />
@@ -171,66 +171,66 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
           </div>
         </div>
 
-        {/* 2. 核心内容区域 */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4">
+        {/* 2. 中间独立滚动内容区域 (Flex-1 Overflow-Y-Auto) */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5">
           {/* 活动标题 */}
           <div className="text-center px-2">
-            <h2 className="text-lg font-black text-[#45433F] tracking-tight">{activity.title}</h2>
-            <p className="text-xs text-[#858078] mt-0.5 line-clamp-1">{activity.subtitle}</p>
+            <h2 className="text-base sm:text-lg font-black text-[#2C221E] tracking-tight">{activity.title}</h2>
+            <p className="text-xs text-[#786F6A] mt-0.5 line-clamp-1">{activity.subtitle}</p>
           </div>
 
-          {/* 插画容器 */}
-          <div className="w-full bg-[#FAF7F2] rounded-2xl border border-[#E8B58D]/30 p-2.5 flex flex-col items-center gap-2 shadow-inner">
-            <div className="w-full h-[145px] flex items-center justify-center">
+          {/* 插画容器（压缩高度至 130px） */}
+          <div className="w-full bg-[#FAF8F5] rounded-2xl border border-[#F3EDE2] p-2 flex flex-col items-center gap-1.5 shadow-inner">
+            <div className="w-full h-[130px] flex items-center justify-center">
               {renderActivityIllustration(activity.category)}
             </div>
 
             {/* 示范话术气泡 */}
-            <div className="w-full bg-white/95 border border-[#E8B58D]/40 rounded-xl px-3 py-2 text-center shadow-xs">
-              <span className="text-xs text-[#B86834] font-medium leading-relaxed">
+            <div className="w-full bg-white/95 border border-orange-200/50 rounded-xl px-3 py-1.5 text-center shadow-xs">
+              <span className="text-xs text-orange-800 font-medium leading-relaxed">
                 💬 {activity.parentPrompt ? activity.parentPrompt.replace(/^["'“”]+|["'“”]+$/g, '') : '咚咚咚，小鼓敲起来，宝宝也来敲一敲！'}
               </span>
             </div>
           </div>
 
-          {/* 3. 陪玩三步法 */}
-          <div className="bg-white rounded-2xl p-4 border border-[#F1EAE0] shadow-xs space-y-3">
-            <div className="text-xs font-bold text-[#858078] flex items-center gap-1.5 pb-1">
+          {/* 3. 陪玩三步法（紧凑化间距 space-y-2） */}
+          <div className="bg-white rounded-2xl p-3.5 border border-[#F3EDE2] shadow-[0_4px_15px_rgba(44,34,30,0.03)] space-y-2.5">
+            <div className="text-xs font-bold text-[#786F6A] flex items-center gap-1.5 pb-0.5">
               <span>📋 陪玩三步法</span>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {activity.steps.map((step: any) => (
-                <div key={step.stepNumber} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#F28C45] text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                <div key={step.stepNumber} className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-xs mt-0.5">
                     {step.stepNumber}
                   </div>
                   <div className="space-y-0.5">
-                    <div className="text-sm font-bold text-[#45433F]">{step.title}</div>
-                    <p className="text-xs text-[#6B665F] leading-relaxed font-normal">{step.description}</p>
+                    <div className="text-xs font-bold text-[#2C221E]">{step.title}</div>
+                    <p className="text-[11px] text-[#786F6A] leading-relaxed font-normal">{step.description}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* 4. 底部双状态结束操作区 */}
-          <div className="pt-2 pb-1 flex flex-col items-center gap-2">
-            <button
-              onClick={handleComplete}
-              className="w-full h-11 rounded-full bg-gradient-to-r from-[#F28C45] to-[#E5762F] hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm shadow-[#F28C45]/30 cursor-pointer"
-            >
-              <CheckCircle2 className="w-4 h-4 fill-white text-[#F28C45]" />
-              <span>愉快完成，去打卡</span>
-            </button>
-            
-            <button
-              onClick={handleInterrupted}
-              className="w-full h-10 rounded-full bg-[#FAF7F2] hover:bg-[#F1EAE0] border border-[#F1EAE0] text-[#858078] hover:text-[#45433F] text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
-            >
-              <span>🥱 宝宝累了 / 中途退出（保存当前时长）</span>
-            </button>
-          </div>
+        {/* 4. 底部常驻固定操作栏 (Fixed/Sticky Bottom with Frosted Glass Shading) */}
+        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#F3EDE2] shadow-[0_-10px_25px_rgba(44,34,30,0.06)] flex flex-col gap-2">
+          <button
+            onClick={handleComplete}
+            className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 cursor-pointer"
+          >
+            <CheckCircle2 className="w-4 h-4 fill-white text-orange-500" />
+            <span>愉快完成，去打卡</span>
+          </button>
+          
+          <button
+            onClick={handleInterrupted}
+            className="w-full h-9 rounded-2xl bg-[#FAF8F5] hover:bg-[#F3EDE2] border border-[#F3EDE2] text-[#786F6A] hover:text-[#2C221E] text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+          >
+            <span>🥱 宝宝累了 / 中途退出（保存当前时长）</span>
+          </button>
         </div>
 
         {/* 抽屉指南组件接入 */}
