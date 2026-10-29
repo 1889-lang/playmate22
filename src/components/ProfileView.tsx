@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { BabyProfile } from '../types';
-import { Baby, Sparkles, CheckCircle2, RotateCcw, Crown, Zap } from 'lucide-react';
+import { Baby, Sparkles, CheckCircle2, RotateCcw } from 'lucide-react';
 
 interface ProfileViewProps {
   profile: BabyProfile | null;
@@ -28,6 +28,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (saved) return;
     const newProfile: BabyProfile = {
       name: name.trim() || '宝藏宝宝',
       birthMonth: profile?.birthMonth || '2025-08',
@@ -36,64 +37,41 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     };
     onUpdateProfile(newProfile);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
     <div className="space-y-4 pb-24 md:pb-12 max-w-lg mx-auto animate-in fade-in duration-200 px-3.5 sm:px-4">
-      
-      {/* 1. VIP 权益精简为顶部的一行小金卡条 */}
-      <div className={`rounded-2xl px-4 py-3 border shadow-xs flex items-center justify-between gap-3 ${
-        isVip
-          ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white border-amber-400'
-          : 'bg-white border-[#F3EDE2] text-[#2C221E]'
-      }`}>
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${
-            isVip ? 'bg-white/20 text-amber-200' : 'bg-amber-100 text-amber-700'
-          }`}>
-            <Crown className={`w-4 h-4 ${isVip ? 'fill-amber-200 text-amber-100' : 'text-amber-600'}`} />
-          </div>
-          <div className="truncate">
-            <div className="text-xs font-bold truncate">
-              {isVip ? '👑 VIP 年卡会员至 2027-10-28' : '免费体验版 · 解锁全阶段 300+ 专家活动'}
-            </div>
-          </div>
-        </div>
-
-        {!isVip ? (
-          <button
-            onClick={onUpgradeVip}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold shadow-xs hover:opacity-95 transition-all cursor-pointer shrink-0 whitespace-nowrap"
-          >
-            开通年卡
-          </button>
-        ) : (
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/25 text-white text-[11px] font-semibold shrink-0 whitespace-nowrap">
-            <Zap className="w-3 h-3 fill-white" /> 权益全开
-          </div>
-        )}
-      </div>
-
-      {/* 2. 紧凑名片：将宝宝信息与保存按钮合二为一，首屏内闭环 */}
+      {/* 紧凑名片：直接居中展示宝宝专属成长档案 */}
       <form onSubmit={handleSave} className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(44,34,30,0.05)] space-y-4">
-        <div className="flex items-center gap-3 pb-3 border-b border-[#F3EDE2]">
+        <div className="flex items-center gap-3.5 pb-3.5 border-b border-[#F3EDE2]">
           <div className="relative w-12 h-12 shrink-0">
-            {isVip && (
+            {profile && isVip && (
               <span className="absolute -top-1.5 -left-1 text-base leading-none transform -rotate-[12deg] select-none filter drop-shadow-xs z-10 pointer-events-none">
                 👑
               </span>
             )}
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
-              isVip ? 'bg-amber-100 text-amber-700 border border-amber-200/80' : 'bg-emerald-100 text-emerald-700'
+              profile && isVip ? 'bg-amber-100 text-amber-700 border border-amber-200/80' : 'bg-emerald-100 text-emerald-700'
             }`}>
               <Baby className="w-6 h-6" />
             </div>
           </div>
-          <div className="min-w-0">
-            <h3 className="text-sm sm:text-base font-bold text-[#2C221E] truncate">
-              {profile ? `${profile.name} 的专属成长名片` : '建立宝宝成长档案'}
-            </h3>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h3 className="text-sm sm:text-base font-bold text-[#2C221E] truncate">
+                {profile ? `${profile.name} 的专属成长名片` : '建立宝宝成长档案'}
+              </h3>
+              {profile && isVip ? (
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60 font-medium inline-flex items-center gap-1 shrink-0">
+                  👑 VIP年卡 · 至2027年10月
+                </span>
+              ) : profile ? (
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-medium inline-flex items-center shrink-0">
+                  成长体验中
+                </span>
+              ) : null}
+            </div>
             <p className="text-[11px] text-[#786F6A] truncate">
               个性化匹配 0-3 岁脑发育科学亲子游戏
             </p>
@@ -131,18 +109,53 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         </div>
 
-        {saved && (
-          <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 shrink-0" /> 已成功保存宝宝档案！
-          </div>
-        )}
-
         <button
           type="submit"
-          className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 hover:opacity-95 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 active:scale-[0.98] transition-all cursor-pointer"
+          disabled={saved}
+          className={`w-full h-12 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
+            saved
+              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 cursor-default'
+              : 'bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 hover:opacity-95 text-white shadow-md shadow-orange-500/25 active:scale-[0.98] cursor-pointer'
+          }`}
         >
-          <Sparkles className="w-4 h-4" /> 保存档案设置
+          {saved ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 shrink-0 animate-in zoom-in-75 duration-200" />
+              <span>已成功保存</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span>保存档案设置</span>
+            </>
+          )}
         </button>
+
+        {!isVip && (
+          <div
+            onClick={onUpgradeVip}
+            className="bg-gradient-to-r from-amber-50 to-orange-50/40 rounded-2xl p-3 border border-amber-100 flex items-center justify-between mt-4 cursor-pointer hover:shadow-xs transition-shadow"
+          >
+            <div className="min-w-0 pr-2">
+              <p className="text-xs font-bold text-amber-900 flex items-center gap-1">
+                <span>👑</span> 升级 VIP 年卡会员
+              </p>
+              <p className="text-[11px] text-amber-700/80 truncate mt-0.5">
+                解锁 0-3 岁 300+ 专属脑发育陪伴游戏
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpgradeVip();
+              }}
+              className="text-xs font-bold text-orange-600 bg-white px-2.5 py-1 rounded-full shadow-sm border border-amber-200/50 hover:bg-orange-50/60 shrink-0 transition-colors"
+            >
+              立即开通 →
+            </button>
+          </div>
+        )}
       </form>
 
       {/* 3. 重置数据与单行浅灰隐私承诺 */}

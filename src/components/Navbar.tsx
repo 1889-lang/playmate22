@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Calendar, Crown } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: string;

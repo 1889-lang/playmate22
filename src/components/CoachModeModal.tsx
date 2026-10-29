@@ -137,33 +137,39 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
       <div className="w-full max-w-md bg-[#FAF8F5] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[#F3EDE2] animate-in fade-in zoom-in-95 duration-200 max-h-[86vh] h-[86vh]">
         
         {/* 1. 顶部 Header 状态栏 (Sticky Header) */}
-        <div className="px-5 py-3 bg-[#FAF8F5] flex items-center justify-between border-b border-[#F3EDE2] shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200/60">
+        <div className="px-5 py-3 bg-[#FAF8F5] flex items-center justify-between border-b border-[#F3EDE2] shrink-0 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200/60 whitespace-nowrap flex-shrink-0">
               {activity.category}
             </span>
-            <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-[#F3EDE2] shadow-xs">
+            <div className={`flex items-center justify-center min-w-[90px] px-2.5 py-1 rounded-xl border border-[#F3EDE2] shadow-xs whitespace-nowrap flex-shrink-0 transition-all ${isPaused ? 'bg-amber-50/80 border-amber-200/70' : 'bg-white'}`}>
               <button
                 onClick={() => setIsPaused(!isPaused)}
-                className="flex items-center gap-1 text-xs font-bold text-[#2C221E] hover:text-orange-600 cursor-pointer"
+                className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#2C221E] hover:text-orange-600 cursor-pointer w-full"
                 title={isPaused ? "点击继续计时" : "点击暂停计时"}
               >
-                {isPaused ? <Play className="w-3.5 h-3.5 text-amber-600 fill-amber-600" /> : <Pause className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />}
-                <span className="font-mono">{formatTimer(elapsedSeconds)}</span>
-                {isPaused && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">【已暂停】</span>}
+                {isPaused ? (
+                  <Play className="w-3.5 h-3.5 text-amber-600 fill-amber-600 flex-shrink-0" />
+                ) : (
+                  <Pause className="w-3.5 h-3.5 text-orange-500 fill-orange-500 flex-shrink-0" />
+                )}
+                <span className={`font-mono transition-opacity ${isPaused ? 'opacity-80 text-amber-900 animate-pulse' : ''}`}>
+                  {formatTimer(elapsedSeconds)}
+                </span>
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => setShowGuide(true)}
-              className="px-3 py-1 rounded-full bg-white hover:bg-[#FAF8F5] text-xs font-bold text-[#2C221E] flex items-center gap-1 border border-[#F3EDE2] shadow-xs transition-colors cursor-pointer"
+              className="px-3 py-1 rounded-full bg-white hover:bg-[#FAF8F5] text-xs font-bold text-[#2C221E] flex items-center gap-1 border border-[#F3EDE2] shadow-xs transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
             >
-              <BookOpen className="w-3.5 h-3.5 text-orange-500" /> 指南
+              <BookOpen className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
+              <span>指南</span>
             </button>
             <button
               onClick={handleCloseX}
-              className="w-8 h-8 rounded-full bg-white hover:bg-[#FAF8F5] flex items-center justify-center text-[#2C221E] shadow-xs transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-white hover:bg-[#FAF8F5] flex items-center justify-center text-[#2C221E] shadow-xs transition-colors cursor-pointer flex-shrink-0"
               aria-label="关闭"
             >
               <X className="w-4 h-4" />
@@ -216,20 +222,20 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
         </div>
 
         {/* 4. 底部常驻固定操作栏 (Fixed/Sticky Bottom with Frosted Glass Shading) */}
-        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#F3EDE2] shadow-[0_-10px_25px_rgba(44,34,30,0.06)] flex flex-col gap-2">
+        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#F3EDE2] shadow-[0_-10px_25px_rgba(44,34,30,0.06)] flex flex-col gap-1.5">
           <button
             onClick={handleComplete}
             className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4 fill-white text-orange-500" />
-            <span>愉快完成，去打卡</span>
+            <span>🎉 愉快完成，去打卡</span>
           </button>
           
           <button
             onClick={handleInterrupted}
-            className="w-full h-9 rounded-2xl bg-[#FAF8F5] hover:bg-[#F3EDE2] border border-[#F3EDE2] text-[#786F6A] hover:text-[#2C221E] text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+            className="text-xs text-stone-400 hover:text-stone-600 py-2.5 bg-transparent border-none w-full text-center transition-colors cursor-pointer font-medium active:scale-95"
           >
-            <span>🥱 宝宝累了 / 中途退出（保存当前时长）</span>
+            稍后再玩 · 保存进度
           </button>
         </div>
 

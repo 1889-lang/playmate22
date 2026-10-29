@@ -55,6 +55,8 @@ export default function App() {
 
   const handleUpgradeVip = () => {
     setIsVip(true);
+    safeStorage.set('playmate_is_vip', true);
+    window.dispatchEvent(new Event('playmate_vip_changed'));
     setShowMembershipModal(false);
     showToast('✨ 【内测体验版已激活】已为您解锁当前全部进阶全脑互动与专家锦囊');
   };
@@ -79,6 +81,7 @@ export default function App() {
 
   useEffect(() => {
     safeStorage.setWithStatus('playmate_is_vip', isVip);
+    window.dispatchEvent(new Event('playmate_vip_changed'));
   }, [isVip]);
 
   // Modals state
@@ -133,10 +136,19 @@ export default function App() {
     showToast('已清空陪玩历史足迹');
   };
 
+  const handleUpdateRecordNotes = (recordId: string, newNotes: string) => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, notes: newNotes } : r))
+    );
+    showToast('✨ 亲子手记已保存');
+  };
+
   const handleResetAllData = () => {
     localStorage.removeItem('playmate_records');
     localStorage.removeItem('playmate_profile');
+    localStorage.removeItem('playmate_user_profile');
     localStorage.removeItem('playmate_is_vip');
+    window.dispatchEvent(new Event('playmate_vip_changed'));
     setRecords([]);
     setIsVip(false);
     setProfile(null);
@@ -173,6 +185,7 @@ export default function App() {
             onSelectTab={setCurrentTab}
             onSelectActivity={(act) => setSelectedActivity(act)}
             onStartPlay={(act) => handleStartPlayAttempt(act)}
+            isVip={isVip}
           />
         )}
 
@@ -191,6 +204,8 @@ export default function App() {
             records={records}
             onClearHistory={handleClearHistory}
             onSelectActivityById={handleSelectActivityById}
+            onNavigateToToday={() => setCurrentTab('today')}
+            onUpdateRecordNotes={handleUpdateRecordNotes}
           />
         )}
 

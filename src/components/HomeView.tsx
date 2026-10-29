@@ -7,6 +7,8 @@ import React, { useState, useMemo } from 'react';
 import { Activity, PlayRecord, BabyProfile } from '../types';
 import { Clock, Play, Sparkles, Baby, AlertCircle, ChevronRight, Smile, Star, Heart, Sun, RefreshCw } from 'lucide-react';
 import { getLocalDateStr } from '../utils/date';
+import { FloatingWidget } from './FloatingWidget';
+import { ActivityItemCard } from './ActivityItemCard';
 
 interface HomeViewProps {
   activities: Activity[];
@@ -166,36 +168,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </section>
       )}
 
-      {/* 右下角悬浮亲子能量挂件（Floating Capsule Widget with VIP Crown indicator） */}
-      <div
-        onClick={() => onSelectTab('profile')}
-        className="fixed right-4 bottom-20 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md shadow-[0_4px_16px_rgba(251,146,60,0.22)] border border-orange-100/80 cursor-pointer transition-transform hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-300"
-        title={profile ? `${profile.name}的成长档案 · 点击查看` : '点击查看宝宝档案与会员状态'}
-      >
-        <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
-          {isVip && (
-            <span
-              className="absolute -top-1.5 -left-1 text-[13px] leading-none transform -rotate-[12deg] select-none filter drop-shadow-xs z-20 pointer-events-none"
-              title="VIP 年卡会员"
-            >
-              👑
-            </span>
-          )}
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold shadow-xs ${
-            isVip
-              ? 'bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-300/80 text-amber-800'
-              : 'bg-emerald-100 border border-emerald-300 text-emerald-800'
-          }`}>
-            <Baby className={`w-4 h-4 ${isVip ? 'text-amber-700' : 'text-emerald-700'}`} />
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 pr-0.5">
-          <span className="text-xs">⏰</span>
-          <span className="text-xs font-extrabold text-orange-600 font-mono">
-            {todayTotalMinutes}m
-          </span>
-        </div>
-      </div>
+      {/* 右下角悬浮亲子能量挂件（仅在已建档时展示，未建档时严禁渲染） */}
+      {profile !== null && (
+        <FloatingWidget
+          isVip={isVip}
+          profile={profile}
+          todayTotalMinutes={todayTotalMinutes}
+          onClick={() => onSelectTab('profile')}
+        />
+      )}
 
       {/* 适龄降级提示横幅（如有） */}
       {ageNotice && (
@@ -209,18 +190,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   {currentActivity && (
         <section className="bg-white rounded-3xl border border-[#F3EDE2] shadow-[0_12px_35px_-12px_rgba(44,34,30,0.07)] overflow-hidden relative">
           
-          {/* 插画区通栏贴顶（无内嵌小盒子与独立外部标签行） */}
-          <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-amber-100/70 via-orange-50/50 to-amber-50/30 relative overflow-hidden flex items-center justify-center border-b border-orange-100/50">
-            {/* 左上角轻盈自然融入式状态文本（一体化微标签，强化今日专属精选） */}
-            <div className="absolute top-3 left-3.5 z-10 flex items-center gap-1 text-xs font-medium text-amber-800/80 select-none">
-              <span className="text-amber-500">✨</span>
-              <span>今日精选 · {currentActivity.category}</span>
+          {/* 纯净封面插画区（含左上角磨砂微浮层标签） */}
+          <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-amber-100/70 via-orange-50/50 to-amber-50/30 relative rounded-t-3xl overflow-hidden flex items-center justify-center border-b border-orange-100/50">
+            {/* 方案 A 悬浮式：直接定位在插画左上角，不占纵向正文空间 */}
+            <div className="absolute top-3 left-3.5 z-10 bg-white/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-amber-800 shadow-sm border border-amber-100/50 flex items-center gap-1 select-none">
+              <span>✨ 今日精选 · {currentActivity.category}</span>
             </div>
-
-            {/* 装饰微光星星 */}
-            <div className="absolute top-3.5 right-4 text-amber-400 text-xs animate-pulse select-none pointer-events-none">✨</div>
-            <div className="absolute bottom-4 left-6 text-amber-300 text-[10px] select-none pointer-events-none">✨</div>
-            <div className="absolute bottom-6 right-16 text-amber-400 text-xs select-none pointer-events-none">⭐</div>
 
             <svg viewBox="0 0 320 200" className="w-full h-full object-contain" aria-label="亲子活动插画">
               <rect x="0" y="0" width="320" height="200" fill="transparent" />
@@ -240,9 +215,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </svg>
           </div>
 
-          {/* 下半部分：高质感杂志化信息流（Lovevery / Kinedu 风格） */}
-          <div className="p-5 sm:p-6 bg-white">
-            {/* 标题与副标题 */}
+          {/* 下半部分：紧凑衔接的文本内容区（Card Body） */}
+          <div className="p-4 pt-3 bg-white rounded-b-3xl">
+            {/* 插画下方首个元素直接是大标题与玩法简述 */}
             <div>
               <h3 
                 onClick={() => onSelectActivity(currentActivity)}
@@ -255,8 +230,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </p>
             </div>
 
-            {/* 单行横向参数条（横向紧凑收敛，严禁一长排竖着堆砌胶囊） */}
-            <div className="bg-stone-50/80 rounded-xl px-3 py-2 flex items-center justify-between text-xs text-stone-600 my-2.5">
+            {/* 单行横向紧凑参数条 */}
+            <div className="bg-stone-50/80 rounded-xl p-2.5 my-3 flex items-center justify-between text-xs text-stone-600">
               <span className="flex items-center gap-1 font-medium shrink-0">
                 <span>⏱</span>
                 <span>{currentActivity.duration}</span>
@@ -281,14 +256,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </span>
               </span>
             </div>
-            {/* 主操作按钮（CTA）与底部标语 */}
-            <div className="mt-3.5">
+
+            {/* 主操作按钮（CTA 减负，干脆有力）与底部标语 */}
+            <div className="mt-3">
               <button
                 onClick={() => onStartPlay(currentActivity)}
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 hover:opacity-95 active:scale-[0.98] transition-all text-white shadow-lg shadow-orange-300/40 cursor-pointer flex items-center justify-center gap-2 font-bold text-sm tracking-wide"
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 hover:opacity-95 active:scale-[0.98] transition-all text-white shadow-lg shadow-orange-300/40 cursor-pointer flex items-center justify-center gap-2 font-bold text-base tracking-wide"
               >
                 <Play className="w-4 h-4 fill-white" />
-                <span>开始 {currentActivity.duration} 互动游戏</span>
+                <span>开始陪伴</span>
               </button>
               <div className="text-center text-[11px] text-stone-400 mt-2">
                 ✨ 免准备 · 随手即玩 · 专业专家指导
@@ -307,10 +283,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <button
             onClick={handleRefreshInspirations}
             disabled={isRefreshingInspirations}
-            className="text-xs text-orange-600 hover:text-orange-700 font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0 whitespace-nowrap active:scale-95 disabled:opacity-75"
+            className="group flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600 active:scale-95 transition-all cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-50"
+            title="换一批推荐灵感"
           >
             <RefreshCw
-              className="w-3.5 h-3.5 transition-transform duration-500 ease-out"
+              className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-600 transition-transform duration-500 ease-out"
               style={{ transform: `rotate(${rotationCount * 360}deg)` }}
             />
             <span>换一批</span>
@@ -318,51 +295,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
 
         <div className={`space-y-2.5 transition-all duration-400 ease-out ${isRefreshingInspirations ? 'opacity-0 translate-y-1 scale-[0.99]' : 'opacity-100 translate-y-0 scale-100'}`}>
-          {backupActivities.map((act, index) => {
-            const icons = [Sparkles, Smile, Star, Sun, Heart];
-            const IconComponent = icons[index % icons.length];
-
-            return (
-              <div
-                key={act.id}
-                onClick={() => onSelectActivity(act)}
-                className="group bg-white rounded-3xl p-4 border border-[#F3EDE2] shadow-[0_8px_25px_-10px_rgba(44,34,30,0.04)] hover:shadow-md hover:border-orange-300/60 transition-all cursor-pointer flex items-center justify-between gap-3.5 active:scale-[0.99]"
-              >
-                {/* 左侧图标容器：升级为平滑可爱的矢量图标底座 */}
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-orange-100/50 flex items-center justify-center text-orange-600 shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-                  <IconComponent className="w-5 h-5" />
-                </div>
-
-                {/* 中间信息区：从四行压缩为清晰的两行 */}
-                <div className="grow min-w-0 space-y-1">
-                  {/* 第一行：标题 + 耗时小胶囊 */}
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-bold text-stone-800 truncate group-hover:text-orange-600 transition-colors">
-                      {act.title}
-                    </h4>
-                    <span className="bg-stone-100/80 text-stone-600 text-[10px] font-mono px-2 py-0.5 rounded-full shrink-0">
-                      ⏱ {act.duration}
-                    </span>
-                  </div>
-
-                  {/* 第二行：分类标签 + 核心育儿价值 */}
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="bg-amber-100/60 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
-                      {act.category}
-                    </span>
-                    <p className="text-xs text-stone-500 truncate">
-                      {act.subtitle}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 右侧极简引导箭头 */}
-                <div className="shrink-0 self-center pl-1">
-                  <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </div>
-            );
-          })}
+          {backupActivities.map((act) => (
+            <ActivityItemCard
+              key={act.id}
+              activity={act}
+              onClick={() => onSelectActivity(act)}
+              isVipUser={isVip}
+            />
+          ))}
         </div>
       </section>
 
