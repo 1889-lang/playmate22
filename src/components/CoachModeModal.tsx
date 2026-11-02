@@ -4,15 +4,16 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { Activity } from '../types';
-import { X, Clock, BookOpen, Pause, Play } from 'lucide-react';
+import { X, Clock, BookOpen, Pause, Play, AlertCircle } from 'lucide-react';
 import { TextGuideDrawer } from './TextGuideDrawer';
+import { getRecommendedMinutes, checkIsCompletedByDuration } from '../utils/activity';
 
 interface CoachModeModalProps {
   activity: Activity;
   initialSeconds?: number;
   onClose: () => void;
   onSaveAndExit: (activity: Activity, elapsedSeconds: number) => void;
-  onFinishPlay: (activity: Activity, durationMinutes: number) => void;
+  onFinishPlay: (activity: Activity, durationMinutes: number, status: 'completed' | 'interrupted') => void;
 }
 
 export const CoachModeModal: React.FC<CoachModeModalProps> = ({
@@ -26,6 +27,7 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showThresholdModal, setShowThresholdModal] = useState(false);
   const timerRef = useRef<any>(null);
 
   // 停止语音朗读的辅助函数
@@ -107,7 +109,19 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
     stopSpeech();
     if (timerRef.current) clearInterval(timerRef.current);
     const durationMins = Math.max(1, Math.round(elapsedSeconds / 60));
-    onFinishPlay(activity, durationMins);
+    const isCompleted = checkIsCompletedByDuration(elapsedSeconds, activity.duration);
+
+    if (isCompleted) {
+      onFinishPlay(activity, durationMins, 'completed');
+    } else {
+      setShowThresholdModal(true);
+    }
+  };
+
+  const handleConfirmInterrupted = () => {
+    setShowThresholdModal(false);
+    const durationMins = Math.max(1, Math.round(elapsedSeconds / 60));
+    onFinishPlay(activity, durationMins, 'interrupted');
   };
 
   const handleSaveProgress = () => {
@@ -329,6 +343,42 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
         {/* 抽屉指南组件接入 */}
         {showGuide && (
           <TextGuideDrawer activity={activity} onClose={() => setShowGuide(false)} />
+        )}
+
+        {/* 未达到建议时长 80% 门槛提示弹窗 */}
+        {showThresholdModal && (
+          <div className="absolute inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="w-full max-w-xs bg-white rounded-3xl p-5 shadow-2xl border border-stone-200 space-y-4 animate-in zoom-in-95 duration-150">
+              <div className="flex items-center gap-2 text-amber-600">
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <h4 className="text-sm font-bold text-stone-900">未达到完成建议门槛</h4>
+              </div>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                当前陪伴时间为 <span className="font-bold text-stone-900">{Math.floor(elapsedSeconds / 60)}分{elapsedSeconds % 60}秒</span>（活动建议时长：<span className="font-bold text-stone-900">{activity.duration}</span>，需达到 80% 门槛方可打卡完成）。
+              </p>
+              <div className="space-y-2 pt-1">
+                <button
+                  onClick={() => {
+                    setShowThresholdModal(false);
+                    if (!isPaused) {
+                      timerRef.current = setInterval(() => {
+                        setElapsedSeconds((prev) => prev + 1);
+                      }, 1000);
+                    }
+                  }}
+                  className="w-full h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold shadow-md cursor-pointer transition-all"
+                >
+                  继续陪玩
+                </button>
+                <button
+                  onClick={handleConfirmInterrupted}
+                  className="w-full h-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium cursor-pointer transition-all"
+                >
+                  保存实际时长并结束（记录为片刻陪伴）
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

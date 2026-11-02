@@ -181,11 +181,11 @@ export default function App() {
     showToast('✓ 已暂存陪伴时长，随时可继续', 1500);
   };
 
-  const handleFinishPlay = (act: Activity, durationMinutes: number) => {
+  const handleFinishPlay = (act: Activity, durationMinutes: number, status: 'completed' | 'interrupted' = 'completed') => {
     setPlayingActivity(null);
     setPausedSession(null);
     safeStorage.remove('playmate_paused_session');
-    setPendingFeedback({ activity: act, durationMinutes, status: 'completed' });
+    setPendingFeedback({ activity: act, durationMinutes, status });
   };
 
   const handleResumeSession = (session: PausedSession) => {
@@ -205,9 +205,11 @@ export default function App() {
     }
     setLastSubmission({ activityId: record.activityId, time: now });
 
-    // 记录今日已完成状态（防刷与Hero卡态联动）
-    safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
-    window.dispatchEvent(new Event('playmate_record_saved'));
+    // 仅当 record.completed 为 true 时，才记录今日已完成状态（防刷与Hero卡态联动）
+    if (record.completed) {
+      safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
+      window.dispatchEvent(new Event('playmate_record_saved'));
+    }
 
     // 同一活动当天多次打卡合并更新时长，避免无限制刷假记录
     const existingIndex = records.findIndex(
@@ -216,12 +218,14 @@ export default function App() {
 
     if (existingIndex >= 0) {
       const mergedMinutes = (records[existingIndex].durationMinutes || 0) + (record.durationMinutes || 0);
+      const isCompleted = records[existingIndex].completed || record.completed;
       setRecords((prev) =>
         prev.map((r, i) =>
           i === existingIndex
             ? {
                 ...r,
                 durationMinutes: mergedMinutes,
+                completed: isCompleted,
                 reaction: record.reaction || r.reaction,
                 photoUrl: record.photoUrl || r.photoUrl,
                 notes: record.notes && record.notes.trim() ? record.notes : r.notes,
@@ -229,9 +233,17 @@ export default function App() {
             : r
         )
       );
+      if (record.completed) {
+        safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
+        window.dispatchEvent(new Event('playmate_record_saved'));
+      }
       showToast('今天已记录过该活动时长，已为你合并更新');
     } else {
       setRecords((prev) => [record, ...prev]);
+      if (record.completed) {
+        safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
+        window.dispatchEvent(new Event('playmate_record_saved'));
+      }
       showToast('✨ 陪伴足迹已安全保存');
     }
 

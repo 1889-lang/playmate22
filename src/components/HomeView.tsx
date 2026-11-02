@@ -267,12 +267,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>✓ 今日已完成 (再玩一次)</span>
                   </button>
-                  <button
-                    onClick={() => onSelectTab('history')}
-                    className="w-full h-8 rounded-xl bg-transparent border-0 text-xs text-stone-400 hover:text-stone-700 transition-colors font-normal flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <span>查看今日足迹手账 →</span>
-                  </button>
                 </div>
               ) : (
                 <button
@@ -283,11 +277,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   <span>开始陪伴</span>
                 </button>
               )}
-              <div className="text-center text-[11px] text-stone-400 mt-2">
-                {profile
-                  ? '✨ 免准备 · 随手即玩 · 月龄陪伴小贴士'
-                  : '🌱 访客探索模式 · 建议完善宝宝档案以获取专属适龄匹配'}
-              </div>
+              {!profile && (
+                <div className="text-center text-[11px] text-stone-400 mt-2">
+                  🌱 访客探索模式 · 建议完善宝宝档案以获取专属适龄匹配
+                </div>
+              )}
             </div>
           </div>
         </section>

@@ -163,3 +163,26 @@ export const getTodayFeaturedActivity = (
 
   return selected;
 };
+
+/**
+ * 从活动建议时长字符串中解析推荐分钟数（默认 5 分钟）
+ */
+export const getRecommendedMinutes = (durationStr: string): number => {
+  if (!durationStr || typeof durationStr !== 'string') return 5;
+  const match = durationStr.match(/(\d+)/);
+  if (match) {
+    const val = parseInt(match[1], 10);
+    return isNaN(val) || val <= 0 ? 5 : val;
+  }
+  return 5;
+};
+
+/**
+ * 校验实际陪玩秒数是否达到建议时长的 80% 门槛
+ */
+export const checkIsCompletedByDuration = (elapsedSeconds: number, durationStr: string): boolean => {
+  const recMins = getRecommendedMinutes(durationStr);
+  const minRequiredSeconds = recMins * 60 * 0.8;
+  return elapsedSeconds >= minRequiredSeconds;
+};
+
