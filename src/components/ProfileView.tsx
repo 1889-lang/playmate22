@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { BabyProfile } from '../types';
-import { Baby, Sparkles, CheckCircle2, RotateCcw, AlertTriangle, Download, Image as ImageIcon, FileCode, Minus, Plus, Calendar, Hash } from 'lucide-react';
+import { Baby, Sparkles, CheckCircle2, RotateCcw, AlertTriangle, Minus, Plus, Calendar, Hash } from 'lucide-react';
 import { calculateMonthsFromBirthMonth } from '../utils/date';
 
 interface ProfileViewProps {
@@ -79,7 +79,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const [saved, setSaved] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [downloadToast, setDownloadToast] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const showToast = (msg: string) => {
@@ -87,35 +86,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     setTimeout(() => {
       setToastMessage(null);
     }, 2000);
-  };
-
-  const handleDownloadIcon = (type: 'svg' | 'png512' | 'png192') => {
-    let url = '/icon.svg';
-    let filename = 'playmate-calendar-icon.svg';
-    let label = 'SVG 矢量源码';
-
-    if (type === 'png512') {
-      url = '/icon-512.png';
-      filename = 'playmate-calendar-512.png';
-      label = '512×512 PNG 高清图标';
-    } else if (type === 'png192') {
-      url = '/icon-192.png';
-      filename = 'playmate-calendar-192.png';
-      label = '192×192 PNG 图标';
-    }
-
-    try {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setDownloadToast(`✓ 已开始保存 ${label}`);
-      setTimeout(() => setDownloadToast(null), 2000);
-    } catch {
-      window.open(url, '_blank');
-    }
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -161,14 +131,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-stone-900/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-medium shadow-xl flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2 duration-200 pointer-events-none">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* 图标下载反馈 Toast */}
-      {downloadToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-medium shadow-xl flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2 duration-200 pointer-events-none">
-          <CheckCircle2 className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-          <span>{downloadToast}</span>
         </div>
       )}
 
@@ -441,74 +403,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           )}
         </button>
       </form>
-
-      {/* 玩伴日历 App Icon 官方资产与下载卡片 */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F3EDE2] shadow-xs space-y-4">
-        <div className="flex items-start gap-4">
-          {/* 高保真 App Icon 预览盒 */}
-          <div className="relative w-18 h-18 sm:w-20 sm:h-20 shrink-0 rounded-[22px] overflow-hidden shadow-lg shadow-orange-500/20 border border-orange-200/60 p-0.5 bg-gradient-to-br from-orange-400 to-amber-500">
-            <img
-              src="/icon.svg"
-              alt="玩伴日历应用图标"
-              className="w-full h-full object-cover rounded-[20px]"
-            />
-          </div>
-
-          {/* 标头说明与规范胶囊 */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h4 className="text-sm font-bold text-stone-900">应用官方图标</h4>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60 font-medium">
-                Design System V1.0
-              </span>
-            </div>
-            <p className="text-xs text-stone-500 leading-relaxed line-clamp-2">
-              标准圆角 (rx=24%)、暖橙琥珀渐变底板、萌趣笑脸日历翻页与成长嫩芽点缀。
-            </p>
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 font-mono">
-                SVG 矢量
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 font-mono">
-                512×512 HD
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 font-mono">
-                192×192 PWA
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 下载操作按钮组 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-[#F3EDE2]">
-          <button
-            type="button"
-            onClick={() => handleDownloadIcon('svg')}
-            className="h-10 px-3 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/60 text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <FileCode className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-            <span>下载 SVG 源码</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDownloadIcon('png512')}
-            className="h-10 px-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs shadow-orange-500/20 transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5 shrink-0" />
-            <span>512px PNG 头像</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDownloadIcon('png192')}
-            className="h-10 px-3 rounded-xl bg-stone-100 hover:bg-stone-200/80 text-stone-700 text-xs font-medium flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <ImageIcon className="w-3.5 h-3.5 text-stone-500 shrink-0" />
-            <span>192px PNG 规格</span>
-          </button>
-        </div>
-      </div>
 
       {/* 重置数据与单行浅灰隐私承诺 */}
       <div className="pt-2 space-y-2.5 text-center">

@@ -31,6 +31,7 @@ interface PlayFeedbackModalProps {
     date: string;
     babyState: string;
     photoUrl?: string;
+    notes?: string;
   }) => void;
 }
 
@@ -77,6 +78,8 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
     const mappedReaction: BabyReaction =
       reaction === 'happy' ? '开心专注' : reaction === 'calm' ? '平静探索' : '容易疲劳';
 
+    const effectiveNotes = status === 'interrupted' ? '中途休息' : '';
+
     if (onSubmit) {
       onSubmit({
         activityId: activity.id,
@@ -84,7 +87,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
         category: activity.category,
         durationMinutes,
         babyReaction: reaction,
-        note: '',
+        note: effectiveNotes,
         status,
         photoUrl: photoDataUrl || undefined,
       });
@@ -101,7 +104,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
         reaction: mappedReaction,
         difficulty: '刚好合适',
         completed: status === 'completed',
-        notes: status === 'interrupted' ? '中途休息' : '',
+        notes: effectiveNotes,
         photoUrl: photoDataUrl || undefined,
       });
     }
@@ -249,7 +252,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
             </div>
           </div>
 
-          {/* 第三项：底部操作栏 */}
+          {/* 第四项：底部操作栏 */}
           <div className="pt-2 space-y-2">
             <button
               type="button"

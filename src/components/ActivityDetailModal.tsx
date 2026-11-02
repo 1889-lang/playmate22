@@ -241,7 +241,7 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
             <span className="text-sm shrink-0">💡</span>
             <div className="text-xs text-[#45433F] font-medium leading-snug">
               <span className="font-bold text-[#B86834]">要点：</span>
-              {activity.observationTips[0] || '看着宝宝眼睛，像日常互动一样轻松自然。'}
+              {(activity.observationTips[0] || '看着宝宝眼睛，像日常互动一样轻松自然。').replace(/^(要点|提示|注意)[：:]\s*/, '')}
             </div>
           </div>
 
@@ -259,7 +259,7 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
 
           {/* Bottom Full-Width Action Button */}
           <div className="pt-0.5">
-            {!activity.isReviewed ? (
+            {!activity.isReviewed && !(activity.isVip && isVip) ? (
               <button
                 disabled
                 className="w-full h-12 rounded-2xl bg-stone-200 text-stone-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed select-none opacity-80"
@@ -279,7 +279,7 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
                 className="w-full h-12 rounded-2xl bg-[#F28C45] hover:bg-[#e07b36] active:scale-[0.98] transition-all text-white font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-[#F28C45]/25 cursor-pointer"
               >
                 <CheckCircle2 className="w-5 h-5 fill-white text-[#F28C45]" />
-                <span>▶ 开始计时陪伴</span>
+                <span>{activity.isVip && !activity.isReviewed ? '▶ 开始计时陪伴（VIP内测体验）' : '▶ 开始计时陪伴'}</span>
               </button>
             )}
           </div>

@@ -79,8 +79,8 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
       // 2. 画面区域（相框内嵌）
       const photoX = 36;
       const photoY = 36;
-      const photoW = width - 72;
-      const photoH = 520;
+      const photoW = width - 72; // 568
+      const photoH = 500;
 
       if (photoUrl) {
         try {
@@ -113,10 +113,10 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
             ctx.restore();
           }
         } catch {
-          drawDefaultPhotoPlaceholder(ctx, photoX, photoY, photoW, photoH, babyName, stateMeta);
+          drawDefaultPhotoPlaceholder(ctx, photoX, photoY, photoW, photoH, babyName, stateMeta, activity);
         }
       } else {
-        drawDefaultPhotoPlaceholder(ctx, photoX, photoY, photoW, photoH, babyName, stateMeta);
+        drawDefaultPhotoPlaceholder(ctx, photoX, photoY, photoW, photoH, babyName, stateMeta, activity);
       }
 
       // 相框轻柔内描边
@@ -128,34 +128,35 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
 
       // 3. 画面下方展示活动名称
       ctx.fillStyle = '#2C221E';
-      ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(activity.title, width / 2, 620);
+      ctx.fillText(activity.title, width / 2, 580);
 
-      // 玩法分类小胶囊
-      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      // 玩法分类与陪伴标签
+      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#C2410C';
-      ctx.fillText(`✨ ${activity.category} · 宝宝状态：${stateMeta.emoji} ${stateMeta.label}`, width / 2, 665);
+      ctx.fillText(`✨ ${activity.category} · 适龄 ${activity.ageRange} · 宝宝状态：${stateMeta.label}`, width / 2, 620);
 
-      // 亲子趣味提示
+      // 活动副标题 / 发育指引
       const promptText = activity.parentPrompt
         ? `“${activity.parentPrompt.replace(/^["'“”]+|["'“”]+$/g, '')}”`
         : '“真正陪孩子玩一会儿，留下珍贵的成长片段”';
-      ctx.font = '500 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = '500 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#786F6A';
-      ctx.fillText(promptText, width / 2, 715);
+      const displayPrompt = promptText.length > 30 ? promptText.slice(0, 29) + '…”' : promptText;
+      ctx.fillText(displayPrompt, width / 2, 680);
 
       // 4. 底部区域展示“专注陪伴 X 分钟 · 日期 · 玩伴日历”
       ctx.strokeStyle = '#F1EDE6';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(photoX, 755);
-      ctx.lineTo(photoX + photoW, 755);
+      ctx.moveTo(photoX + 20, 745);
+      ctx.lineTo(photoX + photoW - 20, 745);
       ctx.stroke();
 
       ctx.fillStyle = '#8C827A';
-      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(`专注陪伴 ${durationMinutes} 分钟 · ${date} · 玩伴日历`, width / 2, 795);
+      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(`专注陪伴 ${durationMinutes} 分钟 · ${date} · 玩伴日历`, width / 2, 785);
 
       if (!isCancelled) {
         setRenderedImageUrl(canvas.toDataURL('image/png'));
@@ -267,7 +268,7 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
   );
 };
 
-// Helper: draw default warm pattern photo when user hasn't uploaded photo
+// Helper: draw default theme-matched picture-book scene when user hasn't uploaded photo
 function drawDefaultPhotoPlaceholder(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -275,13 +276,30 @@ function drawDefaultPhotoPlaceholder(
   w: number,
   h: number,
   babyName: string,
-  stateMeta: { emoji: string; label: string }
+  stateMeta: { emoji: string; label: string },
+  activity: Activity
 ) {
-  // Gradient backdrop
+  const cat = activity.category;
+
+  // 1. 温润绘本渐变底色
   const grad = ctx.createLinearGradient(x, y, x + w, y + h);
-  grad.addColorStop(0, '#FFF5EB');
-  grad.addColorStop(0.5, '#FEF3C7');
-  grad.addColorStop(1, '#FFE4E6');
+  if (cat.includes('大运动') || cat.includes('运动')) {
+    grad.addColorStop(0, '#FFF7ED');
+    grad.addColorStop(1, '#FED7AA');
+  } else if (cat.includes('精细')) {
+    grad.addColorStop(0, '#FFF1F2');
+    grad.addColorStop(1, '#FECDD3');
+  } else if (cat.includes('感官') || cat.includes('认知')) {
+    grad.addColorStop(0, '#F0FDF4');
+    grad.addColorStop(1, '#BBF7D0');
+  } else if (cat.includes('社会') || cat.includes('情绪')) {
+    grad.addColorStop(0, '#FAF5FF');
+    grad.addColorStop(1, '#DDD6FE');
+  } else {
+    // 语言交流
+    grad.addColorStop(0, '#F0F9FF');
+    grad.addColorStop(1, '#BAE6FD');
+  }
 
   ctx.save();
   ctx.beginPath();
@@ -290,24 +308,220 @@ function drawDefaultPhotoPlaceholder(
   ctx.fillStyle = grad;
   ctx.fillRect(x, y, w, h);
 
-  // Decorative dots/stars
-  ctx.fillStyle = '#FDBA74';
+  // 2. 顶部胶囊标签
+  const tagW = 160;
+  const tagH = 34;
+  const tagX = x + (w - tagW) / 2;
+  const tagY = y + 26;
+  ctx.fillStyle = '#FFFFFFD9';
   ctx.beginPath();
-  ctx.arc(x + 40, y + 50, 5, 0, Math.PI * 2);
-  ctx.arc(x + w - 50, y + 60, 6, 0, Math.PI * 2);
-  ctx.arc(x + 80, y + h - 60, 4, 0, Math.PI * 2);
-  ctx.arc(x + w - 60, y + h - 50, 5, 0, Math.PI * 2);
+  ctx.roundRect(tagX, tagY, tagW, tagH, 17);
   ctx.fill();
-
-  // Big Emoji in center
-  ctx.font = '110px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#9A3412';
+  ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(stateMeta.emoji, x + w / 2, y + h / 2 + 10);
+  ctx.fillText(`✨ ${activity.category}`, tagX + tagW / 2, tagY + 22);
 
-  // Baby caption
+  // 3. 中心专属分类绘本矢量图形（纯 Canvas 2D 绘制，绝无异常字符或三角形沙漏）
+  const cx = x + w / 2;
+  const cy = y + 210;
+
+  if (cat.includes('大运动') || cat.includes('运动')) {
+    // 暖阳
+    ctx.fillStyle = '#FDBA74';
+    ctx.beginPath();
+    ctx.arc(cx + 80, cy - 70, 32, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 绿色草坡
+    ctx.fillStyle = '#86EFAC';
+    ctx.beginPath();
+    ctx.moveTo(cx - 180, cy + 90);
+    ctx.quadraticCurveTo(cx - 30, cy + 20, cx + 180, cy + 70);
+    ctx.lineTo(cx + 180, cy + 120);
+    ctx.lineTo(cx - 180, cy + 120);
+    ctx.closePath();
+    ctx.fill();
+
+    // 双脚迈步小脚丫印
+    ctx.fillStyle = '#EA580C';
+    ctx.beginPath();
+    ctx.ellipse(cx - 50, cy + 65, 12, 7, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(cx - 10, cy + 55, 12, 7, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(cx + 30, cy + 60, 12, 7, -0.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 弹跳小皮球
+    ctx.fillStyle = '#F43F5E';
+    ctx.beginPath();
+    ctx.arc(cx + 80, cy + 40, 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 守护大手与宝宝
+    ctx.fillStyle = '#E8B58D';
+    ctx.beginPath();
+    ctx.arc(cx - 60, cy - 20, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#DFA39A';
+    ctx.beginPath();
+    ctx.arc(cx - 10, cy + 5, 18, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (cat.includes('精细')) {
+    // 彩色积木方块
+    ctx.fillStyle = '#FDA4AF';
+    ctx.beginPath();
+    ctx.roundRect(cx - 85, cy + 15, 50, 50, 10);
+    ctx.fill();
+
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath();
+    ctx.roundRect(cx - 20, cy - 25, 50, 50, 10);
+    ctx.fill();
+
+    ctx.fillStyle = '#6EE7B7';
+    ctx.beginPath();
+    ctx.roundRect(cx + 45, cy + 15, 50, 50, 10);
+    ctx.fill();
+
+    // 积木圆孔
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(cx - 60, cy + 40, 10, 0, Math.PI * 2);
+    ctx.arc(cx + 5, cy, 10, 0, Math.PI * 2);
+    ctx.arc(cx + 70, cy + 40, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 抓握小星光
+    ctx.fillStyle = '#F43F5E';
+    ctx.beginPath();
+    ctx.arc(cx, cy - 70, 9, 0, Math.PI * 2);
+    ctx.arc(cx - 16, cy - 60, 6, 0, Math.PI * 2);
+    ctx.arc(cx + 16, cy - 60, 6, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (cat.includes('感官') || cat.includes('认知')) {
+    // 感知波纹同心圆
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 3.5;
+    ctx.setLineDash([8, 8]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#FDBA74';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, 55, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 中心发声摇铃
+    ctx.fillStyle = '#F97316';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(cx - 8, cy - 8, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 点缀星芒
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath();
+    ctx.arc(cx - 90, cy - 40, 6, 0, Math.PI * 2);
+    ctx.arc(cx + 90, cy - 30, 8, 0, Math.PI * 2);
+    ctx.arc(cx + 70, cy + 60, 5, 0, Math.PI * 2);
+    ctx.arc(cx - 70, cy + 50, 7, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (cat.includes('社会') || cat.includes('情绪')) {
+    // 温暖微笑亲子
+    ctx.fillStyle = '#C7D2FE';
+    ctx.beginPath();
+    ctx.arc(cx - 45, cy, 48, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#FED7AA';
+    ctx.beginPath();
+    ctx.arc(cx + 35, cy + 15, 38, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 弯弯笑眼与微笑
+    ctx.strokeStyle = '#4338CA';
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(cx - 58, cy - 6, 8, Math.PI, 0);
+    ctx.arc(cx - 32, cy - 6, 8, Math.PI, 0);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#9A3412';
+    ctx.beginPath();
+    ctx.arc(cx + 25, cy + 8, 6, Math.PI, 0);
+    ctx.arc(cx + 45, cy + 8, 6, Math.PI, 0);
+    ctx.stroke();
+
+    // 飘动暖心红心
+    ctx.fillStyle = '#F43F5E';
+    ctx.beginPath();
+    ctx.arc(cx - 6, cy - 55, 12, 0, Math.PI * 2);
+    ctx.arc(cx + 10, cy - 55, 12, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // 语言交流：翻开的书本与欢快对话
+    ctx.fillStyle = '#E9D5FF';
+    ctx.beginPath();
+    ctx.roundRect(cx - 90, cy - 30, 85, 75, 10);
+    ctx.roundRect(cx + 5, cy - 30, 85, 75, 10);
+    ctx.fill();
+
+    ctx.strokeStyle = '#C084FC';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 35);
+    ctx.lineTo(cx, cy + 50);
+    ctx.stroke();
+
+    // 对话气泡
+    ctx.fillStyle = '#FAF5FF';
+    ctx.strokeStyle = '#A855F7';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(cx - 50, cy - 80, 100, 38, 16);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#7E22CE';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('♪ 咿呀~ ♫', cx, cy - 55);
+  }
+
+  // 4. 下方半透明手账卡片：展示宝宝状态及手记
+  const chipW = w - 48;
+  const chipH = 92;
+  const chipX = x + 24;
+  const chipY = y + h - chipH - 18;
+
+  ctx.fillStyle = '#FFFFFFE6';
+  ctx.beginPath();
+  ctx.roundRect(chipX, chipY, chipW, chipH, 14);
+  ctx.fill();
+  ctx.strokeStyle = '#F1E8DC';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 宝宝状态小胶囊
   ctx.fillStyle = '#78350F';
-  ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(`${babyName} · ${stateMeta.label}时光`, x + w / 2, y + h / 2 + 75);
+  ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`🌟 ${babyName} · ${stateMeta.label}时光`, cx, chipY + 28);
+
+  // 展示活动副标题
+  const noteToShow = activity.subtitle;
+  ctx.fillStyle = '#57534E';
+  ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  const displayNoteToShow = noteToShow.length > 28 ? noteToShow.slice(0, 27) + '…' : noteToShow;
+  ctx.fillText(displayNoteToShow, cx, chipY + 62);
 
   ctx.restore();
 }

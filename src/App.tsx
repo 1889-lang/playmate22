@@ -126,8 +126,9 @@ export default function App() {
   } | null>(null);
 
   const handleStartPlayAttempt = (act: Activity) => {
-    // 严格安全准入校验：未通过审核的活动绝不允许进入陪玩流程
-    if (!isActivityReviewed(act)) {
+    const isActVip = Boolean(act.isVip);
+    // 严格安全准入校验：未通过审核的活动在常规状态下绝不允许进入陪玩流程；VIP内测状态下支持内测体验核验
+    if (!isActivityReviewed(act) && !(isActVip && isVip)) {
       showToast('⚠️ 该活动尚未通过专业安全审核，已临时隔离，暂不支持体验', 3000);
       return;
     }

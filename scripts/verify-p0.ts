@@ -31,7 +31,7 @@ console.log('--- 测试 P0-01：VIP 活动机制与打卡数据完整性 ---');
 const vipAct21 = INITIAL_ACTIVITIES.find((a) => a.id === 'act-21');
 assert(!!vipAct21, '存在 VIP 活动 act-21 (独立扶站学步游)');
 assert(vipAct21?.isVip === true, 'act-21 标识为 VIP 专属');
-assert(vipAct21?.isReviewed === true, 'act-21 通过安全审核');
+assert(vipAct21?.reviewStatus === 'pending_safety_audit', 'act-21 安全待审隔离状态（未取得儿科专业报告前杜绝伪装通过）');
 assert(Array.isArray(vipAct21?.steps) && (vipAct21?.steps.length ?? 0) >= 3, 'act-21 拥有完整陪玩三步法步骤');
 assert(!!vipAct21?.observationTips && vipAct21.observationTips.length > 0, 'act-21 具有观察要点');
 assert(!!vipAct21?.safetyReminder && vipAct21.safetyReminder.length > 5, 'act-21 具有明确安全防护提醒');

@@ -12,7 +12,7 @@ import { INITIAL_ACTIVITIES } from '../data/activities';
 
 interface HistoryViewProps {
   records: PlayRecord[];
-  onClearHistory: () => void;
+  onClearHistory?: () => void;
   onSelectActivityById: (activityId: string) => void;
   onNavigateToToday?: () => void;
   onUpdateRecordNotes?: (recordId: string, newNotes: string) => void;
@@ -59,7 +59,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   onNavigateToToday,
   onUpdateRecordNotes,
 }) => {
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<PlayRecord | null>(null);
   const [noteInput, setNoteInput] = useState('');
@@ -116,11 +115,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     }
   }
 
-  const handleConfirmClear = () => {
-    onClearHistory();
-    setShowConfirmModal(false);
-    setSelectedDate(null);
-  };
+
 
   const filteredRecords = selectedDate
     ? records.filter((r) => r.date === selectedDate)
@@ -398,48 +393,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         )}
       </div>
 
-      {/* 3. Footer Clear History Link */}
-      {records.length > 0 && (
-        <div className="pt-2 text-center">
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="text-[11px] text-[#786F6A]/70 hover:text-rose-600 transition-colors underline decoration-dotted underline-offset-4 cursor-pointer"
-          >
-            清空历史手账记录
-          </button>
-        </div>
-      )}
 
-      {/* Secondary Confirmation Modal for Clearing History */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-[#2C221E]">清空手账记录确认</h3>
-            </div>
-            <p className="text-xs text-[#786F6A] leading-relaxed">
-              确定要清空所有手账记录吗？此操作不可撤销，并将同时重置日历打卡与陪伴统计数据。
-            </p>
-            <div className="flex flex-col gap-1 pt-2">
-              <button
-                onClick={handleConfirmClear}
-                className="w-full h-11 rounded-2xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-md shadow-rose-600/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center"
-              >
-                确认清空
-              </button>
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide cursor-pointer flex items-center justify-center mt-1"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 补充/修改手记弹窗 */}
       {editingRecord && (
