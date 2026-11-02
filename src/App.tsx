@@ -18,7 +18,7 @@ import { PlayFeedbackModal } from './components/PlayFeedbackModal';
 import { PolaroidModal } from './components/PolaroidModal';
 import { PausedSession } from './components/FloatingWidget';
 import { safeStorage } from './utils/storage';
-import { calculateMonthsFromBirthMonth } from './utils/date';
+import { calculateMonthsFromBirthMonth, getLocalDateString } from './utils/date';
 import { isActivityReviewed } from './utils/activity';
 import { Crown, X, Check, Sparkles } from 'lucide-react';
 
@@ -182,10 +182,38 @@ export default function App() {
   };
 
   const handleFinishPlay = (act: Activity, durationMinutes: number, status: 'completed' | 'interrupted' = 'completed') => {
+    const mappedReaction = status === 'interrupted' ? '容易疲劳' : '开心专注';
+    const record: PlayRecord = {
+      id: 'rec_' + Date.now(),
+      activityId: act.id,
+      activityTitle: act.title,
+      category: act.category,
+      date: getLocalDateString(),
+      durationMinutes,
+      reaction: mappedReaction,
+      difficulty: '刚好合适',
+      completed: status === 'completed',
+      notes: status === 'interrupted' ? '中途休息' : '',
+    };
+
+    // 自动保存本次陪玩记录（仅保存一次）
+    handleSaveRecord(record);
+
+    // 关闭陪玩计时弹窗并清理暂存
     setPlayingActivity(null);
     setPausedSession(null);
     safeStorage.remove('playmate_paused_session');
-    setPendingFeedback({ activity: act, durationMinutes, status });
+
+    // 确保弹窗平滑切换，自动打开拍立得结果页面
+    setTimeout(() => {
+      setPolaroidData({
+        activity: act,
+        durationMinutes,
+        date: getLocalDateString(),
+        babyState: status === 'interrupted' ? '累了' : '开心',
+        photoUrl: undefined,
+      });
+    }, 60);
   };
 
   const handleResumeSession = (session: PausedSession) => {
@@ -205,47 +233,9 @@ export default function App() {
     }
     setLastSubmission({ activityId: record.activityId, time: now });
 
-    // 仅当 record.completed 为 true 时，才记录今日已完成状态（防刷与Hero卡态联动）
-    if (record.completed) {
-      safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
-      window.dispatchEvent(new Event('playmate_record_saved'));
-    }
-
-    // 同一活动当天多次打卡合并更新时长，避免无限制刷假记录
-    const existingIndex = records.findIndex(
-      (r) => r.activityId === record.activityId && r.date === record.date
-    );
-
-    if (existingIndex >= 0) {
-      const mergedMinutes = (records[existingIndex].durationMinutes || 0) + (record.durationMinutes || 0);
-      const isCompleted = records[existingIndex].completed || record.completed;
-      setRecords((prev) =>
-        prev.map((r, i) =>
-          i === existingIndex
-            ? {
-                ...r,
-                durationMinutes: mergedMinutes,
-                completed: isCompleted,
-                reaction: record.reaction || r.reaction,
-                photoUrl: record.photoUrl || r.photoUrl,
-                notes: record.notes && record.notes.trim() ? record.notes : r.notes,
-              }
-            : r
-        )
-      );
-      if (record.completed) {
-        safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
-        window.dispatchEvent(new Event('playmate_record_saved'));
-      }
-      showToast('今天已记录过该活动时长，已为你合并更新');
-    } else {
-      setRecords((prev) => [record, ...prev]);
-      if (record.completed) {
-        safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
-        window.dispatchEvent(new Event('playmate_record_saved'));
-      }
-      showToast('✨ 陪伴足迹已安全保存');
-    }
+    // 每次独立陪玩从开始到结束，均记录为 1 次（不合并同日多次记录）
+    setRecords((prev) => [record, ...prev]);
+    showToast('✨ 陪伴足迹已安全保存');
 
     setPausedSession(null);
     safeStorage.remove('playmate_paused_session');
@@ -383,23 +373,7 @@ export default function App() {
         />
       )}
 
-      {/* Play Feedback Modal (Check-in & Reaction selection) */}
-      {pendingFeedback && (
-        <PlayFeedbackModal
-          activity={pendingFeedback.activity}
-          durationMinutes={pendingFeedback.durationMinutes}
-          status={pendingFeedback.status}
-          profile={profile || undefined}
-          onClose={() => setPendingFeedback(null)}
-          onSaveRecord={handleSaveRecord}
-          onGeneratePoster={(data) => {
-            setPendingFeedback(null);
-            setPolaroidData(data);
-          }}
-        />
-      )}
-
-      {/* Polaroid Poster Modal */}
+      {/* Polaroid Poster Modal (Direct Result View) */}
       {polaroidData && (
         <PolaroidModal
           activity={polaroidData.activity}
@@ -408,7 +382,29 @@ export default function App() {
           babyState={polaroidData.babyState}
           photoUrl={polaroidData.photoUrl}
           babyName={profile?.name || '宝宝'}
-          onClose={() => setPolaroidData(null)}
+          onUpdateBabyState={(newState) => {
+            setPolaroidData((prev) => (prev ? { ...prev, babyState: newState } : null));
+            const mappedReaction = newState === '开心' ? '开心专注' : newState === '平静' ? '平静探索' : '容易疲劳';
+            setRecords((prev) => {
+              if (prev.length === 0) return prev;
+              const copy = [...prev];
+              copy[0] = { ...copy[0], reaction: mappedReaction };
+              return copy;
+            });
+          }}
+          onUpdatePhotoUrl={(newUrl) => {
+            setPolaroidData((prev) => (prev ? { ...prev, photoUrl: newUrl } : null));
+            setRecords((prev) => {
+              if (prev.length === 0) return prev;
+              const copy = [...prev];
+              copy[0] = { ...copy[0], photoUrl: newUrl };
+              return copy;
+            });
+          }}
+          onClose={() => {
+            setPolaroidData(null);
+            setCurrentTab('today');
+          }}
         />
       )}
 

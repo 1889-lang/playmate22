@@ -61,20 +61,20 @@ assert(profileViewContent.includes('onResetAllData') && profileViewContent.inclu
 assert(profileViewContent.includes('profileMode'), '真实出生年月与直接选月龄双模式完好保留');
 
 // ----------------------------------------------------------------
-// P1-02: 校验海报默认插画分类匹配、无孤立大Emoji/沙漏图案，且不含无入口手记
+// P1-02: 校验拍立得海报已彻底移除抽象几何图形与重复机械标签，回归纯净拍立得质感
 // ----------------------------------------------------------------
-console.log('\n=== 【P1-02】海报默认插画分类匹配与无冗余手记测试 ===');
+console.log('\n=== 【P1-02】拍立得海报重构与无冗余几何图形测试 ===');
 const polaroidModalPath = path.resolve(process.cwd(), 'src/components/PolaroidModal.tsx');
 const polaroidModalContent = fs.readFileSync(polaroidModalPath, 'utf-8');
 
-// 确认不再有 110px 孤立大 Emoji 绘制
-assert(!polaroidModalContent.includes("font = '110px"), '已彻底移除 110px 巨大孤立 Emoji 绘制代码');
+// 确认不再有抽象几何图形和多层嵌套方框
+assert(!polaroidModalContent.includes("font = '110px"), '已彻底移除旧大 Emoji 绘制代码');
+assert(!polaroidModalContent.includes("人类幼崽"), '严禁出现“人类幼崽”等生硬参数标签');
+assert(!polaroidModalContent.includes("适龄"), '海报内无机械重复的“适龄”标签');
 
-// 确认具备分类专属插画绘制分支
-assert(polaroidModalContent.includes("cat.includes('大运动')"), '具备“大运动”分类专属绘本插画逻辑');
-assert(polaroidModalContent.includes("cat.includes('精细')"), '具备“精细动作”分类专属绘本插画逻辑');
-assert(polaroidModalContent.includes("cat.includes('感官')"), '具备“感官认知”分类专属绘本插画逻辑');
-assert(polaroidModalContent.includes("cat.includes('社会')"), '具备“社会情绪”分类专属绘本插画逻辑');
+// 确认具备分类专属北欧主题绘本插画与玩伴日历印章
+assert(polaroidModalContent.includes("drawThemeIllustration"), '默认无照片时具备分类专属北欧温暖主题绘本插画');
+assert(polaroidModalContent.includes("玩伴日历"), '底部具备玩伴日历手账印章');
 
 // 确认不包含未提供入口的手记展示逻辑
 assert(!polaroidModalContent.includes('notes?: string;'), 'PolaroidModalProps 接口已移除未提供入口的 notes 字段');

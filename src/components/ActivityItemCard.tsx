@@ -4,13 +4,15 @@
  */
 
 import React from 'react';
-import { Activity } from '../types';
+import { Activity, PlayRecord } from '../types';
 import { Lock, Crown } from 'lucide-react';
+import { getLocalDateString } from '../utils/date';
 
 interface ActivityItemCardProps {
   activity: Activity;
   onClick: () => void;
   isVipUser?: boolean;
+  records?: PlayRecord[];
 }
 
 // 柔和马卡龙微缩插画生成器，呈现亲子绘本与治愈画风
@@ -104,6 +106,7 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
   activity,
   onClick,
   isVipUser = false,
+  records = [],
 }) => {
   const isLocked = Boolean(activity.isVip && !isVipUser);
 
@@ -123,11 +126,21 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
     border: 'border-orange-200/60',
   };
 
-  // 格式化时长：如 "5-8分钟" -> "⏱ 5-8分"
-  const formattedDuration = activity.duration ? activity.duration.replace('分钟', '分') : '5分';
+  const formatSuggestedDuration = (durationStr: string): string => {
+    if (!durationStr) return '◷ 约5分钟';
+    const match = durationStr.match(/(\d+)/);
+    const mins = match ? match[1] : '5';
+    return `◷ 约${mins}分钟`;
+  };
+
+  const formattedDuration = formatSuggestedDuration(activity.duration);
 
   // 格式化月龄：如 "6-8个月" -> "6-8月"
   const formattedAge = activity.ageRange ? activity.ageRange.replace('个月', '月') : '6-8月';
+
+  const todayStr = getLocalDateString();
+  const todayActivityRecords = records.filter((r) => r.date === todayStr && r.activityId === activity.id);
+  const todayActivityCount = todayActivityRecords.length;
 
   return (
     <div
@@ -167,8 +180,7 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
               <span>{isLocked ? 'VIP 解锁' : 'VIP 专享'}</span>
             </span>
           ) : (
-            <span className="text-xs text-stone-400 font-medium flex items-center gap-0.5 shrink-0 whitespace-nowrap">
-              <span>⏱</span>
+            <span className="text-xs text-stone-400 font-medium shrink-0 whitespace-nowrap">
               <span>{formattedDuration}</span>
             </span>
           )}
@@ -180,18 +192,20 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
         </p>
 
         {/* 底行：柔和马卡龙领域徽章与适龄月龄并列 */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span
-            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border shrink-0 whitespace-nowrap ${cfg.bg} ${cfg.text} ${cfg.border}`}
-          >
-            {activity.category}
-          </span>
-          <span className="px-2 py-0.5 rounded-full text-[11px] text-stone-500 bg-stone-100/70 border border-stone-200/50 shrink-0">
-            👶 {formattedAge}
-          </span>
-          {activity.materials && activity.materials.length > 0 && (
-            <span className="hidden sm:inline-block text-[11px] text-stone-400 truncate max-w-[100px]">
-              📦 {activity.materials[0].length > 5 ? activity.materials[0].slice(0, 5) + '…' : activity.materials[0]}
+        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span
+              className={`px-2 py-0.5 rounded-full text-[11px] font-medium border shrink-0 whitespace-nowrap ${cfg.bg} ${cfg.text} ${cfg.border}`}
+            >
+              {activity.category}
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[11px] text-stone-500 bg-stone-100/70 border border-stone-200/50 shrink-0">
+              👶 {formattedAge}
+            </span>
+          </div>
+          {todayActivityCount > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 shrink-0">
+              今日陪玩 {todayActivityCount} 次
             </span>
           )}
         </div>

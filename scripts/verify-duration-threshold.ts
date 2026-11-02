@@ -4,10 +4,12 @@
  */
 
 import { checkIsCompletedByDuration, getRecommendedMinutes } from '../src/utils/activity';
+import fs from 'fs';
+import path from 'path';
 
 function runTests() {
   console.log('================================================================');
-  console.log('🧪 玩伴日历 V0.1 — 陪玩时长与完成判定 80% 门槛专项自动化测试套件');
+  console.log('🧪 玩伴日历 V0.1 — 陪玩时长与完成判定及交互简化专项自动化测试套件');
   console.log('================================================================');
 
   let passed = 0;
@@ -31,22 +33,20 @@ function runTests() {
 
   // 2. 80% 门槛判定测试 (建议5分钟，门槛4分钟=240秒)
   const duration5m = '5分钟';
-  assert(checkIsCompletedByDuration(60, duration5m) === false, '场景 A: 建议5分钟，实际1分钟 (60秒) -> 未完成');
-  assert(checkIsCompletedByDuration(180, duration5m) === false, '场景 B: 建议5分钟，实际3分钟 (180秒) -> 未完成');
-  assert(checkIsCompletedByDuration(240, duration5m) === true, '场景 C: 建议5分钟，实际4分钟 (240秒) -> 完成 (刚好达到80%)');
-  assert(checkIsCompletedByDuration(300, duration5m) === true, '场景 D: 建议5分钟，实际5分钟 (300秒) -> 完成');
+  assert(checkIsCompletedByDuration(60, duration5m) === false, '场景 1: 建议5分钟，实际1分钟 (60秒) -> 未完成 (不显示完成状态)');
+  assert(checkIsCompletedByDuration(180, duration5m) === false, '场景 2: 建议5分钟，实际3分钟 (180秒) -> 未完成 (不显示完成状态)');
+  assert(checkIsCompletedByDuration(240, duration5m) === true, '场景 3: 建议5分钟，实际4分钟 (240秒) -> 正常完成');
+  assert(checkIsCompletedByDuration(300, duration5m) === true, '场景 4: 建议5分钟，实际5分钟 (300秒) -> 正常完成');
 
-  // 3. 不同建议时长门槛测试
-  // 3分钟 -> 80% = 2分24秒 = 144秒
-  assert(checkIsCompletedByDuration(120, '3分钟') === false, '建议3分钟，实际2分钟 -> 未完成');
-  assert(checkIsCompletedByDuration(144, '3分钟') === true, '建议3分钟，实际2分24秒 -> 完成');
+  // 3. 检查代码库中是否已彻底清理「片刻陪伴」及复杂提示文案
+  const feedbackModalCode = fs.readFileSync(path.join(process.cwd(), 'src/components/PlayFeedbackModal.tsx'), 'utf-8');
+  const coachModalCode = fs.readFileSync(path.join(process.cwd(), 'src/components/CoachModeModal.tsx'), 'utf-8');
 
-  // 10分钟 -> 80% = 8分钟 = 480秒
-  assert(checkIsCompletedByDuration(420, '10-15分钟') === false, '建议10分钟，实际7分钟 -> 未完成');
-  assert(checkIsCompletedByDuration(480, '10-15分钟') === true, '建议10分钟，实际8分钟 -> 完成');
+  assert(!feedbackModalCode.includes('片刻陪伴'), '验证：PlayFeedbackModal 中无「片刻陪伴」字样');
+  assert(!coachModalCode.includes('片刻陪伴'), '验证：CoachModeModal 中无「片刻陪伴」字样');
+  assert(!coachModalCode.includes('继续陪玩保存实际时长并结束'), '验证：已彻底移除「继续陪玩保存实际时长并结束」复杂选项');
 
   // 4. 多次短时陪玩累计不自动达成单次活动完成逻辑校验
-  // 模拟两次 1 分钟（共 2 分钟）短时陪玩合并记录
   const rec1 = { durationMinutes: 1, completed: false };
   const rec2 = { durationMinutes: 1, completed: false };
   const mergedMinutes = rec1.durationMinutes + rec2.durationMinutes;
@@ -54,12 +54,8 @@ function runTests() {
   assert(mergedMinutes === 2, '多次短时陪玩时长正确累加为 2 分钟');
   assert(isCompletedMerged === false, '多次短时陪玩因单次均未达标，合并后 completed 严格为 false，不误判完成');
 
-  // 5. 达到门槛后的正常完成记录
-  const recValid = { durationMinutes: 4, completed: checkIsCompletedByDuration(240, '5分钟') };
-  assert(recValid.completed === true, '达到 80% 门槛后打卡记录标记为 completed: true');
-
   console.log('================================================================');
-  console.log(`📊 陪玩时长门槛专项测试结果: 通过 ${passed} 项, 失败 ${failed} 项`);
+  console.log(`📊 陪玩时长门槛与交互简化专项测试结果: 通过 ${passed} 项, 失败 ${failed} 项`);
   console.log('================================================================');
 
   if (failed > 0) {

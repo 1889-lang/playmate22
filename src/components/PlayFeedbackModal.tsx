@@ -148,7 +148,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-orange-500" />
             <h3 className="text-sm font-bold text-[#2C221E]">
-              {status === 'interrupted' ? '记录片刻陪伴' : '记录今天的亲子时光'}
+              记录今天的亲子时光
             </h3>
           </div>
           <button
@@ -165,7 +165,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
           {/* 顶部战报胶囊 */}
           <div className="bg-amber-50/70 border border-amber-100/60 rounded-2xl p-3.5 text-center">
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
-              ⏱️ {status === 'interrupted' ? '片刻陪伴' : '专注陪伴'} {durationMinutes} 分钟
+              ⏱️ 陪伴 {durationMinutes} 分钟
             </span>
             <p className="text-xs font-bold text-stone-800 line-clamp-1 mt-1.5">
               {activity.title}

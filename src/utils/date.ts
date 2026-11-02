@@ -71,6 +71,13 @@ export const getEffectiveBabyMonths = (profile?: BabyProfile | null): number | n
 };
 
 /**
+ * 全局工具函数：实时动态获取宝宝当前月龄
+ */
+export const getCurrentBabyAge = (profile?: BabyProfile | null): number | null => {
+  return getEffectiveBabyMonths(profile);
+};
+
+/**
  * 展示月龄文本。未建档或无合法日期时返回明确提示，绝不默认返回“6个月”或“7个月”
  */
 export const calculateBabyAge = (birthDateStr?: string | null): string => {

@@ -5,7 +5,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Activity } from '../types';
-import { X, Download, CheckCircle2 } from 'lucide-react';
+import { X, Download, CheckCircle2, Camera, Sparkles } from 'lucide-react';
 
 interface PolaroidModalProps {
   activity: Activity;
@@ -15,40 +15,49 @@ interface PolaroidModalProps {
   photoUrl?: string;
   babyName?: string;
   onClose: () => void;
+  onUpdateBabyState?: (state: string) => void;
+  onUpdatePhotoUrl?: (url: string | undefined) => void;
 }
 
 export const PolaroidModal: React.FC<PolaroidModalProps> = ({
   activity,
   durationMinutes,
   date,
-  babyState = 'happy',
+  babyState = '开心',
   photoUrl,
   babyName = '宝宝',
   onClose,
+  onUpdateBabyState,
+  onUpdatePhotoUrl,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  
+  const [currentBabyState, setCurrentBabyState] = useState<string>(babyState);
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | undefined>(photoUrl);
 
-  // Map state to label and emoji
-  const stateMeta = (() => {
-    switch (babyState) {
-      case 'calm':
-      case '平静':
-      case '平静探索':
-        return { emoji: '😊', label: '平静探索' };
-      case 'tired':
-      case '累了':
-      case '容易疲劳':
-        return { emoji: '🥱', label: '有点累了' };
-      case 'happy':
-      case '开心':
-      case '开心专注':
-      default:
-        return { emoji: '😍', label: '开心专注' };
-    }
-  })();
+  const reactionOptions = [
+    { key: '很喜欢', emoji: '😍', label: '很喜欢' },
+    { key: '挺开心', emoji: '😊', label: '挺开心' },
+    { key: '一般', emoji: '😐', label: '一般' },
+    { key: '不太感兴趣', emoji: '😣', label: '不太感兴趣' },
+  ];
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCurrentPhotoUrl(reader.result);
+        if (onUpdatePhotoUrl) onUpdatePhotoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     let isCancelled = false;
@@ -61,44 +70,59 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // 640x840 px (2x Retina scale of 320x420)
+      // 640x920 px (2x Retina scale for Scandinavian Editorial Scrapbook Polaroid)
       const width = 640;
-      const height = 840;
+      const height = 920;
       canvas.width = width;
       canvas.height = height;
 
-      // 1. 米白拍立得相纸底色
-      ctx.fillStyle = '#FFFDF9';
+      // 1. 拍立得卡片底色 (#FAF7F2 背景外框，纸张 #FFFFFF)
+      ctx.fillStyle = '#FAF7F2';
       ctx.fillRect(0, 0, width, height);
 
-      // 相纸精致柔和边框
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#EFE8DE';
-      ctx.strokeRect(6, 6, width - 12, height - 12);
+      // 纸张主体
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.roundRect(24, 24, width - 48, height - 48, 20);
+      ctx.shadowColor = 'rgba(69, 67, 63, 0.12)';
+      ctx.shadowBlur = 24;
+      ctx.shadowOffsetY = 8;
+      ctx.fill();
+      ctx.shadowColor = 'transparent'; // reset
 
-      // 2. 画面区域（相框内嵌）
-      const photoX = 36;
-      const photoY = 36;
-      const photoW = width - 72; // 568
-      const photoH = 500;
+      // 纸张精致边框
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#F1EAE0';
+      ctx.strokeRect(24, 24, width - 48, height - 48);
 
-      if (photoUrl) {
+      // 2. 顶部微型手账日期标签
+      ctx.fillStyle = '#858078';
+      ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`✨ ${date} · 玩伴日历成长手账`, width / 2, 62);
+
+      // 3. 中间视觉主体区（Square Photo Area: 560 x 560 px）
+      const photoX = 40;
+      const photoY = 88;
+      const photoW = 560;
+      const photoH = 560;
+
+      if (currentPhotoUrl) {
         try {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           await new Promise<void>((resolve, reject) => {
             img.onload = () => resolve();
             img.onerror = reject;
-            img.src = photoUrl;
+            img.src = currentPhotoUrl;
           });
 
           if (!isCancelled) {
             ctx.save();
             ctx.beginPath();
-            ctx.roundRect(photoX, photoY, photoW, photoH, 16);
+            ctx.roundRect(photoX, photoY, photoW, photoH, 14);
             ctx.clip();
 
-            // Cover aspect fit
             const imgRatio = img.width / img.height;
             const targetRatio = photoW / photoH;
             let sx = 0, sy = 0, sw = img.width, sh = img.height;
@@ -113,50 +137,61 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
             ctx.restore();
           }
         } catch {
-          drawDefaultPhotoPlaceholder(ctx, photoX, photoY, photoW, photoH, babyName, stateMeta, activity);
+          drawThemeIllustration(ctx, photoX, photoY, photoW, photoH, activity);
         }
       } else {
-        drawDefaultPhotoPlaceholder(ctx, photoX, photoY, photoW, photoH, babyName, stateMeta, activity);
+        drawThemeIllustration(ctx, photoX, photoY, photoW, photoH, activity);
       }
 
-      // 相框轻柔内描边
-      ctx.lineWidth = 2;
+      // 照片内边框
+      ctx.lineWidth = 1;
       ctx.strokeStyle = '#E8DFD5';
       ctx.beginPath();
-      ctx.roundRect(photoX, photoY, photoW, photoH, 16);
+      ctx.roundRect(photoX, photoY, photoW, photoH, 14);
       ctx.stroke();
 
-      // 3. 画面下方展示活动名称
-      ctx.fillStyle = '#2C221E';
-      ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      // 4. 底部记录区（清晰排版：活动名称 28px，时长与宝宝状态 17px）
+      // ① 活动名称
+      ctx.fillStyle = '#45433F';
+      ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(activity.title, width / 2, 580);
+      ctx.fillText(activity.title, width / 2, 705);
 
-      // 玩法分类与陪伴标签
-      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = '#C2410C';
-      ctx.fillText(`✨ ${activity.category} · 适龄 ${activity.ageRange} · 宝宝状态：${stateMeta.label}`, width / 2, 620);
+      // ② 实际陪玩时长、宝宝状态与成长领域
+      const emojiMap: Record<string, string> = {
+        '很喜欢': '😍 很喜欢',
+        '挺开心': '😊 挺开心',
+        '一般': '😐 一般',
+        '不太感兴趣': '😣 不太感兴趣',
+        '开心': '😍 很喜欢',
+        '平静': '😊 挺开心',
+        '累了': '🥱 累了',
+      };
+      const stateText = emojiMap[currentBabyState] || `✨ ${currentBabyState}`;
+      ctx.fillStyle = '#858078';
+      ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(`⏱️ ${durationMinutes}分钟 · ${stateText} · 🌱 ${activity.category}`, width / 2, 755);
 
-      // 活动副标题 / 发育指引
-      const promptText = activity.parentPrompt
-        ? `“${activity.parentPrompt.replace(/^["'“”]+|["'“”]+$/g, '')}”`
-        : '“真正陪孩子玩一会儿，留下珍贵的成长片段”';
-      ctx.font = '500 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = '#786F6A';
-      const displayPrompt = promptText.length > 30 ? promptText.slice(0, 29) + '…”' : promptText;
-      ctx.fillText(displayPrompt, width / 2, 680);
+      // ③ 温馨短句 / 手记（若有 parentPrompt 则展示，字号 15px 确保清晰）
+      if (activity.parentPrompt) {
+        const cleanPrompt = `“${activity.parentPrompt.replace(/^["'“”]+|["'“”]+$/g, '')}”`;
+        ctx.fillStyle = '#858078';
+        ctx.font = 'italic 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const displayPrompt = cleanPrompt.length > 38 ? cleanPrompt.slice(0, 37) + '…”' : cleanPrompt;
+        ctx.fillText(displayPrompt, width / 2, 805);
+      }
 
-      // 4. 底部区域展示“专注陪伴 X 分钟 · 日期 · 玩伴日历”
-      ctx.strokeStyle = '#F1EDE6';
-      ctx.lineWidth = 1.5;
+      // ④ 底部纤细装饰分割线与手账印章
+      ctx.strokeStyle = '#F1EAE0';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(photoX + 20, 745);
-      ctx.lineTo(photoX + photoW - 20, 745);
+      ctx.moveTo(photoX + 24, 840);
+      ctx.lineTo(photoX + photoW - 24, 840);
       ctx.stroke();
 
-      ctx.fillStyle = '#8C827A';
-      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(`专注陪伴 ${durationMinutes} 分钟 · ${date} · 玩伴日历`, width / 2, 785);
+      ctx.fillStyle = '#A8A29E';
+      ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(`宝宝档案：${babyName} · 玩伴日历成长印记`, width / 2, 872);
 
       if (!isCancelled) {
         setRenderedImageUrl(canvas.toDataURL('image/png'));
@@ -169,7 +204,7 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [activity, durationMinutes, date, babyState, photoUrl, babyName]);
+  }, [activity, durationMinutes, date, currentBabyState, currentPhotoUrl, babyName]);
 
   const handleDownload = () => {
     if (!renderedImageUrl) return;
@@ -185,18 +220,18 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/65 backdrop-blur-md p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-[#FAF7F2] rounded-3xl shadow-2xl border border-[#F1EAE0] overflow-hidden flex flex-col my-auto max-h-[95vh]">
         {/* Top Header */}
-        <div className="px-4 py-3 bg-[#FAF8F5] border-b border-[#F3EDE2] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">📸</span>
-            <h3 className="text-sm font-bold text-stone-900">拍立得陪伴手账</h3>
+        <div className="px-5 py-3.5 bg-[#FAF7F2] border-b border-[#F1EAE0] flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-base">✨</span>
+            <h3 className="text-sm font-bold text-[#45433F]">陪伴完成 · 拍立得手账已生成</h3>
           </div>
           <button
             onClick={onClose}
             className="p-1 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-200/50 transition-colors cursor-pointer"
-            aria-label="关闭"
+            aria-label="返回首页"
           >
             <X className="w-5 h-5" />
           </button>
@@ -206,32 +241,83 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
         <canvas ref={canvasRef} className="hidden" />
 
         {/* Scrollable Preview Area */}
-        <div className="p-4 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-stone-100/50">
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-[#FAF7F2] space-y-3">
+          
+          {/* 可选补充反馈：宝宝状态与拍照快捷栏 */}
+          <div className="w-full bg-white/85 rounded-2xl p-3 border border-[#F1EAE0] shadow-xs space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-[#858078] font-medium px-1">
+              <span>宝宝状态（可随时调整）</span>
+              <span className="text-orange-600 font-semibold">足迹已自动保存</span>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-1.5">
+              {reactionOptions.map((opt) => {
+                const isSelected = currentBabyState === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => {
+                      setCurrentBabyState(opt.key);
+                      if (onUpdateBabyState) onUpdateBabyState(opt.key);
+                    }}
+                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                      isSelected
+                        ? 'bg-orange-500 text-white shadow-xs'
+                        : 'bg-[#FAF7F2] text-stone-600 border border-[#F1EAE0] hover:bg-stone-100'
+                    }`}
+                  >
+                    <span>{opt.emoji}</span>
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 上传照片快捷按钮 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full h-8 rounded-xl bg-amber-50/80 hover:bg-amber-100 text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-amber-200/50"
+            >
+              <Camera className="w-3.5 h-3.5 text-orange-500" />
+              <span>{currentPhotoUrl ? '更换相纸照片' : '📷 上传一张宝宝玩耍照片（选填）'}</span>
+            </button>
+          </div>
+
+          {/* 拍立得预览大图 */}
           {isGenerating ? (
-            <div className="py-16 flex flex-col items-center gap-3">
+            <div className="py-12 flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs text-stone-500">正在绘制暖色拍立得卡片...</p>
+              <p className="text-xs text-stone-500">正在生成北欧手账拍立得...</p>
             </div>
           ) : (
             renderedImageUrl && (
-              <div className="space-y-2.5 w-full flex flex-col items-center">
-                <div className="w-[300px] h-[393px] rounded-2xl overflow-hidden shadow-xl border border-stone-200/80 bg-[#FFFDF9]">
+              <div className="space-y-2 w-full flex flex-col items-center">
+                <div className="w-[280px] h-[402px] rounded-2xl overflow-hidden shadow-xl border border-[#F1EAE0] bg-white">
                   <img
                     src={renderedImageUrl}
-                    alt="拍立得陪伴手账海报"
+                    alt="拍立得成长手账海报"
                     className="w-full h-full object-contain block select-none"
                   />
                 </div>
-                <p className="text-[11px] text-stone-400 text-center">
-                  💡 手机端可长按上方图片直接保存到系统相册
+                <p className="text-[11px] text-[#858078] text-center font-medium">
+                  💡 手机端可长按上方图片直接保存到相册
                 </p>
               </div>
             )
           )}
         </div>
 
-        {/* Bottom Actions */}
-        <div className="p-4 bg-white border-t border-[#F3EDE2] space-y-2 shrink-0">
+        {/* Bottom Actions: 必须保留「保存拍立得」作为主要操作，「返回首页」作为次要操作 */}
+        <div className="p-4 sm:p-5 bg-white border-t border-[#F1EAE0] space-y-2 shrink-0">
           <button
             type="button"
             disabled={isGenerating || !renderedImageUrl}
@@ -245,12 +331,12 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
             {downloadSuccess ? (
               <>
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>✓ 已保存海报到下载相册</span>
+                <span>✓ 已保存拍立得海报到相册</span>
               </>
             ) : (
               <>
                 <Download className="w-4 h-4 shrink-0" />
-                <span>📥 保存海报图片</span>
+                <span>保存拍立得</span>
               </>
             )}
           </button>
@@ -258,9 +344,9 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-full h-9 py-1 bg-transparent border-none text-xs text-stone-400 hover:text-stone-600 transition-colors text-center font-normal cursor-pointer"
+            className="w-full h-10 rounded-2xl bg-stone-100 hover:bg-stone-200/80 text-stone-700 font-bold text-xs flex items-center justify-center gap-1 transition-all cursor-pointer"
           >
-            关闭
+            返回首页
           </button>
         </div>
       </div>
@@ -268,31 +354,35 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
   );
 };
 
-// Helper: draw default theme-matched picture-book scene when user hasn't uploaded photo
-function drawDefaultPhotoPlaceholder(
+
+// Helper: 绘制分类专属北欧温暖主题插画 (Scandinavian Editorial Illustration)
+function drawThemeIllustration(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   w: number,
   h: number,
-  babyName: string,
-  stateMeta: { emoji: string; label: string },
   activity: Activity
 ) {
   const cat = activity.category;
 
-  // 1. 温润绘本渐变底色
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 14);
+  ctx.clip();
+
+  // 1. 北欧暖调渐变背景
   const grad = ctx.createLinearGradient(x, y, x + w, y + h);
-  if (cat.includes('大运动') || cat.includes('运动')) {
-    grad.addColorStop(0, '#FFF7ED');
+  if (cat.includes('大运动')) {
+    grad.addColorStop(0, '#FEF3E2');
     grad.addColorStop(1, '#FED7AA');
   } else if (cat.includes('精细')) {
     grad.addColorStop(0, '#FFF1F2');
     grad.addColorStop(1, '#FECDD3');
-  } else if (cat.includes('感官') || cat.includes('认知')) {
+  } else if (cat.includes('感官')) {
     grad.addColorStop(0, '#F0FDF4');
     grad.addColorStop(1, '#BBF7D0');
-  } else if (cat.includes('社会') || cat.includes('情绪')) {
+  } else if (cat.includes('社会')) {
     grad.addColorStop(0, '#FAF5FF');
     grad.addColorStop(1, '#DDD6FE');
   } else {
@@ -300,228 +390,142 @@ function drawDefaultPhotoPlaceholder(
     grad.addColorStop(0, '#F0F9FF');
     grad.addColorStop(1, '#BAE6FD');
   }
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, 14);
-  ctx.clip();
   ctx.fillStyle = grad;
   ctx.fillRect(x, y, w, h);
 
-  // 2. 顶部胶囊标签
-  const tagW = 160;
-  const tagH = 34;
-  const tagX = x + (w - tagW) / 2;
-  const tagY = y + 26;
-  ctx.fillStyle = '#FFFFFFD9';
-  ctx.beginPath();
-  ctx.roundRect(tagX, tagY, tagW, tagH, 17);
-  ctx.fill();
-  ctx.fillStyle = '#9A3412';
-  ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`✨ ${activity.category}`, tagX + tagW / 2, tagY + 22);
-
-  // 3. 中心专属分类绘本矢量图形（纯 Canvas 2D 绘制，绝无异常字符或三角形沙漏）
   const cx = x + w / 2;
-  const cy = y + 210;
+  const cy = y + h / 2;
 
-  if (cat.includes('大运动') || cat.includes('运动')) {
-    // 暖阳
+  // 2. 根据不同活动类别绘制精美矢量儿童绘本插画
+  if (cat.includes('大运动')) {
+    // 太阳与草地
     ctx.fillStyle = '#FDBA74';
     ctx.beginPath();
-    ctx.arc(cx + 80, cy - 70, 32, 0, Math.PI * 2);
+    ctx.arc(cx + 120, cy - 120, 45, 0, Math.PI * 2);
     ctx.fill();
 
-    // 绿色草坡
     ctx.fillStyle = '#86EFAC';
     ctx.beginPath();
-    ctx.moveTo(cx - 180, cy + 90);
-    ctx.quadraticCurveTo(cx - 30, cy + 20, cx + 180, cy + 70);
-    ctx.lineTo(cx + 180, cy + 120);
-    ctx.lineTo(cx - 180, cy + 120);
+    ctx.moveTo(x - 50, cy + 180);
+    ctx.quadraticCurveTo(cx, cy + 80, x + w + 50, cy + 140);
+    ctx.lineTo(x + w + 50, h + y);
+    ctx.lineTo(x - 50, h + y);
     ctx.closePath();
     ctx.fill();
 
-    // 双脚迈步小脚丫印
+    // 小脚丫印记与运动符号
     ctx.fillStyle = '#EA580C';
     ctx.beginPath();
-    ctx.ellipse(cx - 50, cy + 65, 12, 7, -0.2, 0, Math.PI * 2);
-    ctx.ellipse(cx - 10, cy + 55, 12, 7, 0.2, 0, Math.PI * 2);
-    ctx.ellipse(cx + 30, cy + 60, 12, 7, -0.1, 0, Math.PI * 2);
+    ctx.ellipse(cx - 60, cy + 40, 24, 14, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(cx + 20, cy + 10, 24, 14, 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // 弹跳小皮球
+    // 活跃小球
     ctx.fillStyle = '#F43F5E';
     ctx.beginPath();
-    ctx.arc(cx + 80, cy + 40, 20, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 守护大手与宝宝
-    ctx.fillStyle = '#E8B58D';
-    ctx.beginPath();
-    ctx.arc(cx - 60, cy - 20, 24, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#DFA39A';
-    ctx.beginPath();
-    ctx.arc(cx - 10, cy + 5, 18, 0, Math.PI * 2);
+    ctx.arc(cx + 110, cy - 20, 28, 0, Math.PI * 2);
     ctx.fill();
   } else if (cat.includes('精细')) {
-    // 彩色积木方块
+    // 积木与抓握
     ctx.fillStyle = '#FDA4AF';
     ctx.beginPath();
-    ctx.roundRect(cx - 85, cy + 15, 50, 50, 10);
+    ctx.roundRect(cx - 100, cy + 20, 80, 80, 16);
     ctx.fill();
 
     ctx.fillStyle = '#FBBF24';
     ctx.beginPath();
-    ctx.roundRect(cx - 20, cy - 25, 50, 50, 10);
+    ctx.roundRect(cx - 20, cy - 40, 80, 80, 16);
     ctx.fill();
 
     ctx.fillStyle = '#6EE7B7';
     ctx.beginPath();
-    ctx.roundRect(cx + 45, cy + 15, 50, 50, 10);
+    ctx.roundRect(cx + 40, cy + 40, 70, 70, 16);
     ctx.fill();
 
-    // 积木圆孔
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(cx - 60, cy + 40, 10, 0, Math.PI * 2);
-    ctx.arc(cx + 5, cy, 10, 0, Math.PI * 2);
-    ctx.arc(cx + 70, cy + 40, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 抓握小星光
+    // 星光点缀
     ctx.fillStyle = '#F43F5E';
     ctx.beginPath();
-    ctx.arc(cx, cy - 70, 9, 0, Math.PI * 2);
-    ctx.arc(cx - 16, cy - 60, 6, 0, Math.PI * 2);
-    ctx.arc(cx + 16, cy - 60, 6, 0, Math.PI * 2);
+    ctx.arc(cx - 30, cy - 90, 12, 0, Math.PI * 2);
+    ctx.arc(cx + 50, cy - 70, 8, 0, Math.PI * 2);
     ctx.fill();
-  } else if (cat.includes('感官') || cat.includes('认知')) {
+  } else if (cat.includes('感官')) {
     // 感知波纹同心圆
     ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = 3.5;
-    ctx.setLineDash([8, 8]);
+    ctx.lineWidth = 5;
+    ctx.setLineDash([12, 10]);
     ctx.beginPath();
-    ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 130, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = '#FDBA74';
-    ctx.lineWidth = 3;
-    ctx.setLineDash([6, 6]);
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.arc(cx, cy, 55, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 85, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 中心发声摇铃
+    // 中心摇铃
     ctx.fillStyle = '#F97316';
     ctx.beginPath();
-    ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 45, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.arc(cx - 8, cy - 8, 8, 0, Math.PI * 2);
+    ctx.arc(cx - 12, cy - 12, 12, 0, Math.PI * 2);
     ctx.fill();
-
-    // 点缀星芒
-    ctx.fillStyle = '#FBBF24';
-    ctx.beginPath();
-    ctx.arc(cx - 90, cy - 40, 6, 0, Math.PI * 2);
-    ctx.arc(cx + 90, cy - 30, 8, 0, Math.PI * 2);
-    ctx.arc(cx + 70, cy + 60, 5, 0, Math.PI * 2);
-    ctx.arc(cx - 70, cy + 50, 7, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (cat.includes('社会') || cat.includes('情绪')) {
-    // 温暖微笑亲子
+  } else if (cat.includes('社会')) {
+    // 温暖拥抱
     ctx.fillStyle = '#C7D2FE';
     ctx.beginPath();
-    ctx.arc(cx - 45, cy, 48, 0, Math.PI * 2);
+    ctx.arc(cx - 70, cy + 10, 70, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#FED7AA';
     ctx.beginPath();
-    ctx.arc(cx + 35, cy + 15, 38, 0, Math.PI * 2);
+    ctx.arc(cx + 50, cy + 30, 60, 0, Math.PI * 2);
     ctx.fill();
 
-    // 弯弯笑眼与微笑
-    ctx.strokeStyle = '#4338CA';
-    ctx.lineWidth = 3.5;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(cx - 58, cy - 6, 8, Math.PI, 0);
-    ctx.arc(cx - 32, cy - 6, 8, Math.PI, 0);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#9A3412';
-    ctx.beginPath();
-    ctx.arc(cx + 25, cy + 8, 6, Math.PI, 0);
-    ctx.arc(cx + 45, cy + 8, 6, Math.PI, 0);
-    ctx.stroke();
-
-    // 飘动暖心红心
+    // 飘动红心
     ctx.fillStyle = '#F43F5E';
     ctx.beginPath();
-    ctx.arc(cx - 6, cy - 55, 12, 0, Math.PI * 2);
-    ctx.arc(cx + 10, cy - 55, 12, 0, Math.PI * 2);
+    ctx.arc(cx - 10, cy - 70, 18, 0, Math.PI * 2);
+    ctx.arc(cx + 18, cy - 70, 18, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // 语言交流：翻开的书本与欢快对话
+    // 语言交流：书本与对话
     ctx.fillStyle = '#E9D5FF';
     ctx.beginPath();
-    ctx.roundRect(cx - 90, cy - 30, 85, 75, 10);
-    ctx.roundRect(cx + 5, cy - 30, 85, 75, 10);
+    ctx.roundRect(cx - 130, cy - 40, 120, 110, 14);
+    ctx.roundRect(cx + 10, cy - 40, 120, 110, 14);
     ctx.fill();
-
-    ctx.strokeStyle = '#C084FC';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - 35);
-    ctx.lineTo(cx, cy + 50);
-    ctx.stroke();
 
     // 对话气泡
     ctx.fillStyle = '#FAF5FF';
     ctx.strokeStyle = '#A855F7';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(cx - 50, cy - 80, 100, 38, 16);
+    ctx.roundRect(cx - 90, cy - 120, 180, 56, 22);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#7E22CE';
-    ctx.font = 'bold 20px sans-serif';
+    ctx.font = 'bold 26px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('♪ 咿呀~ ♫', cx, cy - 55);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('♪ 咿呀~ ♫', cx, cy - 92);
   }
 
-  // 4. 下方半透明手账卡片：展示宝宝状态及手记
-  const chipW = w - 48;
-  const chipH = 92;
-  const chipX = x + 24;
-  const chipY = y + h - chipH - 18;
-
+  // 3. 顶部微型分类标签（精致排版）
   ctx.fillStyle = '#FFFFFFE6';
   ctx.beginPath();
-  ctx.roundRect(chipX, chipY, chipW, chipH, 14);
+  ctx.roundRect(cx - 90, y + 24, 180, 38, 19);
   ctx.fill();
-  ctx.strokeStyle = '#F1E8DC';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
 
-  // 宝宝状态小胶囊
-  ctx.fillStyle = '#78350F';
-  ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#45433F';
+  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(`🌟 ${babyName} · ${stateMeta.label}时光`, cx, chipY + 28);
-
-  // 展示活动副标题
-  const noteToShow = activity.subtitle;
-  ctx.fillStyle = '#57534E';
-  ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const displayNoteToShow = noteToShow.length > 28 ? noteToShow.slice(0, 27) + '…' : noteToShow;
-  ctx.fillText(displayNoteToShow, cx, chipY + 62);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(`✨ ${activity.category}`, cx, y + 49);
 
   ctx.restore();
 }

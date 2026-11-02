@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { PlayRecord, Activity } from '../types';
-import { History as HistoryIcon, Calendar, Flame, AlertTriangle, Clock } from 'lucide-react';
+import { PlayRecord } from '../types';
+import { History as HistoryIcon, Calendar, Flame, Clock } from 'lucide-react';
 import { getLocalDateStr } from '../utils/date';
 import { PolaroidModal } from './PolaroidModal';
 import { INITIAL_ACTIVITIES } from '../data/activities';
@@ -16,25 +16,6 @@ interface HistoryViewProps {
   onSelectActivityById: (activityId: string) => void;
   onNavigateToToday?: () => void;
   onUpdateRecordNotes?: (recordId: string, newNotes: string) => void;
-}
-
-// 默认套话占位文案清单，此类文案在无用户个性化输入时视为无手记
-const DEFAULT_PLACEHOLDER_NOTES = [
-  '和宝宝度过了专注而温暖的专属亲子时光，在欢声笑语中留下美好成长片段～',
-  '和宝宝度过了专注而温暖的专属亲子时光',
-  '无备注',
-  '暂无手记',
-  '暂无备注',
-];
-
-export function hasMeaningfulNote(notes?: string | null): boolean {
-  if (!notes) return false;
-  const trimmed = notes.trim();
-  if (!trimmed) return false;
-  if (DEFAULT_PLACEHOLDER_NOTES.some((p) => trimmed === p)) {
-    return false;
-  }
-  return true;
 }
 
 // 格式化手账日期为亲切的 "10月28日"
@@ -57,11 +38,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   onClearHistory,
   onSelectActivityById,
   onNavigateToToday,
-  onUpdateRecordNotes,
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [editingRecord, setEditingRecord] = useState<PlayRecord | null>(null);
-  const [noteInput, setNoteInput] = useState('');
   const [polaroidRecord, setPolaroidRecord] = useState<PlayRecord | null>(null);
 
   const totalPlayTime = records.reduce((acc, curr) => acc + curr.durationMinutes, 0);
@@ -115,39 +93,35 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     }
   }
 
-
-
   const filteredRecords = selectedDate
     ? records.filter((r) => r.date === selectedDate)
     : records;
 
-  const reactionEmojiMap: Record<string, string> = {
-    '开心专注': '🥰',
-    '平静探索': '🌱',
-    '容易疲劳': '😴',
-    '略显抗拒': '🐥',
-  };
+  // Group filtered records by date
+  const groupedRecords = filteredRecords.reduce((acc, rec) => {
+    const d = rec.date;
+    if (!acc[d]) acc[d] = [];
+    acc[d].push(rec);
+    return acc;
+  }, {} as Record<string, PlayRecord[]>);
 
-  const handleOpenNoteModal = (record: PlayRecord) => {
-    setEditingRecord(record);
-    const existing = hasMeaningfulNote(record.notes) ? record.notes.trim() : '';
-    setNoteInput(existing);
-  };
+  const sortedDates = Object.keys(groupedRecords).sort((a, b) => b.localeCompare(a));
 
-  const handleSaveNoteModal = () => {
-    if (editingRecord) {
-      if (onUpdateRecordNotes) {
-        onUpdateRecordNotes(editingRecord.id, noteInput.trim());
-      }
-      setEditingRecord(null);
-    }
+  const reactionEmojiMap: Record<string, { emoji: string; label: string }> = {
+    '开心专注': { emoji: '😍', label: '很喜欢' },
+    '平静探索': { emoji: '😊', label: '挺开心' },
+    '容易疲劳': { emoji: '🥱', label: '累了' },
+    '略显抗拒': { emoji: '😣', label: '不太感兴趣' },
+    '很喜欢': { emoji: '😍', label: '很喜欢' },
+    '挺开心': { emoji: '😊', label: '挺开心' },
+    '一般': { emoji: '😐', label: '一般' },
+    '不太感兴趣': { emoji: '😣', label: '不太感兴趣' },
   };
 
   return (
     <div className="space-y-4 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-3xl mx-auto pt-1">
-      {/* 1. Two-in-One Compact Weekly Desk Calendar Card (周打卡台历卡 - 温暖手账时光印记) */}
+      {/* 1. 温暖台历周视图卡片 */}
       <div className="bg-white rounded-2xl p-4 border border-amber-100/60 shadow-sm space-y-3">
-        {/* Top bar of desk calendar card: Streak & Total Stats */}
         <div className="flex items-center justify-between text-xs pb-2 border-b border-amber-100/50">
           <div className="flex items-center gap-1.5 font-bold text-orange-600">
             <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
@@ -165,7 +139,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           </div>
         </div>
 
-        {/* Bottom part of desk calendar card: 7-day grid (Mon-Sun) with click filter */}
         <div className="grid grid-cols-7 gap-1.5">
           {weekDays.map((wd) => {
             const isSelected = selectedDate === wd.dateStr;
@@ -213,16 +186,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
       </div>
 
-      {/* 2. History Footprint Stream（温暖亲子手账时光轴） */}
-      <div className="space-y-3">
+      {/* 2. 时间轴手账流（Timeline Scrapbook Flow） */}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-[#786F6A] uppercase tracking-wider flex items-center gap-1.5">
             {selectedDate ? (
               <>
-                <span className="text-orange-600">{selectedDate}</span> 亲子手账
+                <span className="text-orange-600">{selectedDate}</span> 陪伴足迹
               </>
             ) : (
-              '成长手账印记'
+              '成长时间轴手账'
             )}
           </h3>
           {selectedDate && (
@@ -239,8 +212,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           <div className="text-center py-10 bg-white rounded-2xl border border-amber-100/50 p-6 shadow-sm space-y-3.5">
             <HistoryIcon className="w-10 h-10 text-[#786F6A]/40 mx-auto" />
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-[#2C221E]">暂无陪玩记录</h3>
-              <p className="text-xs text-[#786F6A]">真正陪孩子玩一会儿，在这里留下珍贵的成长片段吧</p>
+              <h3 className="text-sm font-bold text-[#2C221E]">暂无陪伴足迹</h3>
+              <p className="text-xs text-[#786F6A]">和宝宝玩一会儿，在这里留下轻松的亲子陪伴瞬间吧</p>
             </div>
             {onNavigateToToday && (
               <div className="pt-1">
@@ -256,136 +229,102 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         ) : filteredRecords.length === 0 ? (
           <div className="text-center py-10 bg-white rounded-2xl border border-amber-100/50 p-6 shadow-sm space-y-2">
             <Calendar className="w-10 h-10 text-orange-500/60 mx-auto mb-1" />
-            <h3 className="text-sm font-bold text-[#2C221E]">这天还没有陪玩记录，去完成今天的陪伴吧~</h3>
-            <p className="text-xs text-[#786F6A]">点击上方其他日期或点此返回查看全部手账。</p>
+            <h3 className="text-sm font-bold text-[#2C221E]">这天还没有陪伴足迹~</h3>
+            <p className="text-xs text-[#786F6A]">点击上方其他日期或点此返回查看全部足迹。</p>
             <div className="pt-2">
               <button
                 onClick={() => setSelectedDate(null)}
                 className="px-4 py-2 rounded-2xl bg-orange-100 text-orange-800 text-xs font-bold hover:bg-orange-200 transition-colors shadow-xs"
               >
-                查看全部手账
+                查看全部足迹
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-2.5">
-            {filteredRecords.map((rec) => {
-              const hasRealNote = hasMeaningfulNote(rec.notes);
-              const emoji = reactionEmojiMap[rec.reaction] || '🥰';
-
-              // 统一马卡龙领域胶囊色
-              const catClass =
-                rec.category === '大运动'
-                  ? 'bg-orange-50 text-orange-700 border-orange-200/60'
-                  : rec.category === '精细动作'
-                  ? 'bg-amber-50 text-amber-800 border-amber-200/60'
-                  : rec.category === '感官认知'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
-                  : rec.category === '社会情绪'
-                  ? 'bg-purple-50 text-purple-700 border-purple-200/60'
-                  : 'bg-sky-50 text-sky-700 border-sky-200/60';
+          <div className="space-y-6">
+            {sortedDates.map((dateStr) => {
+              const dayRecords = groupedRecords[dateStr];
+              const dateHeader = dateStr === todayStr ? `今天 · ${formatRecordDate(dateStr)}` : formatRecordDate(dateStr);
 
               return (
-                <div
-                  key={rec.id}
-                  onClick={() => onSelectActivityById(rec.activityId)}
-                  className="bg-white rounded-2xl p-3.5 shadow-xs border border-amber-100/50 mb-2.5 group cursor-pointer hover:shadow-sm hover:border-orange-200/80 transition-all active:scale-[0.99]"
-                >
-                  {/* 卡片主体：左侧手账微徽章 (w-12 h-12) + 右侧内容 */}
-                  <div className="flex items-center gap-3">
-                    {/* 左侧圆润温暖的亲子手账微徽章 */}
-                    <div className="rounded-2xl w-12 h-12 bg-amber-100/60 flex items-center justify-center text-amber-800 text-lg shrink-0 group-hover:scale-105 transition-transform shadow-xs">
-                      <span className="select-none">{emoji}</span>
-                    </div>
-
-                    {/* 右侧核心信息 */}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      {/* 顶行：标题 + 右上角优雅克制的时间手账印记 */}
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-sm font-bold text-stone-900 group-hover:text-orange-600 transition-colors truncate">
-                          {rec.activityTitle}
-                        </h4>
-                        <span className="text-xs text-stone-400 font-medium shrink-0 whitespace-nowrap">
-                          {formatRecordDate(rec.date)} · {rec.durationMinutes}分钟
-                        </span>
-                      </div>
-
-                      {/* 次行：领域微胶囊 + 宝宝状态反馈徽章 + 右侧无备注时的补充手记次级引导 */}
-                      <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border shrink-0 ${catClass}`}>
-                            {rec.category}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50/80 text-amber-800 border border-amber-100 shrink-0">
-                            {rec.reaction}
-                          </span>
-                          {rec.difficulty && (
-                            <span className="px-2 py-0.5 rounded-full text-[11px] text-stone-500 bg-stone-100/70 border border-stone-200/50 shrink-0">
-                              {rec.difficulty}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1.5 ml-auto">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPolaroidRecord(rec);
-                            }}
-                            className="text-[11px] text-orange-600 hover:text-orange-700 font-semibold inline-flex items-center gap-1 py-0.5 px-2 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
-                            title="生成拍立得手账海报"
-                          >
-                            <span>📸 拍立得海报</span>
-                          </button>
-
-                          {!hasRealNote && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenNoteModal(rec);
-                              }}
-                              className="text-[11px] text-stone-400 hover:text-amber-800 transition-colors inline-flex items-center gap-1 py-0.5 px-1.5 rounded-md hover:bg-amber-50/80 cursor-pointer"
-                              title="为这次陪伴写下简短手记"
-                            >
-                              <span>✏️ 补写手记</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                <div key={dateStr} className="space-y-3">
+                  {/* 日期分组标题 */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-400" />
+                    <h4 className="text-xs font-bold text-stone-700">{dateHeader}</h4>
                   </div>
 
-                  {/* 拍照记录缩略图 */}
-                  {rec.photoUrl && (
-                    <div className="mt-2.5">
-                      <img
-                        src={rec.photoUrl}
-                        alt="亲子陪伴瞬间"
-                        className="w-20 h-20 rounded-xl object-cover border border-amber-200/60 shadow-xs"
-                      />
-                    </div>
-                  )}
+                  {/* 竖向手账虚线时间轴容器 */}
+                  <div className="border-l-2 border-dashed border-amber-200 ml-4 pl-4 space-y-3">
+                    {dayRecords.map((rec) => {
+                      const reactionInfo = reactionEmojiMap[rec.reaction] || { emoji: '🥰', label: rec.reaction || '很喜欢' };
 
-                  {/* 手账感亲子随笔气泡（仅在有真实输入备注时展示）：奶黄拍立得便签条 */}
-                  {hasRealNote && (
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenNoteModal(rec);
-                      }}
-                      className="bg-amber-50/80 rounded-xl p-2.5 text-xs text-stone-600 border border-amber-100/50 leading-relaxed mt-2.5 font-sans relative group/note cursor-pointer hover:bg-amber-100/60 transition-colors"
-                      title="点击编辑手记"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="flex-1">“{rec.notes}”</span>
-                        <span className="text-[10px] text-stone-400 group-hover/note:text-amber-800 transition-colors shrink-0 flex items-center gap-0.5 pt-0.5">
-                          ✏️ 编辑
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                      // 统一马卡龙领域胶囊色
+                      const catClass =
+                        rec.category === '大运动'
+                          ? 'bg-orange-50 text-orange-700 border-orange-200/60'
+                          : rec.category === '精细动作'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200/60'
+                          : rec.category === '感官认知'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
+                          : rec.category === '社会情绪'
+                          ? 'bg-purple-50 text-purple-700 border-purple-200/60'
+                          : 'bg-sky-50 text-sky-700 border-sky-200/60';
+
+                      return (
+                        <div
+                          key={rec.id}
+                          onClick={() => setPolaroidRecord(rec)}
+                          className="bg-white rounded-2xl p-4 shadow-xs border border-amber-100/60 group cursor-pointer hover:shadow-md hover:border-orange-300 transition-all active:scale-[0.99] relative flex items-center justify-between gap-3"
+                        >
+                          {/* 时间轴左侧时间点装饰 */}
+                          <div className="absolute -left-[21px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-orange-400 border-2 border-white shadow-xs" />
+
+                          {/* 左侧：无照片时展示表情，有照片时作为卡片主体 */}
+                          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                            {!rec.photoUrl && (
+                              <div className="rounded-2xl w-12 h-12 bg-amber-100/60 flex items-center justify-center text-amber-800 text-lg shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                                <span className="select-none">{reactionInfo.emoji}</span>
+                              </div>
+                            )}
+
+                            {/* 中间核心信息 */}
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <h5 className="text-sm font-bold text-stone-900 group-hover:text-orange-600 transition-colors truncate">
+                                  {rec.activityTitle}
+                                </h5>
+                                <span className="text-xs text-stone-400 font-medium shrink-0 whitespace-nowrap font-mono">
+                                  {rec.durationMinutes}分钟
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border shrink-0 ${catClass}`}>
+                                  {rec.category}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50/80 text-amber-800 border border-amber-100 shrink-0 flex items-center gap-1">
+                                  <span>{reactionInfo.emoji}</span>
+                                  <span>{reactionInfo.label}</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 右侧：若有打卡照片，直接渲染 w-14 h-14 rounded-xl object-cover 照片缩略图 */}
+                          {rec.photoUrl && (
+                            <div className="shrink-0">
+                              <img
+                                src={rec.photoUrl}
+                                alt="亲子陪伴打卡照片"
+                                className="w-14 h-14 rounded-xl object-cover shadow-xs border border-amber-200/80 group-hover:scale-105 transition-transform"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
@@ -393,103 +332,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         )}
       </div>
 
-
-
-      {/* 补充/修改手记弹窗 */}
-      {editingRecord && (
-        <div
-          onClick={() => setEditingRecord(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl border border-amber-100 space-y-4 animate-in zoom-in-95 duration-200"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-800 text-sm shadow-xs">
-                  ✏️
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-stone-900">
-                    {hasMeaningfulNote(editingRecord.notes) ? '编辑亲子手记' : '补充亲子手记'}
-                  </h3>
-                  <p className="text-[11px] text-stone-400 truncate max-w-[200px]">
-                    {editingRecord.activityTitle} · {formatRecordDate(editingRecord.date)}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingRecord(null)}
-                className="w-7 h-7 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 cursor-pointer transition-colors text-xs font-semibold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Input area */}
-            <div className="space-y-2.5">
-              <textarea
-                value={noteInput}
-                onChange={(e) => setNoteInput(e.target.value)}
-                placeholder="记录宝宝当下的可爱反应、新掌握的动作或亲子温馨瞬间（如：笑出声、抓握很有力、对声音很敏感...）"
-                rows={4}
-                autoFocus
-                className="w-full p-3 text-xs text-stone-800 bg-[#FAF8F5] rounded-2xl border border-stone-200 focus:outline-none focus:border-amber-400 focus:bg-white transition-all resize-none leading-relaxed"
-              />
-
-              {/* 快捷灵感词标签 */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] text-stone-400 font-medium">快捷灵感词：</span>
-                <div className="flex flex-wrap gap-1">
-                  {[
-                    '笑得特别开心 🥰',
-                    '好奇东张西望 👀',
-                    '专注抓握很久 🤲',
-                    '听到声音立刻转头 🎵',
-                    '配合度超高 🌟',
-                  ].map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => {
-                        setNoteInput((prev) => {
-                          const trimmed = prev.trim();
-                          return trimmed ? `${trimmed}，${tag}` : tag;
-                        });
-                      }}
-                      className="text-[10px] px-2.5 py-1 rounded-full bg-amber-50/80 text-amber-800 hover:bg-amber-100 transition-colors border border-amber-200/50 cursor-pointer"
-                    >
-                      +{tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="pt-1 flex flex-col">
-              <button
-                type="button"
-                onClick={handleSaveNoteModal}
-                className="w-full h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-xs font-bold text-white shadow-md shadow-orange-500/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                ✓ 保存手记
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingRecord(null)}
-                className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide cursor-pointer flex items-center justify-center mt-1"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Polaroid Modal for Historical Record */}
+      {/* Polaroid Modal for Footprint Record View & Save */}
       {polaroidRecord && (() => {
         const matchingAct =
           INITIAL_ACTIVITIES.find((a) => a.id === polaroidRecord.activityId) || {
@@ -508,7 +351,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             developmentalDomain: polaroidRecord.category,
             safetyReminder: '',
             stopCondition: '',
-            source: '家庭日常陪伴',
+            source: '日常陪伴',
             isReviewed: true,
             accentColor: 'apricot',
           };

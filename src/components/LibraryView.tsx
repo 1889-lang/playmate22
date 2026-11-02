@@ -1,11 +1,6 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState } from 'react';
 import { Activity, BabyProfile } from '../types';
-import { Search, Lightbulb, ChevronRight } from 'lucide-react';
+import { Lightbulb, ChevronRight } from 'lucide-react';
 import { ActivityItemCard } from './ActivityItemCard';
 import { getEffectiveBabyMonths } from '../utils/date';
 import { isActivityReviewed, parseAgeRange } from '../utils/activity';
@@ -27,7 +22,6 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('全部');
   const [selectedAgeBracket, setSelectedAgeBracket] = useState<string>('matched');
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [showExpertTip, setShowExpertTip] = useState(false);
 
   const categories: string[] = ['全部', '大运动', '精细动作', '感官认知', '社会情绪', '语言交流'];
@@ -55,13 +49,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
     // 1. 分类匹配
     const matchesCategory = selectedCategory === '全部' || act.category === selectedCategory;
 
-    // 2. 关键词匹配
-    const matchesSearch =
-      act.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      act.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      act.materials.some((m) => m.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    // 3. 严格月龄过滤（统一由 parseAgeRange 处理）
+    // 2. 严格月龄过滤（统一由 parseAgeRange 处理）
     const { min, max } = parseAgeRange(act.ageRange);
     let matchesAge = true;
     if (selectedAgeBracket === 'matched') {
@@ -79,7 +67,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
       matchesAge = min >= 12 || max >= 12;
     }
 
-    return matchesCategory && matchesSearch && matchesAge;
+    return matchesCategory && matchesAge;
   });
 
   const handleActivityClick = (act: Activity) => {
@@ -88,19 +76,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
 
   return (
     <div className="space-y-3.5 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-4xl mx-auto">
-      {/* 1. 顶部全宽搜索栏、月龄过滤与分类 Tabs */}
+      {/* 1. 月龄过滤与分类 Tabs */}
       <div className="space-y-2.5">
-        <div className="relative w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#786F6A]/60" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索活动名称、所需材料或技能..."
-            className="w-full h-11 pl-10 pr-4 rounded-2xl bg-white border border-[#F3EDE2] text-xs text-[#2C221E] placeholder-[#786F6A]/60 focus:outline-none focus:border-orange-400 shadow-xs"
-          />
-        </div>
-
         {/* 月龄过滤胶囊栏 */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
           {ageBrackets.map((bracket) => (
@@ -167,7 +144,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
           <div className="text-2xl">🌱</div>
           <p className="text-xs font-bold text-stone-700">未找到符合条件的已审核玩法</p>
           <p className="text-[11px] text-[#786F6A] max-w-sm mx-auto leading-relaxed">
-            所有亲子互动均执行严格审核准入，高风险或未复核玩法已安全隔离。您可以尝试调整分类或搜索关键词。
+            所有亲子互动均执行严格审核准入，高风险或未复核玩法已安全隔离。您可以尝试调整分类。
           </p>
         </div>
       ) : (

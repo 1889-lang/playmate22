@@ -27,7 +27,6 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showThresholdModal, setShowThresholdModal] = useState(false);
   const timerRef = useRef<any>(null);
 
   // 停止语音朗读的辅助函数
@@ -109,19 +108,7 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
     stopSpeech();
     if (timerRef.current) clearInterval(timerRef.current);
     const durationMins = Math.max(1, Math.round(elapsedSeconds / 60));
-    const isCompleted = checkIsCompletedByDuration(elapsedSeconds, activity.duration);
-
-    if (isCompleted) {
-      onFinishPlay(activity, durationMins, 'completed');
-    } else {
-      setShowThresholdModal(true);
-    }
-  };
-
-  const handleConfirmInterrupted = () => {
-    setShowThresholdModal(false);
-    const durationMins = Math.max(1, Math.round(elapsedSeconds / 60));
-    onFinishPlay(activity, durationMins, 'interrupted');
+    onFinishPlay(activity, durationMins, 'completed');
   };
 
   const handleSaveProgress = () => {
@@ -219,21 +206,8 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200/60 whitespace-nowrap flex-shrink-0">
               {activity.category}
             </span>
-            <div className={`flex items-center justify-center min-w-[90px] px-2.5 py-1 rounded-xl border border-[#F3EDE2] shadow-xs whitespace-nowrap flex-shrink-0 transition-all ${isPaused ? 'bg-amber-50/80 border-amber-200/70' : 'bg-white'}`}>
-              <button
-                onClick={() => setIsPaused(!isPaused)}
-                className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#2C221E] hover:text-orange-600 cursor-pointer w-full"
-                title={isPaused ? "点击继续计时" : "点击暂停计时"}
-              >
-                {isPaused ? (
-                  <Play className="w-3.5 h-3.5 text-amber-600 fill-amber-600 flex-shrink-0" />
-                ) : (
-                  <Pause className="w-3.5 h-3.5 text-orange-500 fill-orange-500 flex-shrink-0" />
-                )}
-                <span className={`font-mono transition-opacity ${isPaused ? 'opacity-80 text-amber-900 animate-pulse' : ''}`}>
-                  {formatTimer(elapsedSeconds)}
-                </span>
-              </button>
+            <div className="px-3 py-1 rounded-xl bg-amber-50/80 border border-amber-200/60 text-xs font-semibold text-amber-900 flex items-center gap-1.5 whitespace-nowrap">
+              <span>⏱️ 陪伴互动中</span>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -329,7 +303,7 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
             onClick={handleComplete}
             className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-md shadow-orange-500/20 active:scale-[0.99] transition-all cursor-pointer"
           >
-            🎉 完成陪伴，去打卡
+            🏁 结束陪伴，记录足迹
           </button>
           
           <button
@@ -343,42 +317,6 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
         {/* 抽屉指南组件接入 */}
         {showGuide && (
           <TextGuideDrawer activity={activity} onClose={() => setShowGuide(false)} />
-        )}
-
-        {/* 未达到建议时长 80% 门槛提示弹窗 */}
-        {showThresholdModal && (
-          <div className="absolute inset-0 z-60 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="w-full max-w-xs bg-white rounded-3xl p-5 shadow-2xl border border-stone-200 space-y-4 animate-in zoom-in-95 duration-150">
-              <div className="flex items-center gap-2 text-amber-600">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <h4 className="text-sm font-bold text-stone-900">未达到完成建议门槛</h4>
-              </div>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                当前陪伴时间为 <span className="font-bold text-stone-900">{Math.floor(elapsedSeconds / 60)}分{elapsedSeconds % 60}秒</span>（活动建议时长：<span className="font-bold text-stone-900">{activity.duration}</span>，需达到 80% 门槛方可打卡完成）。
-              </p>
-              <div className="space-y-2 pt-1">
-                <button
-                  onClick={() => {
-                    setShowThresholdModal(false);
-                    if (!isPaused) {
-                      timerRef.current = setInterval(() => {
-                        setElapsedSeconds((prev) => prev + 1);
-                      }, 1000);
-                    }
-                  }}
-                  className="w-full h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold shadow-md cursor-pointer transition-all"
-                >
-                  继续陪玩
-                </button>
-                <button
-                  onClick={handleConfirmInterrupted}
-                  className="w-full h-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium cursor-pointer transition-all"
-                >
-                  保存实际时长并结束（记录为片刻陪伴）
-                </button>
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>
