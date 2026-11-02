@@ -17,13 +17,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
   return (
     <header className="sticky top-0 z-30 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#F3EDE2] px-4 py-3 flex items-center justify-between shadow-[0_4px_20px_-4px_rgba(44,34,30,0.03)]">
       <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onSelectTab('today')}>
-        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
-          <Calendar className="w-4 h-4" />
+        <div className="w-9 h-9 rounded-2xl overflow-hidden shadow-md shadow-orange-500/20 border border-orange-200/50 shrink-0 bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
+          <img src="/icon.svg" alt="玩伴日历 Logo" className="w-full h-full object-cover" />
         </div>
         <div>
           <h1 className="text-sm font-bold text-[#2C221E] tracking-tight flex items-center gap-1.5">
             玩伴日历 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">V1.0</span>
           </h1>
+          <p className="text-xs text-stone-500/80 font-normal mt-0.5 tracking-tight">
+            每天轻松找玩法 · 真正陪孩子玩一会儿
+          </p>
         </div>
       </div>
 

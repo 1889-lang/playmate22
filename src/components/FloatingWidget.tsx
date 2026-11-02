@@ -4,14 +4,22 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BabyProfile } from '../types';
-import { Baby } from 'lucide-react';
+import { Activity, BabyProfile } from '../types';
+import { Baby, Play, Pause } from 'lucide-react';
+
+export interface PausedSession {
+  activity: Activity;
+  elapsedSeconds: number;
+  updatedAt: number;
+}
 
 interface FloatingWidgetProps {
   isVip?: boolean | string | number | null;
   profile?: BabyProfile | null;
   todayTotalMinutes?: number;
   onClick?: () => void;
+  pausedSession?: PausedSession | null;
+  onResumeSession?: (session: PausedSession) => void;
 }
 
 /**
@@ -84,6 +92,8 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
   profile,
   todayTotalMinutes = 0,
   onClick,
+  pausedSession,
+  onResumeSession,
 }) => {
   const [effectiveIsVip, setEffectiveIsVip] = useState<boolean>(() =>
     resolveVipStatus(propIsVip, profile)
@@ -123,21 +133,39 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
     };
   }, [checkStatus]);
 
-  // 当用户未录入婴儿档案时，严禁渲染悬浮挂件，避免未建档却有头像的穿帮感
-  if (!profile) {
+  // 当用户未录入婴儿档案且没有暂存的会话时，不渲染悬浮挂件
+  if (!profile && !pausedSession) {
     return null;
   }
 
+  const formatTimer = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const remainingSecs = sec % 60;
+    return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+  };
+
+  const handleClick = () => {
+    if (pausedSession && onResumeSession) {
+      onResumeSession(pausedSession);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
       className={`fixed right-4 bottom-20 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer transition-all hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
-        effectiveIsVip
+        pausedSession
+          ? 'bg-amber-50/95 backdrop-blur-md shadow-[0_4px_16px_rgba(245,158,11,0.3)] border-2 border-amber-400 ring-2 ring-amber-400/20'
+          : effectiveIsVip
           ? 'bg-gradient-to-r from-amber-50/95 via-orange-50/95 to-amber-50/90 backdrop-blur-md shadow-[0_4px_16px_rgba(245,158,11,0.25)] border border-amber-300/80 ring-1 ring-amber-300/40'
           : 'bg-white/95 backdrop-blur-md shadow-[0_4px_16px_rgba(251,146,60,0.18)] border border-orange-100/80'
       }`}
       title={
-        profile
+        pausedSession
+          ? `【待继续】${pausedSession.activity.title}（已玩 ${formatTimer(pausedSession.elapsedSeconds)}）· 点击继续`
+          : profile
           ? `${profile.name}的成长档案 · ${effectiveIsVip ? '👑 VIP尊享中' : '点击查看'}`
           : '点击查看宝宝档案与会员状态'
       }
@@ -160,26 +188,44 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
         {/* 内层头像容器：裁切为正圆形 */}
         <div
           className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center font-bold shadow-xs transition-colors ${
-            effectiveIsVip
+            pausedSession
+              ? 'bg-amber-500 text-white'
+              : effectiveIsVip
               ? 'bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-300/90 text-amber-800'
               : 'bg-emerald-100 border border-emerald-300 text-emerald-800'
           }`}
         >
-          <Baby
-            className={`w-4 h-4 ${
-              effectiveIsVip ? 'text-amber-700' : 'text-emerald-700'
-            }`}
-          />
+          {pausedSession ? (
+            <Play className="w-3.5 h-3.5 fill-white text-white ml-0.5" />
+          ) : (
+            <Baby
+              className={`w-4 h-4 ${
+                effectiveIsVip ? 'text-amber-700' : 'text-emerald-700'
+              }`}
+            />
+          )}
         </div>
       </div>
 
-      {/* 陪伴计时显示 */}
-      <div className="flex items-center gap-1.5 pr-0.5">
-        <span className="text-xs">⏰</span>
-        <span className="text-xs font-extrabold text-orange-600 font-mono">
-          {todayTotalMinutes}m
-        </span>
-      </div>
+      {/* 陪伴计时显示：若有暂存会话展示待继续时间，否则展示今日累计 */}
+      {pausedSession ? (
+        <div className="flex items-center gap-1.5 pr-0.5">
+          <div className="flex items-center gap-1 font-mono text-xs font-bold text-amber-900">
+            <span className="text-[10px] text-amber-600">⏸</span>
+            <span>{formatTimer(pausedSession.elapsedSeconds)}</span>
+          </div>
+          <span className="text-[10px] bg-amber-200/80 text-amber-900 font-semibold px-1.5 py-0.5 rounded-full leading-none">
+            继续
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5 pr-0.5">
+          <span className="text-xs">⏰</span>
+          <span className="text-xs font-extrabold text-orange-600 font-mono">
+            {todayTotalMinutes}m
+          </span>
+        </div>
+      )}
     </div>
   );
 };

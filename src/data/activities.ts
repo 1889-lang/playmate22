@@ -23,6 +23,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '当宝宝出现揉眼睛、烦躁或扭头不看时立即停止。',
     source: '早期感官游戏指导手册（第四版）',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'sage'
   },
   {
@@ -40,13 +41,15 @@ export const INITIAL_ACTIVITIES: Activity[] = [
       { stepNumber: 3, title: '视线互动', description: '在宝宝前方放置色彩鲜艳的玩具吸引注意力。' }
     ],
     parentPrompt: '“小飞机起飞啦！飞向蓝天，宝宝看前方有什么呀？”',
-    observationTips: ['观察宝宝头部抬起的持久度和颈椎稳定性', '注意手臂是否有支撑动作'],
+    observationTips: ['观察宝宝抬头时好奇看向四周的可爱神情', '感受手臂自然支撑带来的小成就感'],
     alternativePlay: '可以在垫子上放置旋转音乐铃辅助吸引。',
     developmentalDomain: '大运动及核心平衡',
     safetyReminder: '切勿动作过猛，避免宝宝头部无支撑下垂或突然滑落。',
     stopCondition: '宝宝双臂出现无力支撑或开始哭闹时立即停止。',
     source: '亲子大运动训练指南',
-    isReviewed: true,
+    isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '涉及双手托举婴儿腹部离地悬空飞翔，存在身体施力与跌落安全隐患，待儿科运动发育专业人员复核。',
     accentColor: 'apricot'
   },
   {
@@ -71,6 +74,8 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝对触觉产生抗拒或注意力分散时结束。',
     source: '社区亲子工作坊分享',
     isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '触觉盒包含棉花与粗麻纤维，口欲期婴儿易扯落放入口中导致误吞窒息，待材料安全性审核。',
     accentColor: 'coral'
   },
   {
@@ -95,6 +100,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝对镜子失去兴趣或表现疲惫时停止。',
     source: '幼儿心理发展研究指引',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'blue'
   },
   {
@@ -119,6 +125,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝出现急躁或不耐烦时立即停止。',
     source: '皮亚杰认知发展观察法',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'sage'
   },
   {
@@ -143,6 +150,8 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝视线涣散或想睡觉时停止。',
     source: '民间育儿经验汇编',
     isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '涉及吸水彩球（水宝宝）与强力胶自制瓶口，存在极高误吞膨胀窒息及化学胶水接触风险，已安全隔离。',
     accentColor: 'apricot'
   },
   {
@@ -167,6 +176,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '听到过大噪音宝宝受到惊吓或哭闹时停止。',
     source: '音乐启蒙游戏教程',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'coral'
   },
   {
@@ -191,6 +201,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝将球扔开且对捡球失去兴趣时结束。',
     source: '婴儿精细动作训练指南',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'blue'
   },
   {
@@ -213,8 +224,9 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     developmentalDomain: '言语前沟通与社交轮流意识',
     safetyReminder: '保持温柔的声调，避免高分贝尖叫惊吓宝宝。',
     stopCondition: '宝宝开始自顾自玩别的或注意力转移时停止。',
-    source: '儿童语言发展早期干预指引',
+    source: '家庭趣味发音互动小锦囊',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'sage'
   },
   {
@@ -239,6 +251,8 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝独坐不稳开始歪倒时应立即扶住并停止。',
     source: '婴幼儿体能发育促进方案',
     isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '涉及独坐前倾重心转移，待平衡与防磕碰安全标准复核。',
     accentColor: 'apricot'
   },
   {
@@ -263,6 +277,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝表现困倦时停止。',
     source: '早期阅读与听觉启蒙',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'coral'
   },
   {
@@ -287,6 +302,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝把所有布巾拉完且失去兴趣时停止。',
     source: '蒙台梭利早期精细动作游戏',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'blue'
   },
   {
@@ -311,6 +327,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝翻身爬开或烦躁时停止。',
     source: '婴儿身体感知训练',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'sage'
   },
   {
@@ -335,6 +352,8 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝打哈欠或想睡觉时停止。',
     source: '婴幼儿心理健康绘本指引',
     isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '布偶毛绒纤维及装饰眼珠需经小零件拉力测试，待实物安全审核。',
     accentColor: 'apricot'
   },
   {
@@ -358,7 +377,9 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     safetyReminder: '木珠或小球尺寸必须足够大（大于3厘米），严防误吞。',
     stopCondition: '宝宝将杯子砸向地面或情绪烦躁时停止。',
     source: '早期认知启蒙实验记录',
-    isReviewed: true,
+    isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '木珠与小球存在严重气道异物梗阻与误吞窒息风险，不能仅凭文字说明保障安全，待专业安全审核隔离。',
     accentColor: 'coral'
   },
   {
@@ -383,6 +404,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝开始啃咬积木且不愿玩搬运时停止。',
     source: '儿童早期发展活动精选',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'blue'
   },
   {
@@ -400,13 +422,15 @@ export const INITIAL_ACTIVITIES: Activity[] = [
       { stepNumber: 3, title: '享受律动', description: '观察宝宝身体随节奏放松的反应。' }
     ],
     parentPrompt: '“听听这首好听的音乐，跟妈妈一起摇呀摇~”',
-    observationTips: ['观察宝宝是否对音乐表现出微笑、踢腿或挥手等兴奋反应', '心率平稳'],
+    observationTips: ['观察宝宝是否对音乐表现出微笑、踢腿或挥手等开心反应', '享受轻松欢快的音乐律动氛围'],
     alternativePlay: '可以轻声清唱摇篮曲。',
     developmentalDomain: '音乐感知与情绪舒缓',
     safetyReminder: '音响音量不宜过大，保护宝宝听力。',
     stopCondition: '宝宝表现出烦躁或想睡觉时关闭音乐。',
-    source: '亲子音乐治疗与感知工作坊',
+    source: '亲子音乐律动与听觉游戏',
     isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '待音量分贝控制标准与摇晃幅度规范复核。',
     accentColor: 'sage'
   },
   {
@@ -431,6 +455,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     stopCondition: '宝宝对手势失去兴趣时停止。',
     source: '婴幼儿社会性互动指南',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'apricot'
   },
   {
@@ -448,13 +473,15 @@ export const INITIAL_ACTIVITIES: Activity[] = [
       { stepNumber: 3, title: '观察反应', description: '观察宝宝是表现出愉悦、好奇还是皱眉。' }
     ],
     parentPrompt: '“闻一闻，好清香的橘子味道呀，香不香？”',
-    observationTips: ['严格观察宝宝呼吸道有无打喷嚏、过敏或呼吸急促反应', '嗅觉灵敏度'],
+    observationTips: ['闻一闻天然水果清香，观察宝宝可爱的嗅嗅小动作', '如果宝宝扭头避开就及时拿开，尊重宝宝节奏'],
     alternativePlay: '使用切开的苹果或梨散发天然果香。',
-    developmentalDomain: '嗅觉感知与神经发育',
+    developmentalDomain: '嗅觉感知与自然探索',
     safetyReminder: '切勿将刺激性气味（如香水、精油）直接凑近宝宝鼻腔，严防过敏。',
     stopCondition: '宝宝出现打喷嚏、咳嗽或扭头抗拒时立即移开。',
-    source: '儿童感觉统合训练参考',
+    source: '家庭日常感知探索灵感',
     isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '涉及香囊挥发性气味物质与柑橘精油刺激，婴幼儿呼吸道粘膜娇嫩且存在未知致敏风险，待医疗卫生专业审核隔离。',
     accentColor: 'coral'
   },
   {
@@ -477,8 +504,9 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     developmentalDomain: '大运动（爬行准备）与四肢协调',
     safetyReminder: '确保爬行垫周围无尖锐家具边缘。',
     stopCondition: '宝宝趴着哭闹或双臂无力趴在垫子上时立即抱起休息。',
-    source: '中国婴幼儿运动发育里程碑指导',
+    source: '亲子大动作陪伴小灵感',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'blue'
   },
   {
@@ -491,18 +519,19 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     materials: ['安全学步推车或沙发边缘'],
     prerequisite: '宝宝能扶着家具稳稳站立',
     steps: [
-      { stepNumber: 1, title: '安全扶站', description: '引导宝宝双手扶着稳固的沙发边缘或推车。' },
-      { stepNumber: 2, title: '前方逗引', description: '在前方两步远放置喜爱玩具，鼓励迈出小腿。' },
-      { stepNumber: 3, title: '赞赏鼓励', description: '随时扶住腰部，给予热烈掌声。' }
+      { stepNumber: 1, title: '准备扶持', description: '引导宝宝双手扶稳沙发边缘或学步推车，双脚平稳踏地。' },
+      { stepNumber: 2, title: '引导扶站', description: '在前方两步处摆放宝宝心爱的小玩具，轻声呼唤鼓励迈步。' },
+      { stepNumber: 3, title: '轻夸鼓励', description: '家长双手在身后稳稳保护，宝宝每迈出一步都欢呼击掌。' }
     ],
-    parentPrompt: '“宝宝向前走一步，太棒啦！”',
-    observationTips: ['观察双腿是否内扣或外八'],
+    parentPrompt: '“宝宝扶好小推车，迈开小步走一步，太棒啦！”',
+    observationTips: ['要点：多给宝宝正向鼓励，一起感受双腿轻轻蹬动的节奏'],
     alternativePlay: '推箱子学步',
     developmentalDomain: '大运动与下肢肌力',
     safetyReminder: '必须全程看护防摔倒',
     stopCondition: '疲劳时停止',
-    source: '高级早教大师课程',
+    source: '日常亲子探索玩法',
     isReviewed: true,
+    reviewStatus: 'approved',
     accentColor: 'apricot',
     isVip: true
   },
@@ -520,13 +549,15 @@ export const INITIAL_ACTIVITIES: Activity[] = [
       { stepNumber: 2, title: '尝试放入', description: '引导双手齐心协力往下按。' }
     ],
     parentPrompt: '“方块找家咯，放进去！”',
-    observationTips: ['观察手指精准度'],
+    observationTips: ['观察宝宝手眼协调的小动作，多给予温柔鼓励'],
     alternativePlay: '纸盒投币',
     developmentalDomain: '精细动作与空间思维',
     safetyReminder: '严防吞咽小部件',
     stopCondition: '烦躁时停止',
-    source: '蒙台梭利高级早教',
-    isReviewed: true,
+    source: '经典家庭互动游戏',
+    isReviewed: false,
+    reviewStatus: 'pending_safety_audit',
+    auditReason: '包含可放入口中的小型木质积木部件，存在口欲期异物梗阻风险，待小零件圆筒测试审核。',
     accentColor: 'blue',
     isVip: true
   }

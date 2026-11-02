@@ -15,7 +15,11 @@ import { ProfileView } from './components/ProfileView';
 import { ActivityDetailModal } from './components/ActivityDetailModal';
 import { CoachModeModal } from './components/CoachModeModal';
 import { PlayFeedbackModal } from './components/PlayFeedbackModal';
+import { PolaroidModal } from './components/PolaroidModal';
+import { PausedSession } from './components/FloatingWidget';
 import { safeStorage } from './utils/storage';
+import { calculateMonthsFromBirthMonth } from './utils/date';
+import { isActivityReviewed } from './utils/activity';
 import { Crown, X, Check, Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -23,16 +27,21 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [lastSubmission, setLastSubmission] = useState<{ activityId: string; time: number } | null>(null);
 
-  // Quick onboarding modal state for unregistered users clicking start play
+  // Paused session state for tracking in-progress play
+  const [pausedSession, setPausedSession] = useState<PausedSession | null>(() => {
+    return safeStorage.get<PausedSession | null>('playmate_paused_session', null);
+  });
+
   const [quickProfileModalAct, setQuickProfileModalAct] = useState<Activity | null>(null);
   const [quickName, setQuickName] = useState('宝宝');
   const [quickMonths, setQuickMonths] = useState(6);
+  const [quickAgePhase, setQuickAgePhase] = useState<'0-6' | '7-12' | '1-3'>('0-6');
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, durationMs: number = 2500) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage((current) => (current === msg ? null : current));
-    }, 2500);
+    }, durationMs);
   };
   
   // SafeStorage state for records
@@ -40,9 +49,29 @@ export default function App() {
     return safeStorage.get<PlayRecord[]>('playmate_records', []);
   });
 
-  // SafeStorage state for baby profile (null when unregistered)
+  // SafeStorage state for baby profile (null when unregistered, strictly avoids fake profile creation)
   const [profile, setProfile] = useState<BabyProfile | null>(() => {
-    return safeStorage.get<BabyProfile | null>('playmate_profile', null);
+    const raw = safeStorage.get<BabyProfile | null>('playmate_profile', null);
+    if (!raw) return null;
+    // 兼容迁移已有老数据：若没有 ageSource，进行平滑迁移
+    if (!raw.ageSource) {
+      if (raw.birthMonth && raw.birthMonth !== '2025-08') {
+        const calculated = calculateMonthsFromBirthMonth(raw.birthMonth);
+        return {
+          ...raw,
+          currentMonths: calculated !== null ? calculated : raw.currentMonths,
+          ageSource: 'birth_month',
+        };
+      } else {
+        // 如果旧数据为硬编码 2025-08，移除虚假出生月份并标记为估算月龄模式
+        return {
+          ...raw,
+          birthMonth: undefined,
+          ageSource: 'estimated',
+        };
+      }
+    }
+    return raw;
   });
 
   // SafeStorage state for VIP membership
@@ -58,7 +87,7 @@ export default function App() {
     safeStorage.set('playmate_is_vip', true);
     window.dispatchEvent(new Event('playmate_vip_changed'));
     setShowMembershipModal(false);
-    showToast('✨ 【内测体验版已激活】已为您解锁当前全部进阶全脑互动与专家锦囊');
+    showToast('✨ 【内测体验版已激活】已为您解锁当前全部进阶趣味互动与贴心锦囊');
   };
 
   useEffect(() => {
@@ -88,8 +117,21 @@ export default function App() {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [playingActivity, setPlayingActivity] = useState<Activity | null>(null);
   const [pendingFeedback, setPendingFeedback] = useState<{ activity: Activity; durationMinutes: number; status: 'completed' | 'interrupted' } | null>(null);
+  const [polaroidData, setPolaroidData] = useState<{
+    activity: Activity;
+    durationMinutes: number;
+    date: string;
+    babyState?: string;
+    photoUrl?: string;
+  } | null>(null);
 
   const handleStartPlayAttempt = (act: Activity) => {
+    // 严格安全准入校验：未通过审核的活动绝不允许进入陪玩流程
+    if (!isActivityReviewed(act)) {
+      showToast('⚠️ 该活动尚未通过专业安全审核，已临时隔离，暂不支持体验', 3000);
+      return;
+    }
+
     if (profile === null) {
       setQuickProfileModalAct(act);
     } else {
@@ -101,9 +143,9 @@ export default function App() {
     e.preventDefault();
     const newProfile: BabyProfile = {
       name: quickName.trim() || '宝宝',
-      birthMonth: '2025-08',
       currentMonths: Number(quickMonths) || 6,
       favoriteCategories: ['感官认知', '大运动'],
+      ageSource: 'estimated', // 明确为估算月龄模式，不伪造虚构出生年月
     };
     setProfile(newProfile);
     const actToPlay = quickProfileModalAct;
@@ -112,6 +154,41 @@ export default function App() {
       setPlayingActivity(actToPlay);
     }
     showToast('✨ 宝宝档案已建立，为您匹配专属适龄游戏！');
+  };
+
+  const handleSkipQuickProfile = () => {
+    const actToPlay = quickProfileModalAct;
+    setQuickProfileModalAct(null);
+    // P0-03 核心规范：
+    // 用户点击跳过时，profile 严格保持 null！不得创建默认档案，不得写入 playmate_profile
+    showToast('已开启访客体验模式（未建档），随时可在【档案】中设置月龄', 3000);
+    if (actToPlay) {
+      setPlayingActivity(actToPlay);
+    }
+  };
+
+  const handleSaveAndExit = (act: Activity, elapsedSecs: number) => {
+    const sessionData: PausedSession = {
+      activity: act,
+      elapsedSeconds: elapsedSecs,
+      updatedAt: Date.now(),
+    };
+    setPausedSession(sessionData);
+    safeStorage.set('playmate_paused_session', sessionData);
+    setPlayingActivity(null);
+    // 严格确保不呼起打卡弹窗，仅弹出 1.5s 提示
+    showToast('✓ 已暂存陪伴时长，随时可继续', 1500);
+  };
+
+  const handleFinishPlay = (act: Activity, durationMinutes: number) => {
+    setPlayingActivity(null);
+    setPausedSession(null);
+    safeStorage.remove('playmate_paused_session');
+    setPendingFeedback({ activity: act, durationMinutes, status: 'completed' });
+  };
+
+  const handleResumeSession = (session: PausedSession) => {
+    setPlayingActivity(session.activity);
   };
 
   const handleSaveRecord = (record: PlayRecord) => {
@@ -126,9 +203,39 @@ export default function App() {
       return;
     }
     setLastSubmission({ activityId: record.activityId, time: now });
-    setRecords((prev) => [record, ...prev]);
-    setPendingFeedback(null);
-    showToast('✨ 陪伴足迹已安全保存');
+
+    // 记录今日已完成状态（防刷与Hero卡态联动）
+    safeStorage.set(`today_completed_${record.date}_${record.activityId}`, true);
+    window.dispatchEvent(new Event('playmate_record_saved'));
+
+    // 同一活动当天多次打卡合并更新时长，避免无限制刷假记录
+    const existingIndex = records.findIndex(
+      (r) => r.activityId === record.activityId && r.date === record.date
+    );
+
+    if (existingIndex >= 0) {
+      const mergedMinutes = (records[existingIndex].durationMinutes || 0) + (record.durationMinutes || 0);
+      setRecords((prev) =>
+        prev.map((r, i) =>
+          i === existingIndex
+            ? {
+                ...r,
+                durationMinutes: mergedMinutes,
+                reaction: record.reaction || r.reaction,
+                photoUrl: record.photoUrl || r.photoUrl,
+                notes: record.notes && record.notes.trim() ? record.notes : r.notes,
+              }
+            : r
+        )
+      );
+      showToast('今天已记录过该活动时长，已为你合并更新');
+    } else {
+      setRecords((prev) => [record, ...prev]);
+      showToast('✨ 陪伴足迹已安全保存');
+    }
+
+    setPausedSession(null);
+    safeStorage.remove('playmate_paused_session');
   };
 
   const handleClearHistory = () => {
@@ -148,10 +255,12 @@ export default function App() {
     localStorage.removeItem('playmate_profile');
     localStorage.removeItem('playmate_user_profile');
     localStorage.removeItem('playmate_is_vip');
+    localStorage.removeItem('playmate_paused_session');
     window.dispatchEvent(new Event('playmate_vip_changed'));
     setRecords([]);
     setIsVip(false);
     setProfile(null);
+    setPausedSession(null);
     setCurrentTab('today');
     showToast('已重置所有本地数据');
   };
@@ -186,12 +295,15 @@ export default function App() {
             onSelectActivity={(act) => setSelectedActivity(act)}
             onStartPlay={(act) => handleStartPlayAttempt(act)}
             isVip={isVip}
+            pausedSession={pausedSession}
+            onResumeSession={handleResumeSession}
           />
         )}
 
         {currentTab === 'library' && (
           <LibraryView
             activities={INITIAL_ACTIVITIES}
+            profile={profile}
             onSelectActivity={(act) => setSelectedActivity(act)}
             onStartPlay={(act) => handleStartPlayAttempt(act)}
             isVip={isVip}
@@ -230,6 +342,11 @@ export default function App() {
       {selectedActivity && (
         <ActivityDetailModal
           activity={selectedActivity}
+          isVip={isVip}
+          onUpgradeVip={() => {
+            setSelectedActivity(null);
+            setShowMembershipModal(true);
+          }}
           onClose={() => setSelectedActivity(null)}
           onStartPlay={(act) => {
             setSelectedActivity(null);
@@ -242,15 +359,18 @@ export default function App() {
       {playingActivity && (
         <CoachModeModal
           activity={playingActivity}
+          initialSeconds={
+            pausedSession && pausedSession.activity.id === playingActivity.id
+              ? pausedSession.elapsedSeconds
+              : 0
+          }
           onClose={() => setPlayingActivity(null)}
-          onFinishPlay={(act, durationMin, status) => {
-            setPlayingActivity(null);
-            setPendingFeedback({ activity: act, durationMinutes: durationMin, status });
-          }}
+          onSaveAndExit={handleSaveAndExit}
+          onFinishPlay={handleFinishPlay}
         />
       )}
 
-      {/* Play Feedback Modal (Polaroid Poster Generator) */}
+      {/* Play Feedback Modal (Check-in & Reaction selection) */}
       {pendingFeedback && (
         <PlayFeedbackModal
           activity={pendingFeedback.activity}
@@ -259,6 +379,23 @@ export default function App() {
           profile={profile || undefined}
           onClose={() => setPendingFeedback(null)}
           onSaveRecord={handleSaveRecord}
+          onGeneratePoster={(data) => {
+            setPendingFeedback(null);
+            setPolaroidData(data);
+          }}
+        />
+      )}
+
+      {/* Polaroid Poster Modal */}
+      {polaroidData && (
+        <PolaroidModal
+          activity={polaroidData.activity}
+          durationMinutes={polaroidData.durationMinutes}
+          date={polaroidData.date}
+          babyState={polaroidData.babyState}
+          photoUrl={polaroidData.photoUrl}
+          babyName={profile?.name || '宝宝'}
+          onClose={() => setPolaroidData(null)}
         />
       )}
 
@@ -272,7 +409,11 @@ export default function App() {
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600">
                 ✨ 完善宝宝档案
               </span>
-              <button onClick={() => setQuickProfileModalAct(null)} className="text-[#786F6A] hover:text-[#2C221E] cursor-pointer">
+              <button
+                onClick={handleSkipQuickProfile}
+                className="p-1 rounded-full text-[#786F6A] hover:text-[#2C221E] hover:bg-stone-100 transition-colors cursor-pointer"
+                title="跳过建档，直接体验"
+              >
                 <X className="w-4 h-4"/>
               </button>
             </div>
@@ -280,7 +421,7 @@ export default function App() {
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-[#2C221E]">请先填入宝宝信息</h3>
               <p className="text-xs text-[#786F6A] leading-relaxed">
-                请先填入宝宝信息，以便为你匹配适龄玩法与生成打卡海报
+                简单选择宝宝月龄，以便为您匹配适龄玩法与生成打卡海报
               </p>
             </div>
 
@@ -292,42 +433,108 @@ export default function App() {
                   value={quickName}
                   onChange={(e) => setQuickName(e.target.value)}
                   placeholder="例如：小宝 / 汤圆"
-                  className="w-full h-12 px-4 rounded-2xl bg-[#FAF8F5] border border-[#F3EDE2] text-xs text-[#2C221E] placeholder-[#786F6A]/50 focus:outline-none focus:border-orange-400"
+                  className="w-full h-11 px-4 rounded-2xl bg-[#FAF8F5] border border-[#F3EDE2] text-xs text-[#2C221E] placeholder-[#786F6A]/50 focus:outline-none focus:border-orange-400"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#2C221E]">宝宝月龄（快速选择）</label>
-                <select
-                  value={quickMonths}
-                  onChange={(e) => setQuickMonths(Number(e.target.value))}
-                  className="w-full h-12 px-4 rounded-2xl bg-[#FAF8F5] border border-[#F3EDE2] text-xs text-[#2C221E] focus:outline-none focus:border-orange-400"
-                >
-                  {[...Array(36)].map((_, i) => {
-                    const m = i + 1;
-                    return (
-                      <option key={m} value={m}>
-                        {m} 个月 {m === 6 ? '(黄金发育期)' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
+              {/* 分阶段月龄直觉点选（彻底告别36项长单列select） */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#2C221E]">宝宝月龄</label>
+                  <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/50">
+                    当前选择：{quickMonths} 个月
+                  </span>
+                </div>
+
+                {/* 阶段选择 Tabs */}
+                <div className="grid grid-cols-3 gap-1 p-1 bg-[#FAF8F5] rounded-xl border border-[#F3EDE2]">
+                  {(['0-6', '7-12', '1-3'] as const).map((phase) => (
+                    <button
+                      key={phase}
+                      type="button"
+                      onClick={() => setQuickAgePhase(phase)}
+                      className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        quickAgePhase === phase
+                          ? 'bg-white text-orange-600 shadow-xs font-bold'
+                          : 'text-[#786F6A] hover:text-[#2C221E]'
+                      }`}
+                    >
+                      {phase === '0-6' ? '0-6个月' : phase === '7-12' ? '7-12个月' : '1-3岁'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 快捷月龄按钮网格 */}
+                <div className="grid grid-cols-6 gap-1.5 pt-1">
+                  {quickAgePhase === '0-6' &&
+                    [1, 2, 3, 4, 5, 6].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setQuickMonths(m)}
+                        className={`h-9 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          quickMonths === m
+                            ? 'bg-orange-500 text-white shadow-xs'
+                            : 'bg-[#FAF8F5] text-stone-700 border border-[#F3EDE2] hover:bg-white'
+                        }`}
+                      >
+                        {m}月
+                      </button>
+                    ))}
+                  {quickAgePhase === '7-12' &&
+                    [7, 8, 9, 10, 11, 12].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setQuickMonths(m)}
+                        className={`h-9 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          quickMonths === m
+                            ? 'bg-orange-500 text-white shadow-xs'
+                            : 'bg-[#FAF8F5] text-stone-700 border border-[#F3EDE2] hover:bg-white'
+                        }`}
+                      >
+                        {m}月
+                      </button>
+                    ))}
+                  {quickAgePhase === '1-3' &&
+                    [15, 18, 24, 30, 36].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setQuickMonths(m)}
+                        className={`col-span-1 h-9 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                          quickMonths === m
+                            ? 'bg-orange-500 text-white shadow-xs'
+                            : 'bg-[#FAF8F5] text-stone-700 border border-[#F3EDE2] hover:bg-white'
+                        }`}
+                      >
+                        {m}月
+                      </button>
+                    ))}
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 to-amber-500 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-orange-500/25 cursor-pointer transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 mt-2"
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md shadow-orange-500/20 cursor-pointer transition-all active:scale-[0.99] flex items-center justify-center gap-1.5 mt-2"
               >
                 完成并开始今日陪玩
+              </button>
+              <button
+                type="button"
+                onClick={handleSkipQuickProfile}
+                className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide cursor-pointer flex items-center justify-center mt-1"
+              >
+                暂不建档，返回继续浏览
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Global Lightweight Toast */}
+      {/* Global Lightweight Toast - 页面中央上方轻量非阻塞 Toast */}
       {toastMessage && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-[#2C221E] text-[#FAF8F5] px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[70] bg-stone-900/90 backdrop-blur-md text-stone-50 px-4 py-2.5 rounded-2xl shadow-xl text-xs font-semibold flex items-center gap-2 border border-white/10 animate-in fade-in slide-in-from-top-3 duration-200 pointer-events-none">
           <span>{toastMessage}</span>
         </div>
       )}
@@ -348,8 +555,8 @@ export default function App() {
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-[#2C221E]">解锁玩伴日历全部专家特权</h3>
-              <p className="text-xs text-[#786F6A]">已为您解锁当前全部进阶全脑互动与专家锦囊，开启高质量专注陪伴。</p>
+              <h3 className="text-lg font-bold text-[#2C221E]">解锁玩伴日历全部进阶特权</h3>
+              <p className="text-xs text-[#786F6A]">已为您解锁当前全部进阶趣味互动与贴心锦囊，开启轻松愉快的亲子陪伴。</p>
             </div>
 
             {/* Pricing Tiers */}
@@ -380,7 +587,7 @@ export default function App() {
                 </div>
                 <div>
                   <div className="text-xs font-bold text-[#2C221E]">年度陪伴尊享版</div>
-                  <div className="text-[10px] text-[#786F6A]">全月龄 0-3岁畅玩 · 专家指导</div>
+                  <div className="text-[10px] text-[#786F6A]">全月龄 0-3岁畅玩 · 玩法贴心提醒</div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-extrabold text-orange-600">内测免费</div>
@@ -391,15 +598,21 @@ export default function App() {
             {/* Perks bullet list */}
             <div className="bg-[#FAF8F5] rounded-2xl p-3 space-y-1.5 text-[11px] text-[#2C221E]">
               <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-orange-500" /> 进阶动作库随心选（0-3岁全覆盖）</div>
-              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-orange-500" /> 儿科专家敏感期解读与陪伴锦囊</div>
+              <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-orange-500" /> 月龄小贴士与陪伴锦囊</div>
               <div className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-orange-500" /> 高清拍立得海报无限制本地导出</div>
             </div>
 
             <button
               onClick={handleUpgradeVip}
-              className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 to-amber-500 text-white text-xs font-bold shadow-md shadow-orange-500/25 hover:opacity-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md shadow-orange-500/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4 fill-white" /> 立即激活内测特权版
+            </button>
+            <button
+              onClick={() => setShowMembershipModal(false)}
+              className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide cursor-pointer flex items-center justify-center mt-1"
+            >
+              暂不需要
             </button>
           </div>
         </div>

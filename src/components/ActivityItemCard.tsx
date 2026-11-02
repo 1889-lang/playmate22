@@ -107,13 +107,14 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
 }) => {
   const isLocked = Boolean(activity.isVip && !isVipUser);
 
-  // 柔和马卡龙领域徽章体系
+  // 柔和马卡龙领域徽章体系（V1.1 收敛规范）
   const categoryConfig: Record<string, { bg: string; text: string; border: string }> = {
     '感官认知': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200/60' },
-    '大运动': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200/60' },
-    '精细动作': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200/60' },
-    '社会情绪': { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200/60' },
-    '语言交流': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200/60' },
+    '大运动': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200/60' },
+    '精细动作': { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200/60' },
+    '社会情绪': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200/60' },
+    '语言交流': { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200/60' },
+    '语言社交': { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200/60' },
   };
 
   const cfg = categoryConfig[activity.category] || {
@@ -131,19 +132,19 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`group bg-white rounded-2xl p-3 sm:p-3.5 shadow-sm border transition-all active:scale-[0.99] cursor-pointer flex items-center gap-3.5 hover:shadow-md hover:border-orange-200/80 ${
+      className={`group bg-white rounded-2xl p-3 shadow-xs border transition-all active:scale-[0.99] cursor-pointer flex items-center gap-3 hover:shadow-sm hover:border-orange-200/80 ${
         isLocked
           ? 'border-amber-200/70 bg-gradient-to-r from-amber-50/20 to-white'
           : 'border-amber-100/50'
       }`}
     >
-      {/* 1. 左侧微缩插画封面（w-20 h-20 绘本风格） */}
-      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-amber-50/80 flex-shrink-0 flex items-center justify-center border border-amber-100/50 shadow-xs relative group-hover:scale-[1.02] transition-transform">
+      {/* 1. 左侧微缩插画封面（76x76px 绘本杂志卡牌规范） */}
+      <div className="w-[76px] h-[76px] rounded-2xl overflow-hidden bg-amber-50/80 flex-shrink-0 flex items-center justify-center border border-amber-100/50 shadow-xs relative group-hover:scale-[1.02] transition-transform">
         <ActivityMiniIllustration category={activity.category} title={activity.title} />
       </div>
 
-      {/* 2. 右侧内容排版（flex-1 min-w-0 flex flex-col justify-between py-0.5） */}
-      <div className="flex-1 min-w-0 flex flex-col justify-between h-20 py-0.5 space-y-1">
+      {/* 2. 右侧内容排版（两行流精炼呈现） */}
+      <div className="flex-1 min-w-0 flex flex-col justify-between h-[76px] py-0.5 space-y-1">
         {/* 顶行：玩法标题 + 极简耗时 / VIP 解锁 */}
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-stone-900 font-bold text-sm truncate group-hover:text-orange-600 transition-colors">
@@ -152,7 +153,7 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
 
           {activity.isVip ? (
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 shrink-0 whitespace-nowrap ${
+              className={`px-2 py-0.5 rounded-full text-[11px] font-bold border flex items-center gap-1 shrink-0 whitespace-nowrap ${
                 isLocked
                   ? 'bg-amber-100 text-amber-800 border-amber-200'
                   : 'bg-amber-50 text-amber-700 border-amber-200/60'
@@ -174,22 +175,22 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
         </div>
 
         {/* 中行：核心发育启发简述 */}
-        <p className="text-xs text-stone-500 line-clamp-1 leading-relaxed">
+        <p className="text-xs text-stone-600 line-clamp-1 leading-relaxed">
           {activity.subtitle}
         </p>
 
         {/* 底行：柔和马卡龙领域徽章与适龄月龄并列 */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-medium border shrink-0 whitespace-nowrap ${cfg.bg} ${cfg.text} ${cfg.border}`}
+            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border shrink-0 whitespace-nowrap ${cfg.bg} ${cfg.text} ${cfg.border}`}
           >
             {activity.category}
           </span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] text-stone-500 bg-stone-100/70 border border-stone-200/50 shrink-0">
+          <span className="px-2 py-0.5 rounded-full text-[11px] text-stone-500 bg-stone-100/70 border border-stone-200/50 shrink-0">
             👶 {formattedAge}
           </span>
           {activity.materials && activity.materials.length > 0 && (
-            <span className="hidden sm:inline-block text-[10px] text-stone-400 truncate max-w-[100px]">
+            <span className="hidden sm:inline-block text-[11px] text-stone-400 truncate max-w-[100px]">
               📦 {activity.materials[0].length > 5 ? activity.materials[0].slice(0, 5) + '…' : activity.materials[0]}
             </span>
           )}

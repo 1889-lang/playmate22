@@ -11,12 +11,16 @@ interface ActivityDetailModalProps {
   activity: Activity;
   onClose: () => void;
   onStartPlay: (activity: Activity) => void;
+  isVip?: boolean;
+  onUpgradeVip?: () => void;
 }
 
 export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
   activity,
   onClose,
   onStartPlay,
+  isVip = false,
+  onUpgradeVip,
 }) => {
   const steps = activity.steps;
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
@@ -49,6 +53,16 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${accentBgMap[activity.accentColor]}`}>
               {activity.category}
             </span>
+            {activity.isVip && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                👑 VIP
+              </span>
+            )}
+            {!activity.isReviewed && (
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                ⚠️ 待安全审核
+              </span>
+            )}
             <span className="text-xs text-[#858078]">适龄: {activity.ageRange}</span>
             <span className="text-xs text-[#858078] font-mono">· {activity.duration}</span>
           </div>
@@ -71,70 +85,203 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
           </div>
 
           {/* Central Comic Bubble Interactive Scene Container (~55-60% height, zero scroll) */}
-          <div className="relative w-full aspect-[16/10] sm:h-[240px] rounded-2xl bg-gradient-to-b from-[#F1EAE0]/80 via-[#FAF7F2] to-[#F1EAE0] border border-[#E8B58D]/30 shadow-inner flex items-center justify-center p-3 overflow-visible">
-            
-            {/* Adult Comic Bubble (Orange, Left Top Staggered) */}
-            <div className="absolute top-3 left-4 z-20 bg-[#F28C45]/95 text-white text-xs font-bold px-3 py-1.5 rounded-2xl shadow-md border border-orange-300 flex items-center gap-1.5 max-w-[58%]">
-              <span>🙋 “啊——！原来是这样呀”</span>
-            </div>
+          {(() => {
+            const cat = activity.category;
+            let adultBubble = '🙋 “宝宝在说什么？原来是这样呀~”';
+            let babyBubble = '👶 “啊~ 咿~ ♪”';
+            let focusTip = '⏳ 重点：停顿 3 秒等宝宝回应（双向轮流交流）';
+            let sceneType = 'language';
 
-            {/* Baby Comic Bubble (Light Blue, Right Upper-Middle Staggered) */}
-            <div className="absolute top-[52px] right-4 z-10 bg-sky-100/95 text-sky-900 text-xs font-bold px-3 py-1.5 rounded-2xl shadow-sm border border-sky-200 flex items-center gap-1.5">
-              <span>👶 “啊~ ♪”</span>
-            </div>
+            if (cat.includes('大运动') || cat.includes('运动')) {
+              adultBubble = '🙋 “双手扶好，迈开小步探索新天地！”';
+              babyBubble = '👶 “蹬蹬蹬 · 踩稳迈步！”';
+              focusTip = '🌟 重点：双手身后全程轻护防跌倒，多给正向鼓励';
+              sceneType = 'motor';
+            } else if (cat.includes('精细')) {
+              adultBubble = '🙋 “看小手抓住什么啦，轻轻放这儿~”';
+              babyBubble = '👶 “抓到啦 · 捏一捏 ♪”';
+              focusTip = '🌟 重点：顺应抓握节奏，鼓励双侧小手轻松配合';
+              sceneType = 'fine';
+            } else if (cat.includes('感官') || cat.includes('认知')) {
+              adultBubble = '🙋 “看一看，听一听，小眼睛跟过来啦~”';
+              babyBubble = '👶 “好奇注视 · 眼睛亮亮的 ✨”';
+              focusTip = '🌟 重点：跟随宝宝视线互动，保持温和光线与声音';
+              sceneType = 'sensory';
+            } else if (cat.includes('社会') || cat.includes('情绪')) {
+              adultBubble = '🙋 “给宝宝一个大大的笑脸和抱抱~”';
+              babyBubble = '👶 “咯咯笑 · 扑进怀抱 😊”';
+              focusTip = '🌟 重点：温暖眼神注视，传递满满的安全感与回应';
+              sceneType = 'social';
+            }
 
-            {/* Central SVG Illustration */}
-            <svg viewBox="0 0 360 190" className="w-full h-full object-contain overflow-visible" aria-label="漫画气泡互动场景">
-              {/* Background Floor */}
-              <rect x="0" y="0" width="360" height="190" fill="#FAF7F2" rx="16" />
-              <rect x="0" y="140" width="360" height="50" fill="#EFE5D8" />
-              <ellipse cx="180" cy="152" rx="110" ry="10" fill="#E2D4C3" opacity="0.6" />
-              <path d="M60 115 Q180 95 300 115 L320 145 Q180 160 40 145 Z" fill="#A8B9A0" opacity="0.25" />
+            return (
+              <div className="relative w-full aspect-[16/10] sm:h-[240px] rounded-2xl bg-gradient-to-b from-[#F1EAE0]/80 via-[#FAF7F2] to-[#F1EAE0] border border-[#E8B58D]/30 shadow-inner flex items-center justify-center p-3 overflow-visible">
+                {/* Adult Comic Bubble (Orange, Left Top Staggered) */}
+                <div className="absolute top-3 left-4 z-20 bg-[#F28C45]/95 text-white text-xs font-bold px-3 py-1.5 rounded-2xl shadow-md border border-orange-300 flex items-center gap-1.5 max-w-[62%]">
+                  <span>{adultBubble}</span>
+                </div>
 
-              {/* Adult Character (Left) */}
-              <g transform="translate(90, 50)">
-                <path d="M15 25 Q30 10 50 20 L58 75 Q35 85 8 75 Z" fill="#E8B58D" />
-                <circle cx="32" cy="5" r="14" fill="#DDB896" />
-                <path d="M20 2 Q32 -5 45 2 Q40 15 22 15 Z" fill="#45433F" opacity="0.8" />
-                <path d="M28 7 Q32 11 36 7" fill="none" stroke="#45433F" strokeWidth="2" strokeLinecap="round" />
-              </g>
+                {/* Baby Comic Bubble (Light Blue, Right Upper-Middle Staggered) */}
+                <div className="absolute top-[52px] right-4 z-10 bg-sky-100/95 text-sky-900 text-xs font-bold px-3 py-1.5 rounded-2xl shadow-sm border border-sky-200 flex items-center gap-1.5">
+                  <span>{babyBubble}</span>
+                </div>
 
-              {/* Baby Character (Right) */}
-              <g transform="translate(210, 65)">
-                <ellipse cx="30" cy="45" rx="24" ry="7" fill="#C5B5A2" opacity="0.4" />
-                <circle cx="30" cy="18" r="12" fill="#DDB896" />
-                <path d="M15 28 Q30 20 45 28 L52 55 Q30 65 8 55 Z" fill="#DFA39A" />
-                <circle cx="26" cy="16" r="2" fill="#45433F" />
-                <circle cx="34" cy="16" r="2" fill="#45433F" />
-              </g>
+                {/* Category-Specific SVG Illustration */}
+                <svg viewBox="0 0 360 190" className="w-full h-full object-contain overflow-visible" aria-label="亲子陪伴漫画场景">
+                  {/* Background Floor */}
+                  <rect x="0" y="0" width="360" height="190" fill="#FAF7F2" rx="16" />
+                  <rect x="0" y="140" width="360" height="50" fill="#EFE5D8" />
+                  <ellipse cx="180" cy="152" rx="110" ry="10" fill="#E2D4C3" opacity="0.6" />
 
-              {/* Interaction Wave / Heart */}
-              <path d="M130 60 Q170 40 210 65" fill="none" stroke="#F28C45" strokeWidth="2.5" strokeDasharray="5,5" className="animate-pulse" />
-            </svg>
+                  {sceneType === 'motor' && (
+                    <g id="motor-scene">
+                      {/* Sofa / Standing Support surface */}
+                      <rect x="30" y="90" width="100" height="60" rx="8" fill="#DDB896" opacity="0.8" />
+                      <rect x="40" y="75" width="80" height="20" rx="6" fill="#C5A280" opacity="0.9" />
+                      {/* Footsteps markings */}
+                      <ellipse cx="170" cy="150" rx="8" ry="4" fill="#E8B58D" opacity="0.7" />
+                      <ellipse cx="195" cy="148" rx="8" ry="4" fill="#E8B58D" opacity="0.7" />
+                      {/* Adult Protective hands */}
+                      <g transform="translate(140, 45)">
+                        <circle cx="35" cy="12" r="14" fill="#DDB896" />
+                        <path d="M15 28 Q35 15 55 28 L62 85 Q35 95 8 85 Z" fill="#E8B58D" />
+                        {/* Arms extending forward to protect */}
+                        <path d="M45 45 Q70 55 90 70" fill="none" stroke="#DDB896" strokeWidth="6" strokeLinecap="round" />
+                      </g>
+                      {/* Baby Standing proudly */}
+                      <g transform="translate(210, 68)">
+                        <circle cx="25" cy="14" r="13" fill="#DDB896" />
+                        <path d="M12 26 Q25 18 38 26 L44 60 Q25 66 6 60 Z" fill="#DFA39A" />
+                        {/* Two standing legs */}
+                        <rect x="12" y="60" width="6" height="16" rx="3" fill="#45433F" opacity="0.7" />
+                        <rect x="26" y="60" width="6" height="16" rx="3" fill="#45433F" opacity="0.7" />
+                      </g>
+                    </g>
+                  )}
 
-            {/* Comic Bubble 3: Turn-taking Timer / Ruler (Bottom Center, bottom-3) */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 bg-white/95 text-[#45433F] text-[11px] font-bold px-3.5 py-1 rounded-full shadow-sm border border-[#E8B58D]/40 flex items-center gap-1.5 whitespace-nowrap">
-              <span>⏳ 停顿 3 秒等他回应（轮流对话）</span>
-            </div>
-          </div>
+                  {sceneType === 'fine' && (
+                    <g id="fine-scene">
+                      {/* Small table */}
+                      <rect x="130" y="115" width="100" height="35" rx="6" fill="#DDB896" />
+                      {/* Soft blocks/rings */}
+                      <circle cx="160" cy="108" r="8" fill="#F28C45" />
+                      <rect x="180" y="100" width="16" height="16" rx="3" fill="#A8B9A0" />
+                      {/* Adult on Left */}
+                      <g transform="translate(70, 50)">
+                        <circle cx="32" cy="10" r="14" fill="#DDB896" />
+                        <path d="M15 28 Q32 15 49 28 L56 80 Q32 90 8 80 Z" fill="#E8B58D" />
+                      </g>
+                      {/* Baby on Right */}
+                      <g transform="translate(230, 65)">
+                        <circle cx="25" cy="14" r="12" fill="#DDB896" />
+                        <path d="M10 26 Q25 18 40 26 L46 60 Q25 68 4 60 Z" fill="#A9BFCC" />
+                        {/* Small hand reaching */}
+                        <path d="M12 36 Q-5 45 -20 42" fill="none" stroke="#DDB896" strokeWidth="4" strokeLinecap="round" />
+                      </g>
+                    </g>
+                  )}
 
-          {/* Bottom Concise Wrap-up: Single Warm Tip Capsule (No truncation, normal wrap) */}
+                  {sceneType === 'sensory' && (
+                    <g id="sensory-scene">
+                      {/* Sensory ripples */}
+                      <circle cx="180" cy="90" r="28" fill="none" stroke="#F28C45" strokeWidth="1.5" strokeDasharray="4,4" className="animate-ping" opacity="0.4" />
+                      <circle cx="180" cy="90" r="16" fill="#F28C45" opacity="0.85" />
+                      <circle cx="180" cy="90" r="7" fill="#FFFDF9" />
+                      {/* Adult */}
+                      <g transform="translate(80, 50)">
+                        <circle cx="30" cy="10" r="14" fill="#DDB896" />
+                        <path d="M15 28 Q30 15 45 28 L52 80 Q30 90 8 80 Z" fill="#E8B58D" />
+                      </g>
+                      {/* Baby watching */}
+                      <g transform="translate(225, 65)">
+                        <circle cx="25" cy="14" r="12" fill="#DDB896" />
+                        <path d="M10 26 Q25 18 40 26 L46 60 Q25 68 4 60 Z" fill="#DFA39A" />
+                        {/* Eyes looking at the sensory source */}
+                        <circle cx="20" cy="13" r="2" fill="#45433F" />
+                        <circle cx="26" cy="13" r="2" fill="#45433F" />
+                      </g>
+                    </g>
+                  )}
+
+                  {(sceneType === 'social' || sceneType === 'language') && (
+                    <g id="interactive-scene">
+                      {/* Adult Character (Left) */}
+                      <g transform="translate(90, 50)">
+                        <path d="M15 25 Q30 10 50 20 L58 75 Q35 85 8 75 Z" fill="#E8B58D" />
+                        <circle cx="32" cy="5" r="14" fill="#DDB896" />
+                        <path d="M20 2 Q32 -5 45 2 Q40 15 22 15 Z" fill="#45433F" opacity="0.8" />
+                        <path d="M28 7 Q32 11 36 7" fill="none" stroke="#45433F" strokeWidth="2" strokeLinecap="round" />
+                      </g>
+
+                      {/* Baby Character (Right) */}
+                      <g transform="translate(210, 65)">
+                        <ellipse cx="30" cy="45" rx="24" ry="7" fill="#C5B5A2" opacity="0.4" />
+                        <circle cx="30" cy="18" r="12" fill="#DDB896" />
+                        <path d="M15 28 Q30 20 45 28 L52 55 Q30 65 8 55 Z" fill="#DFA39A" />
+                        <circle cx="26" cy="16" r="2" fill="#45433F" />
+                        <circle cx="34" cy="16" r="2" fill="#45433F" />
+                      </g>
+
+                      {/* Interaction Wave / Heart */}
+                      <path d="M130 60 Q170 40 210 65" fill="none" stroke="#F28C45" strokeWidth="2.5" strokeDasharray="5,5" className="animate-pulse" />
+                    </g>
+                  )}
+                </svg>
+
+                {/* Comic Bubble 3: Turn-taking Timer / Ruler (Bottom Center, bottom-3) */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 bg-white/95 text-[#45433F] text-[11px] font-bold px-3.5 py-1 rounded-full shadow-sm border border-[#E8B58D]/40 flex items-center gap-1.5 whitespace-nowrap">
+                  <span>{focusTip}</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Bottom Concise Wrap-up: Single Warm Tip Capsule */}
           <div className="bg-white rounded-2xl px-3.5 py-2.5 border border-[#F1EAE0] shadow-xs flex items-center gap-2">
             <span className="text-sm shrink-0">💡</span>
             <div className="text-xs text-[#45433F] font-medium leading-snug">
               <span className="font-bold text-[#B86834]">要点：</span>
-              {activity.observationTips[0] || '看着宝宝眼睛，像聊天一样一问一答。'}
+              {activity.observationTips[0] || '看着宝宝眼睛，像日常互动一样轻松自然。'}
             </div>
           </div>
 
-          {/* Bottom Full-Width Warm Orange Action Button (#F28C45) */}
+          {/* 未通过审核时的安全隔离说明 */}
+          {!activity.isReviewed && (
+            <div className="bg-rose-50 border border-rose-200/80 rounded-2xl p-3 text-xs text-rose-900 space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-rose-800">
+                <span>⚠️ 待安全审核隔离提醒</span>
+              </div>
+              <p className="text-[11px] text-rose-700 leading-relaxed">
+                {activity.auditReason || '该玩法涉及待复核的安全动作或材料风险，已临时隔离，暂不支持体验。'}
+              </p>
+            </div>
+          )}
+
+          {/* Bottom Full-Width Action Button */}
           <div className="pt-0.5">
-            <button
-              onClick={() => onStartPlay(activity)}
-              className="w-full h-12 rounded-2xl bg-[#F28C45] hover:bg-[#e07b36] active:scale-[0.98] transition-all text-white font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-[#F28C45]/25"
-            >
-              <CheckCircle2 className="w-5 h-5 fill-white text-[#F28C45]" /> 完成本次陪玩
-            </button>
+            {!activity.isReviewed ? (
+              <button
+                disabled
+                className="w-full h-12 rounded-2xl bg-stone-200 text-stone-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed select-none opacity-80"
+              >
+                <span>⚠️ 内容审核隔离中 · 暂不支持体验</span>
+              </button>
+            ) : activity.isVip && !isVip ? (
+              <button
+                onClick={onUpgradeVip}
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-orange-500/20 cursor-pointer active:scale-[0.98] transition-all"
+              >
+                <span>👑 解锁 VIP 特权体验</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => onStartPlay(activity)}
+                className="w-full h-12 rounded-2xl bg-[#F28C45] hover:bg-[#e07b36] active:scale-[0.98] transition-all text-white font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-[#F28C45]/25 cursor-pointer"
+              >
+                <CheckCircle2 className="w-5 h-5 fill-white text-[#F28C45]" />
+                <span>▶ 开始计时陪伴</span>
+              </button>
+            )}
           </div>
 
         </div>

@@ -4,24 +4,87 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { Activity } from '../types';
-import { X, CheckCircle2, Clock, BookOpen, Pause, Play } from 'lucide-react';
+import { X, Clock, BookOpen, Pause, Play } from 'lucide-react';
 import { TextGuideDrawer } from './TextGuideDrawer';
 
 interface CoachModeModalProps {
   activity: Activity;
+  initialSeconds?: number;
   onClose: () => void;
-  onFinishPlay: (activity: Activity, durationMinutes: number, status: 'completed' | 'interrupted') => void;
+  onSaveAndExit: (activity: Activity, elapsedSeconds: number) => void;
+  onFinishPlay: (activity: Activity, durationMinutes: number) => void;
 }
 
 export const CoachModeModal: React.FC<CoachModeModalProps> = ({
   activity,
+  initialSeconds = 0,
   onClose,
+  onSaveAndExit,
   onFinishPlay,
 }) => {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(initialSeconds);
   const [isPaused, setIsPaused] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const timerRef = useRef<any>(null);
+
+  // 停止语音朗读的辅助函数
+  const stopSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+  };
+
+  // 组件卸载时确保停止语音朗读，防止后台漏音
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+    };
+  }, []);
+
+  // 串联口语化语音朗读文案
+  const buildSpeechText = () => {
+    const stepsText = activity.steps
+      .map((step: any, idx: number) => `第${idx + 1}步：${step.title}。${step.description}`)
+      .join('。');
+    const promptText = activity.parentPrompt
+      ? `温馨互动示范：${activity.parentPrompt.replace(/^["'“”]+|["'“”]+$/g, '')}`
+      : '';
+    return `${activity.title}。${activity.subtitle || ''}。陪玩三步法：${stepsText}。${promptText}`;
+  };
+
+  // 切换语音播放与暂停
+  const toggleSpeech = () => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return;
+    }
+
+    if (isSpeaking) {
+      stopSpeech();
+      return;
+    }
+
+    // 先清除可能残留的朗读队列
+    window.speechSynthesis.cancel();
+
+    const text = buildSpeechText();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  };
 
   useEffect(() => {
     if (!isPaused) {
@@ -41,22 +104,22 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
   };
 
   const handleComplete = () => {
+    stopSpeech();
+    if (timerRef.current) clearInterval(timerRef.current);
     const durationMins = Math.max(1, Math.round(elapsedSeconds / 60));
-    onFinishPlay(activity, durationMins, 'completed');
+    onFinishPlay(activity, durationMins);
   };
 
-  const handleInterrupted = () => {
-    const durationMins = Math.max(0, Math.round(elapsedSeconds / 60));
-    onFinishPlay(activity, durationMins, 'interrupted');
+  const handleSaveProgress = () => {
+    stopSpeech();
+    if (timerRef.current) clearInterval(timerRef.current);
+    onSaveAndExit(activity, elapsedSeconds);
   };
 
   const handleCloseX = () => {
-    if (elapsedSeconds > 10) {
-      const durationMins = Math.max(1, Math.round(elapsedSeconds / 60));
-      onFinishPlay(activity, durationMins, 'interrupted');
-    } else {
-      onClose();
-    }
+    stopSpeech();
+    if (timerRef.current) clearInterval(timerRef.current);
+    onSaveAndExit(activity, elapsedSeconds);
   };
 
   // 分类专属手绘插画映射函数
@@ -201,8 +264,33 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
 
           {/* 3. 陪玩三步法（紧凑化间距 space-y-2） */}
           <div className="bg-white rounded-2xl p-3.5 border border-[#F3EDE2] shadow-[0_4px_15px_rgba(44,34,30,0.03)] space-y-2.5">
-            <div className="text-xs font-bold text-[#786F6A] flex items-center gap-1.5 pb-0.5">
-              <span>📋 陪玩三步法</span>
+            <div className="flex items-center justify-between pb-0.5">
+              <span className="text-xs font-bold text-[#786F6A] flex items-center gap-1.5">
+                📋 陪玩三步法
+              </span>
+              <button
+                type="button"
+                onClick={toggleSpeech}
+                className={
+                  isSpeaking
+                    ? "rounded-full px-3 py-1 bg-orange-100 text-orange-700 text-xs font-semibold flex items-center gap-1 animate-pulse cursor-pointer shadow-xs transition-all"
+                    : "rounded-full px-3 py-1 bg-amber-100/70 hover:bg-amber-100 text-amber-900 text-xs font-medium flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs"
+                }
+                title={isSpeaking ? "点击暂停朗读" : "点击听语音引导"}
+                aria-label={isSpeaking ? "正在朗读" : "听怎么玩"}
+              >
+                {isSpeaking ? (
+                  <>
+                    <span>⏸</span>
+                    <span>正在朗读</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔊</span>
+                    <span>听怎么玩</span>
+                  </>
+                )}
+              </button>
             </div>
             
             <div className="space-y-2.5">
@@ -222,18 +310,17 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
         </div>
 
         {/* 4. 底部常驻固定操作栏 (Fixed/Sticky Bottom with Frosted Glass Shading) */}
-        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#F3EDE2] shadow-[0_-10px_25px_rgba(44,34,30,0.06)] flex flex-col gap-1.5">
+        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#F3EDE2] shadow-[0_-10px_25px_rgba(44,34,30,0.06)] flex flex-col">
           <button
             onClick={handleComplete}
-            className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 cursor-pointer"
+            className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-md shadow-orange-500/20 active:scale-[0.99] transition-all cursor-pointer"
           >
-            <CheckCircle2 className="w-4 h-4 fill-white text-orange-500" />
-            <span>🎉 愉快完成，去打卡</span>
+            🎉 完成陪伴，去打卡
           </button>
           
           <button
-            onClick={handleInterrupted}
-            className="text-xs text-stone-400 hover:text-stone-600 py-2.5 bg-transparent border-none w-full text-center transition-colors cursor-pointer font-medium active:scale-95"
+            onClick={handleSaveProgress}
+            className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide flex items-center justify-center gap-1 mt-1 cursor-pointer"
           >
             稍后再玩 · 保存进度
           </button>
@@ -247,3 +334,5 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
     </div>
   );
 };
+ 
+export { CoachModeModal as PlaySessionModal };

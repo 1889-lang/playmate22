@@ -5,9 +5,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { Activity, PlayRecord, BabyProfile } from '../types';
-import { Clock, Play, Sparkles, Baby, AlertCircle, ChevronRight, Smile, Star, Heart, Sun, RefreshCw } from 'lucide-react';
-import { getLocalDateStr } from '../utils/date';
-import { FloatingWidget } from './FloatingWidget';
+import { Clock, Play, Sparkles, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { getLocalDateStr, getEffectiveBabyMonths } from '../utils/date';
+import { getReviewedActivities, getTodayFeaturedActivity, parseAgeRange } from '../utils/activity';
+import { safeStorage } from '../utils/storage';
+import { FloatingWidget, PausedSession } from './FloatingWidget';
 import { ActivityItemCard } from './ActivityItemCard';
 
 interface HomeViewProps {
@@ -18,30 +20,12 @@ interface HomeViewProps {
   onSelectActivity: (activity: Activity) => void;
   onStartPlay: (activity: Activity) => void;
   isVip?: boolean;
+  pausedSession?: PausedSession | null;
+  onResumeSession?: (session: PausedSession) => void;
 }
 
 /**
- * 解析适龄范围字符串（例如 "6-8个月" -> min: 6, max: 8；"9-12+" -> min: 9, max: 99）
- */
-function parseAgeRange(ageRangeStr: string): { min: number; max: number } {
-  const cleaned = ageRangeStr.replace(/个月/g, '').trim();
-  if (cleaned.includes('+')) {
-    const minVal = parseInt(cleaned.replace('+', ''), 10) || 0;
-    return { min: minVal, max: 99 };
-  }
-  const parts = cleaned.split('-');
-  if (parts.length === 2) {
-    return { min: parseInt(parts[0], 10) || 0, max: parseInt(parts[1], 10) || 99 };
-  }
-  const single = parseInt(cleaned, 10);
-  if (!isNaN(single)) {
-    return { min: single, max: single };
-  }
-  return { min: 0, max: 99 };
-}
-
-/**
- * Fisher-Yates 随机洗牌算法
+ * Fisher-Yates 随机洗牌算法（仅用于备选灵感列表换一批）
  */
 function fisherYatesShuffle<T>(array: T[]): T[] {
   const arr = [...array];
@@ -66,47 +50,66 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onSelectActivity,
   onStartPlay,
   isVip = false,
+  pausedSession,
+  onResumeSession,
 }) => {
-  const [shuffleKey, setShuffleKey] = useState(0);
+  // 1. 获取宝宝统一有效月龄（未建档时严格为 null，严禁隐式回退到 6 个月）
+  const effectiveMonths = getEffectiveBabyMonths(profile);
 
-  // 1. 安全底线拦截：强制要求 activity.isReviewed === true
+  // 2. 严格安全底线拦截：候选池强制只接受已审核活动
   const reviewedActivities = useMemo(() => {
-    return activities.filter((a) => a.isReviewed === true);
+    return getReviewedActivities(activities);
   }, [activities]);
 
-  // 2. 适龄匹配过滤与优雅降级
+  // 3. 适龄候选池筛选（若无匹配则保持空，绝不拿未审核或不适龄活动冒充）
   const { filteredPool, ageNotice } = useMemo(() => {
-    if (!profile || !profile.currentMonths) {
+    if (effectiveMonths === null) {
+      // 未建档访客状态：进入全部已审核活动的通用池
       return { filteredPool: reviewedActivities, ageNotice: null };
     }
 
     const ageMatched = reviewedActivities.filter((a) => {
       const { min, max } = parseAgeRange(a.ageRange);
-      return profile.currentMonths >= min && profile.currentMonths <= max;
+      return effectiveMonths >= min && effectiveMonths <= max;
     });
 
     if (ageMatched.length > 0) {
       return { filteredPool: ageMatched, ageNotice: null };
     } else {
       return {
-        filteredPool: reviewedActivities,
-        ageNotice: `暂无完全匹配 ${profile.currentMonths}个月龄的专属活动，已为您展示精选已审核活动`,
+        filteredPool: [],
+        ageNotice: `当前宝宝月龄（${effectiveMonths}个月）暂无已审核专属活动，请期待专业审核更新`,
       };
     }
-  }, [reviewedActivities, profile]);
+  }, [reviewedActivities, effectiveMonths]);
 
-  // 3. 首页玩法呈现（主推活动确立为今日专属精选，备选列表支持独立换一批）
+  const todayStr = getLocalDateStr();
+  const todayRecords = records.filter((r) => r.date === todayStr);
+  const todayTotalMinutes = todayRecords.reduce((acc, curr) => acc + curr.durationMinutes, 0);
+
+  // 4. 首页主推活动（确定性哈希与缓存锁定，刷新及切换永不跳变）
+  const currentActivity = useMemo(() => {
+    return getTodayFeaturedActivity(profile, activities);
+  }, [activities, profile]);
+
+  // 今日主推荐活动是否已完成打卡
+  const todayRecordForHero = useMemo(() => {
+    if (!currentActivity) return null;
+    const fromStorage = safeStorage.get<boolean>(`today_completed_${todayStr}_${currentActivity.id}`, false);
+    const fromRecords = records.find(
+      (r) => r.activityId === currentActivity.id && r.date === todayStr && (r.durationMinutes || 0) > 0
+    );
+    if (fromStorage && !fromRecords) {
+      return { durationMinutes: 1 } as PlayRecord;
+    }
+    return fromRecords || null;
+  }, [records, currentActivity, todayStr]);
+
   const [inspirationsShuffleKey, setInspirationsShuffleKey] = useState(0);
-
-  const featuredShuffled = useMemo(() => {
-    return fisherYatesShuffle(filteredPool);
-  }, [filteredPool]);
 
   const inspirationsShuffled = useMemo(() => {
     return fisherYatesShuffle(filteredPool);
   }, [filteredPool, inspirationsShuffleKey]);
-
-  const currentActivity = featuredShuffled[0] || reviewedActivities[0] || activities[0];
 
   const backupActivities = useMemo(() => {
     const filtered = inspirationsShuffled.filter((a) => a.id !== currentActivity?.id);
@@ -127,23 +130,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }, 400);
   };
 
-  const todayStr = getLocalDateStr();
-  const todayRecords = records.filter((r) => r.date === todayStr);
-  const todayTotalMinutes = todayRecords.reduce((acc, curr) => acc + curr.durationMinutes, 0);
-
-  // 多元化马卡龙微透胶囊色体系
-  const categoryConfig: Record<string, { icon: string; bg: string; text: string; border: string }> = {
-    '语言交流': { icon: '💬', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200/70' },
-    '社会情绪': { icon: '🌟', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200/70' },
-    '感官认知': { icon: '🎨', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200/70' },
-    '大运动': { icon: '✈️', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200/70' },
-    '精细动作': { icon: '🧸', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200/70' },
-  };
-
   return (
     <div className="space-y-4 pb-32 md:pb-16 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-3xl mx-auto">
       
-      {/* 1. Unregistered Gift Package Banner (Only when unregistered) */}
+      {/* 1. 未建档轻量引导卡片（仅未建档时展示，明确提示访客状态） */}
       {profile === null && (
         <section className="bg-gradient-to-br from-[#FFF5EE] via-[#FFF9F3] to-[#FDF6F0] rounded-3xl p-5 sm:p-6 border border-[#F3EDE2] shadow-[0_10px_30px_-10px_rgba(234,138,92,0.08)] flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -153,32 +143,34 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
             <div className="space-y-0.5 min-w-0">
               <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 mb-1 whitespace-nowrap">
-                ✨ 定制专属成长方案
+                🌱 访客探索模式
               </span>
               <h3 className="text-xs sm:text-sm font-bold text-[#2C221E] truncate">还没有建立宝宝档案</h3>
-              <p className="text-[11px] text-[#786F6A] truncate">填入宝宝信息，立即开启全周期脑发育科学陪伴</p>
+              <p className="text-[11px] text-[#786F6A] truncate">设置真实宝宝月龄，获取个性化适龄安全指导</p>
             </div>
           </div>
           <button
             onClick={() => onSelectTab('profile')}
             className="w-full sm:w-auto px-4 py-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-orange-500/25 shrink-0 whitespace-nowrap cursor-pointer transition-transform active:scale-95"
           >
-            立即去建档 →
+            去设置宝宝月龄 →
           </button>
         </section>
       )}
 
-      {/* 右下角悬浮亲子能量挂件（仅在已建档时展示，未建档时严禁渲染） */}
-      {profile !== null && (
+      {/* 右下角悬浮亲子能量挂件（已建档或有暂存陪玩会话时展示） */}
+      {(profile !== null || pausedSession != null) && (
         <FloatingWidget
           isVip={isVip}
           profile={profile}
           todayTotalMinutes={todayTotalMinutes}
           onClick={() => onSelectTab('profile')}
+          pausedSession={pausedSession}
+          onResumeSession={onResumeSession}
         />
       )}
 
-      {/* 适龄降级提示横幅（如有） */}
+      {/* 适龄缺省提示横幅（无匹配适龄活动时展示，绝不伪装不适龄推荐） */}
       {ageNotice && (
         <div className="bg-[#FFF9F3] border border-orange-200/60 rounded-2xl px-3.5 py-2.5 flex items-center gap-2 text-xs text-[#B86834]">
           <AlertCircle className="w-4 h-4 text-orange-500 shrink-0" />
@@ -186,16 +178,24 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       )}
 
-      {/* 2. Above-the-Fold Core: Today's Featured Activity Card (Directly at top) */}
-                  {currentActivity && (
+      {/* 2. 今日主推卡片（无内容时展示安全空状态，杜绝 fallback 到未审核活动） */}
+      {currentActivity ? (
         <section className="bg-white rounded-3xl border border-[#F3EDE2] shadow-[0_12px_35px_-12px_rgba(44,34,30,0.07)] overflow-hidden relative">
           
-          {/* 纯净封面插画区（含左上角磨砂微浮层标签） */}
+          {/* 纯净封面插画区 */}
           <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-amber-100/70 via-orange-50/50 to-amber-50/30 relative rounded-t-3xl overflow-hidden flex items-center justify-center border-b border-orange-100/50">
-            {/* 方案 A 悬浮式：直接定位在插画左上角，不占纵向正文空间 */}
-            <div className="absolute top-3 left-3.5 z-10 bg-white/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-amber-800 shadow-sm border border-amber-100/50 flex items-center gap-1 select-none">
-              <span>✨ 今日精选 · {currentActivity.category}</span>
-            </div>
+            {/* 悬浮标签：未建档明确标注“通用推荐”，已建档显示“今日精选” */}
+            {todayRecordForHero ? (
+              <div className="absolute top-3 left-3.5 z-10 bg-emerald-600 text-white backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-1.5 select-none animate-in fade-in">
+                <span>✓ 今日已达成 · 陪伴 {todayRecordForHero.durationMinutes} 分钟 🎉</span>
+              </div>
+            ) : (
+              <div className="absolute top-3 left-3.5 z-10 bg-white/85 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-amber-800 shadow-xs border border-amber-100/60 flex items-center gap-1 select-none">
+                <span>
+                  {profile ? `✨ 今日精选 · ${currentActivity.category}` : `🌱 通用探索推荐 · ${currentActivity.category}`}
+                </span>
+              </div>
+            )}
 
             <svg viewBox="0 0 320 200" className="w-full h-full object-contain" aria-label="亲子活动插画">
               <rect x="0" y="0" width="320" height="200" fill="transparent" />
@@ -215,9 +215,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </svg>
           </div>
 
-          {/* 下半部分：紧凑衔接的文本内容区（Card Body） */}
+          {/* 文本内容区 */}
           <div className="p-4 pt-3 bg-white rounded-b-3xl">
-            {/* 插画下方首个元素直接是大标题与玩法简述 */}
             <div>
               <h3 
                 onClick={() => onSelectActivity(currentActivity)}
@@ -257,53 +256,100 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </span>
             </div>
 
-            {/* 主操作按钮（CTA 减负，干脆有力）与底部标语 */}
+            {/* 主操作按钮 */}
             <div className="mt-3">
-              <button
-                onClick={() => onStartPlay(currentActivity)}
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 hover:opacity-95 active:scale-[0.98] transition-all text-white shadow-lg shadow-orange-300/40 cursor-pointer flex items-center justify-center gap-2 font-bold text-base tracking-wide"
-              >
-                <Play className="w-4 h-4 fill-white" />
-                <span>开始陪伴</span>
-              </button>
+              {todayRecordForHero ? (
+                <div className="space-y-1.5">
+                  <button
+                    onClick={() => onStartPlay(currentActivity)}
+                    className="w-full h-12 rounded-2xl bg-emerald-50 hover:bg-emerald-100/90 active:scale-[0.98] transition-all text-emerald-800 border border-emerald-200/80 cursor-pointer flex items-center justify-center gap-2 font-bold text-sm tracking-wide shadow-xs"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>✓ 今日已完成 (再玩一次)</span>
+                  </button>
+                  <button
+                    onClick={() => onSelectTab('history')}
+                    className="w-full h-8 rounded-xl bg-transparent border-0 text-xs text-stone-400 hover:text-stone-700 transition-colors font-normal flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>查看今日足迹手账 →</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => onStartPlay(currentActivity)}
+                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 hover:opacity-95 active:scale-[0.98] transition-all text-white shadow-lg shadow-orange-300/40 cursor-pointer flex items-center justify-center gap-2 font-bold text-base tracking-wide"
+                >
+                  <Play className="w-4 h-4 fill-white" />
+                  <span>开始陪伴</span>
+                </button>
+              )}
               <div className="text-center text-[11px] text-stone-400 mt-2">
-                ✨ 免准备 · 随手即玩 · 专业专家指导
+                {profile
+                  ? '✨ 免准备 · 随手即玩 · 月龄陪伴小贴士'
+                  : '🌱 访客探索模式 · 建议完善宝宝档案以获取专属适龄匹配'}
               </div>
             </div>
           </div>
         </section>
+      ) : (
+        /* 空状态卡片：无已审核或适龄活动时的标准展示 */
+        <section className="bg-white rounded-3xl p-8 border border-[#F3EDE2] text-center space-y-3">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-2xl">
+            🌱
+          </div>
+          <h3 className="text-base font-bold text-stone-900">
+            {effectiveMonths !== null ? `暂无适合 ${effectiveMonths} 个月龄的已审核活动` : '暂无可推荐的已审核活动'}
+          </h3>
+          <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
+            为保障婴幼儿游戏安全性，所有亲子玩法均需通过专业审核。高风险或未复核内容已安全隔离，您可以前往活动库探索其他月龄。
+          </p>
+          <button
+            onClick={() => onSelectTab('library')}
+            className="px-4 py-2 rounded-2xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 transition-colors cursor-pointer"
+          >
+            去活动宝库浏览 →
+          </button>
+        </section>
       )}
 
-      {/* 童趣灵感推荐区 */}
+      {/* 3. 童趣灵感推荐区 */}
       <section className="space-y-2.5 pt-1">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-bold text-stone-700 flex items-center gap-1.5">
             <span>✨ 今天还想玩什么？</span>
           </h3>
-          <button
-            onClick={handleRefreshInspirations}
-            disabled={isRefreshingInspirations}
-            className="group flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600 active:scale-95 transition-all cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-50"
-            title="换一批推荐灵感"
-          >
-            <RefreshCw
-              className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-600 transition-transform duration-500 ease-out"
-              style={{ transform: `rotate(${rotationCount * 360}deg)` }}
-            />
-            <span>换一批</span>
-          </button>
+          {backupActivities.length > 0 && (
+            <button
+              onClick={handleRefreshInspirations}
+              disabled={isRefreshingInspirations}
+              className="group min-h-[44px] min-w-[44px] py-3 px-4 rounded-xl hover:bg-stone-100 active:scale-95 flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-800 transition-all cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-50"
+              title="换一批推荐灵感"
+            >
+              <RefreshCw
+                className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-700 transition-transform duration-500 ease-out"
+                style={{ transform: `rotate(${rotationCount * 360}deg)` }}
+              />
+              <span className="font-medium">换一批</span>
+            </button>
+          )}
         </div>
 
-        <div className={`space-y-2.5 transition-all duration-400 ease-out ${isRefreshingInspirations ? 'opacity-0 translate-y-1 scale-[0.99]' : 'opacity-100 translate-y-0 scale-100'}`}>
-          {backupActivities.map((act) => (
-            <ActivityItemCard
-              key={act.id}
-              activity={act}
-              onClick={() => onSelectActivity(act)}
-              isVipUser={isVip}
-            />
-          ))}
-        </div>
+        {backupActivities.length > 0 ? (
+          <div className={`space-y-2.5 transition-all duration-400 ease-out ${isRefreshingInspirations ? 'opacity-0 translate-y-1 scale-[0.99]' : 'opacity-100 translate-y-0 scale-100'}`}>
+            {backupActivities.map((act) => (
+              <ActivityItemCard
+                key={act.id}
+                activity={act}
+                onClick={() => onSelectActivity(act)}
+                isVipUser={isVip}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-stone-50 rounded-2xl p-6 text-center text-xs text-stone-400">
+            暂无更多已审核的备选适龄活动
+          </div>
+        )}
       </section>
 
     </div>

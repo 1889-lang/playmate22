@@ -6,6 +6,8 @@ export interface ActivityStep {
   description: string;
 }
 
+export type ReviewStatus = 'approved' | 'pending_safety_audit' | 'in_review' | 'rejected';
+
 export interface Activity {
   id: string;
   title: string;
@@ -23,7 +25,9 @@ export interface Activity {
   safetyReminder: string; // 安全提醒
   stopCondition: string; // 停止条件
   source: string; // 来源
-  isReviewed: boolean; // 是否经过专业审核
+  isReviewed: boolean; // 是否经过专业审核（仅 true 允许进入正式推荐与陪玩）
+  reviewStatus?: ReviewStatus; // 明确审核状态
+  auditReason?: string; // 审核说明或隔离原因
   accentColor: 'sage' | 'apricot' | 'coral' | 'blue';
   isVip?: boolean; // 是否为VIP高级活动
 }
@@ -42,13 +46,17 @@ export interface PlayRecord {
   difficulty: ActivityDifficulty;
   completed: boolean;
   notes: string;
+  photoUrl?: string;
 }
+
+export type AgeSource = 'birth_month' | 'estimated';
 
 export interface BabyProfile {
   name: string;
-  birthMonth: string; // YYYY-MM
+  birthMonth?: string; // YYYY-MM (当为 birth_month 模式时有效且必须<=当前月份)
   currentMonths: number;
   favoriteCategories: ActivityCategory[];
+  ageSource?: AgeSource; // 区分真实出生年月或估算月龄
 }
 
 export type ProfileStatus = 'unregistered' | 'registered';
