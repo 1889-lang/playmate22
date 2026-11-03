@@ -122,33 +122,32 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               )}
             </div>
             <div className="text-stone-400 text-base font-bold flex items-center gap-1.5">
-              {babyAge !== null && babyAge !== undefined ? (
-                <span className="text-xs font-semibold text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded-xl">修改</span>
-              ) : null}
               <span className="text-stone-400 font-normal">&gt;</span>
             </div>
           </div>
         </div>
 
-        {/* 3. 保存按钮 */}
-        <button
-          type="submit"
-          disabled={saved}
-          className={`w-full h-14 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            saved
-              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-              : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/25 active:scale-[0.99]'
-          }`}
-        >
-          {saved ? (
-            <>
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span>✓ 保存完成</span>
-            </>
-          ) : (
-            <span>保存完成</span>
-          )}
-        </button>
+        {/* 3. 保存按钮（Primary 精致居中胶囊，严禁通栏满宽） */}
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={saved}
+            className={`mx-auto w-3/5 max-w-[200px] h-11 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              saved
+                ? 'bg-emerald-500'
+                : 'bg-gradient-to-r from-amber-500 to-orange-400'
+            }`}
+          >
+            {saved ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>保存完成</span>
+              </>
+            ) : (
+              <span>保存完成</span>
+            )}
+          </button>
+        </div>
       </form>
 
       {/* 底部重置操作 */}
@@ -291,18 +290,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <p className="text-xs text-stone-600 leading-relaxed">
               确定要清空所有档案、记录并恢复初始状态吗？此操作不可撤销。
             </p>
-            <div className="flex flex-col gap-1 pt-2">
+            <div className="flex flex-col gap-1.5 pt-2">
               <button
                 type="button"
                 onClick={handleReset}
-                className="w-full h-11 rounded-2xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-md shadow-rose-600/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center"
+                className="mx-auto w-3/5 max-w-[200px] h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-xs font-medium text-white shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center"
               >
                 确认恢复
               </button>
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
-                className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide cursor-pointer flex items-center justify-center mt-1"
+                className="text-stone-400 hover:text-stone-600 text-xs py-2 block text-center transition-colors cursor-pointer"
               >
                 取消
               </button>

@@ -6,7 +6,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, PlayRecord, BabyProfile } from './types';
 import { INITIAL_ACTIVITIES } from './data/activities';
-import { Navbar } from './components/Navbar';
 import { TabBar } from './components/TabBar';
 import { HomeView } from './components/HomeView';
 import { LibraryView } from './components/LibraryView';
@@ -279,13 +278,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2C221E] font-sans antialiased selection:bg-orange-100 selection:text-orange-900">
       
-      {/* Top Navbar */}
-      <Navbar
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
-        isVip={isVip}
-        onOpenMembership={() => setShowMembershipModal(true)}
-      />
 
       {/* Main Container */}
       <main className="max-w-5xl mx-auto px-4 py-6">
@@ -523,19 +515,21 @@ export default function App() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-md shadow-orange-500/20 cursor-pointer transition-all active:scale-[0.99] flex items-center justify-center gap-1.5 mt-2"
-              >
-                完成并开始今日陪玩
-              </button>
-              <button
-                type="button"
-                onClick={handleSkipQuickProfile}
-                className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide cursor-pointer flex items-center justify-center mt-1"
-              >
-                暂不建档，返回继续浏览
-              </button>
+              <div className="pt-2 flex flex-col items-center">
+                <button
+                  type="submit"
+                  className="w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span>开始今日陪玩</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSkipQuickProfile}
+                  className="text-stone-400 hover:text-stone-600 text-xs py-2 block text-center transition-colors cursor-pointer w-full mt-1"
+                >
+                  暂不建档，返回继续浏览
+                </button>
+              </div>
             </form>
           </div>
         </div>

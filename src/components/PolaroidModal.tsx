@@ -288,7 +288,7 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
               className="w-full h-8 rounded-xl bg-amber-50/80 hover:bg-amber-100 text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-amber-200/50"
             >
               <Camera className="w-3.5 h-3.5 text-orange-500" />
-              <span>{currentPhotoUrl ? '更换相纸照片' : '📷 上传一张宝宝玩耍照片（选填）'}</span>
+              <span>{currentPhotoUrl ? '更换相纸照片' : '上传一张宝宝玩耍照片（选填）'}</span>
             </button>
           </div>
 
@@ -316,22 +316,22 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
           )}
         </div>
 
-        {/* Bottom Actions: 必须保留「保存拍立得」作为主要操作，「返回首页」作为次要操作 */}
+        {/* Bottom Actions: Primary 居中胶囊保存 + Ghost 文本返回首页 */}
         <div className="p-4 sm:p-5 bg-white border-t border-[#F1EAE0] space-y-2 shrink-0">
           <button
             type="button"
             disabled={isGenerating || !renderedImageUrl}
             onClick={handleDownload}
-            className={`w-full h-12 rounded-2xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`mx-auto w-3/5 max-w-[200px] h-11 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               downloadSuccess
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
-                : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/25 active:scale-[0.99]'
+                ? 'bg-emerald-600'
+                : 'bg-gradient-to-r from-amber-500 to-orange-400'
             }`}
           >
             {downloadSuccess ? (
               <>
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>✓ 已保存拍立得海报到相册</span>
+                <span>已保存到相册</span>
               </>
             ) : (
               <>
@@ -344,7 +344,7 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-full h-10 rounded-2xl bg-stone-100 hover:bg-stone-200/80 text-stone-700 font-bold text-xs flex items-center justify-center gap-1 transition-all cursor-pointer"
+            className="text-stone-400 hover:text-stone-600 text-xs py-2 block text-center transition-colors cursor-pointer w-full"
           >
             返回首页
           </button>

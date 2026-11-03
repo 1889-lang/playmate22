@@ -297,18 +297,18 @@ export const CoachModeModal: React.FC<CoachModeModalProps> = ({
           </div>
         </div>
 
-        {/* 4. 底部常驻固定操作栏 (Fixed/Sticky Bottom with Frosted Glass Shading) */}
-        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#F3EDE2] shadow-[0_-10px_25px_rgba(44,34,30,0.06)] flex flex-col">
+        {/* 4. 底部常驻固定操作栏 (Primary 居中胶囊 + Ghost 纯文本轻链接) */}
+        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#F3EDE2] shadow-[0_-10px_25px_rgba(44,34,30,0.06)] flex flex-col items-center">
           <button
             onClick={handleComplete}
-            className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-md shadow-orange-500/20 active:scale-[0.99] transition-all cursor-pointer"
+            className="w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
           >
-            🏁 结束陪伴，记录足迹
+            <span>结束陪伴</span>
           </button>
           
           <button
             onClick={handleSaveProgress}
-            className="w-full h-9 py-2 bg-transparent border-0 shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide flex items-center justify-center gap-1 mt-1 cursor-pointer"
+            className="text-stone-400 hover:text-stone-600 text-xs py-2 block text-center transition-colors cursor-pointer w-full mt-1"
           >
             稍后再玩 · 保存进度
           </button>

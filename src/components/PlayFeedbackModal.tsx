@@ -221,7 +221,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
               {!photoDataUrl ? (
                 <div className="flex items-center justify-center gap-1.5 py-1 text-xs text-amber-900/60 font-medium">
                   <Camera className="w-4 h-4 text-orange-500" />
-                  <span>📷 拍张宝宝玩耍照片（选填）</span>
+                  <span>拍张宝宝玩耍照片（选填）</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-2">
@@ -252,29 +252,29 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
             </div>
           </div>
 
-          {/* 第四项：底部操作栏 */}
-          <div className="pt-2 space-y-2">
+          {/* 第四项：底部操作栏（Primary 居中胶囊 + Secondary + Ghost 纯文本） */}
+          <div className="pt-2 space-y-2.5 flex flex-col items-center">
             <button
               type="button"
               onClick={() => handleSave(true)}
-              className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 active:scale-[0.99] transition-all cursor-pointer"
+              className="w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4 shrink-0" />
-              <span>生成拍立得海报并分享</span>
+              <span>保存手账相片</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSave(false)}
-              className="w-full h-10 rounded-2xl bg-stone-100 hover:bg-stone-200/80 text-stone-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.99] cursor-pointer"
+              className="h-10 px-5 rounded-full bg-amber-50/80 border border-amber-200/60 text-amber-900 font-medium text-xs active:scale-95 transition-all cursor-pointer flex items-center justify-center"
             >
-              <span>✓ 仅完成打卡</span>
+              <span>仅完成打卡</span>
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="w-full h-8 py-1 bg-transparent border-none shadow-none text-xs text-stone-400 hover:text-stone-600 active:opacity-60 transition-colors text-center font-normal tracking-wide cursor-pointer flex items-center justify-center"
+              className="text-stone-400 hover:text-stone-600 text-xs py-1.5 block text-center transition-colors cursor-pointer w-full"
             >
               直接关闭
             </button>

@@ -5,11 +5,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { Activity, PlayRecord, BabyProfile } from '../types';
-import { Play, AlertCircle, RefreshCw } from 'lucide-react';
+import { Play, AlertCircle } from 'lucide-react';
 import { getLocalDateStr, getEffectiveBabyMonths } from '../utils/date';
 import { getReviewedActivities, parseAgeRange } from '../utils/activity';
 import { FloatingWidget, PausedSession } from './FloatingWidget';
-import { ActivityItemCard } from './ActivityItemCard';
 
 interface HomeViewProps {
   activities: Activity[];
@@ -24,7 +23,7 @@ interface HomeViewProps {
 }
 
 /**
- * Fisher-Yates 随机洗牌算法（仅用于备选灵感列表换一批）
+ * Fisher-Yates 随机洗牌算法（用于换一换灵感列表）
  */
 function fisherYatesShuffle<T>(array: T[]): T[] {
   const arr = [...array];
@@ -41,6 +40,26 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
   return arr;
 }
 
+const cleanTitle = (title: string): string => {
+  if (!title) return '';
+  return title.replace(/[(（][^)）]*[)）]/g, '').trim();
+};
+
+const getFriendlyIntro = (act: Activity): string => {
+  if (!act) return '';
+  const sub = act.subtitle || '';
+  if (sub.includes('听觉') || sub.includes('抓握')) {
+    return '和宝宝一起听听奇妙的声音，引导宝宝伸手探索，享受轻松愉快的亲子互动时光。';
+  }
+  if (sub.includes('前庭') || sub.includes('运动') || sub.includes('平衡')) {
+    return '带宝宝体验轻柔有趣的身体互动，在欢声笑语中感受充满活力的亲子时刻。';
+  }
+  if (sub.includes('触觉') || sub.includes('精细') || sub.includes('抓取')) {
+    return '陪宝宝摸摸不同的小物件，用小手开启充满好奇的探索之旅。';
+  }
+  return `和宝宝一起进行有趣的${act.category}互动，在轻松陪伴中发现探索的小美好。`;
+};
+
 export const HomeView: React.FC<HomeViewProps> = ({
   activities,
   records,
@@ -52,15 +71,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
   pausedSession,
   onResumeSession,
 }) => {
-  // 1. 获取宝宝统一有效月龄
   const effectiveMonths = getEffectiveBabyMonths(profile);
 
-  // 2. 严格安全底线拦截：候选池强制只接受已审核活动
   const reviewedActivities = useMemo(() => {
     return getReviewedActivities(activities);
   }, [activities]);
 
-  // 3. 适龄候选池筛选
   const { filteredPool, ageNotice } = useMemo(() => {
     if (effectiveMonths === null) {
       return { filteredPool: reviewedActivities, ageNotice: null };
@@ -85,10 +101,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const todayRecords = records.filter((r) => r.date === todayStr);
   const todayTotalMinutes = todayRecords.reduce((acc, curr) => acc + (curr.durationMinutes || 0), 0);
 
-  const [featuredOffset, setFeaturedOffset] = useState(0);
-  const [isRefreshingFeatured, setIsRefreshingFeatured] = useState(false);
+  const [featuredOffset] = useState(0);
 
-  // 4. 首页主推活动（支持换一换）
   const currentActivity = useMemo(() => {
     const pool = filteredPool.length > 0 ? filteredPool : reviewedActivities;
     if (pool.length === 0) return null;
@@ -101,51 +115,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
     return pool[index];
   }, [filteredPool, reviewedActivities, featuredOffset]);
 
-  const handleRefreshFeatured = () => {
-    if (isRefreshingFeatured) return;
-    setIsRefreshingFeatured(true);
-    setFeaturedOffset((prev) => prev + 1);
-    setTimeout(() => {
-      setIsRefreshingFeatured(false);
-    }, 400);
-  };
-
   const [inspirationsShuffleKey, setInspirationsShuffleKey] = useState(0);
 
   const inspirationsShuffled = useMemo(() => {
-    return fisherYatesShuffle(filteredPool);
-  }, [filteredPool, inspirationsShuffleKey]);
+    return fisherYatesShuffle(filteredPool.length > 0 ? filteredPool : reviewedActivities);
+  }, [filteredPool, reviewedActivities, inspirationsShuffleKey]);
 
   const backupActivities = useMemo(() => {
     const filtered = inspirationsShuffled.filter((a) => a.id !== currentActivity?.id);
     return filtered.slice(0, 3);
   }, [inspirationsShuffled, currentActivity]);
 
-  const [isRefreshingInspirations, setIsRefreshingInspirations] = useState(false);
-  const [rotationCount, setRotationCount] = useState(0);
-
-  const handleRefreshInspirations = () => {
-    if (isRefreshingInspirations) return;
-    setIsRefreshingInspirations(true);
-    setRotationCount((prev) => prev + 1);
-    setInspirationsShuffleKey((prev) => prev + 1);
-
-    setTimeout(() => {
-      setIsRefreshingInspirations(false);
-    }, 400);
-  };
-
   return (
     <div className="space-y-4 pb-32 md:pb-16 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-3xl mx-auto">
       
-      {/* 1. 顶部品牌区 */}
-      <div className="flex items-center justify-between pt-1 pb-1">
+      {/* 1. 顶部 Header 结构（干净纯粹） */}
+      <div className="flex items-center justify-between pt-3 pb-1">
         <div>
-          <h1 className="text-base sm:text-lg font-bold text-[#2C221E] tracking-tight">玩伴日历</h1>
-          <p className="text-xs text-[#786F6A] mt-0.5">今天，和宝宝一起发现世界的小美好</p>
+          <h1 className="text-xl font-bold text-stone-800 tracking-tight">
+            玩伴日历
+          </h1>
+          <p className="text-xs text-stone-400 mt-1">今天，和宝宝一起发现世界的小美好</p>
         </div>
         {profile === null && (
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 flex items-center gap-1 shadow-xs select-none">
+          <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs px-2.5 py-1 rounded-full font-medium select-none shadow-xs">
             🌱 探索模式
           </span>
         )}
@@ -171,88 +164,84 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       )}
 
-      {/* 今日推荐标题区 */}
-      <div className="flex items-center justify-between pt-2 pb-1">
-        <div>
-          <h2 className="text-sm sm:text-base font-bold text-stone-800 tracking-tight">今日推荐</h2>
-          <p className="text-[11px] text-stone-500">每天一个，亲子时光更有趣</p>
-        </div>
-        <button
-          onClick={handleRefreshFeatured}
-          disabled={isRefreshingFeatured}
-          className="px-3 py-1.5 rounded-xl bg-white border border-[#F3EDE2] text-xs font-semibold text-stone-600 hover:bg-stone-50 flex items-center gap-1 transition-all cursor-pointer shadow-xs disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 text-stone-400 ${isRefreshingFeatured ? 'animate-spin' : ''}`} />
-          <span>换一换</span>
-        </button>
-      </div>
-
-      {/* 2. 今日推荐卡片 */}
+      {/* 2. 今日主推荐卡片（今日陪玩邀请卡，纯净无冗余） */}
       {currentActivity ? (
-        <section className="bg-white rounded-3xl border border-[#F3EDE2] shadow-[0_12px_35px_-12px_rgba(44,34,30,0.07)] overflow-hidden relative">
+        <div className="bg-white rounded-3xl p-3 shadow-sm border border-stone-100 space-y-3">
           
-          {/* 1. 小型「🌱 推荐体验」标签 */}
-          <div className="absolute top-3 left-3.5 z-10 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-amber-800 shadow-xs border border-amber-100/70 flex items-center gap-1 select-none">
-            <span>🌱 推荐体验</span>
-          </div>
-
-          {/* 2. 当前推荐活动的主题插画 */}
-          <div className="w-full h-48 sm:h-56 bg-gradient-to-br from-amber-100/70 via-orange-50/50 to-amber-50/30 relative rounded-t-3xl overflow-hidden flex items-center justify-center border-b border-orange-100/50">
-            <svg viewBox="0 0 320 200" className="w-full h-full object-contain" aria-label="亲子活动插画">
-              <rect x="0" y="0" width="320" height="200" fill="transparent" />
-              <rect x="0" y="150" width="320" height="50" fill="#FDF3E3" opacity="0.6" rx="8" />
-              <ellipse cx="160" cy="165" rx="110" ry="12" fill="#E8D5BC" opacity="0.4" />
-              <path d="M60 130 Q160 110 260 130 L280 170 Q160 185 40 170 Z" fill="#A8B9A0" opacity="0.25" />
+          {/* 纯净插画区（无任何悬浮横幅或遮挡胶囊） */}
+          <div 
+            onClick={() => onSelectActivity(currentActivity)}
+            className="w-full aspect-[4/3] rounded-2xl object-cover bg-amber-50/50 relative overflow-hidden flex items-center justify-center cursor-pointer group"
+          >
+            <svg viewBox="0 0 320 240" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102" aria-label="北欧绘本育儿插画">
+              <defs>
+                <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FAF7F2" />
+                  <stop offset="100%" stopColor="#F1EAE0" />
+                </linearGradient>
+              </defs>
+              <rect width="320" height="240" fill="url(#bgGrad)" />
+              <rect x="0" y="170" width="320" height="70" fill="#E8D5BC" opacity="0.5" />
+              <ellipse cx="160" cy="190" rx="130" ry="16" fill="#D5C2A8" opacity="0.35" />
               
-              <g transform="translate(105, 75)">
-                <path d="M15 25 Q30 10 50 20 L58 65 Q35 85 10 75 Z" fill="#E8B58D" />
-                <circle cx="32" cy="5" r="12" fill="#DDB896" />
-              </g>
-              <g transform="translate(175, 90)">
-                <ellipse cx="25" cy="40" rx="20" ry="6" fill="#C5B5A2" opacity="0.4" />
-                <circle cx="25" cy="16" r="10" fill="#DDB896" />
-                <path d="M12 26 Q25 18 38 26 L42 42 Q25 48 8 42 Z" fill="#DFA39A" />
+              <circle cx="65" cy="140" r="16" fill="#A8B9A0" opacity="0.65" />
+              <rect x="235" y="135" width="22" height="22" rx="4" fill="#E8B58D" opacity="0.75" />
+              <rect x="255" y="125" width="18" height="32" rx="4" fill="#DFA39A" opacity="0.75" />
+
+              <g transform="translate(130, 75)">
+                <path d="M15 35 Q32 15 55 25 L65 85 Q35 105 5 95 Z" fill="#E8B58D" />
+                <circle cx="38" cy="14" r="16" fill="#F4D0B2" />
+                <path d="M22 12 Q38 -2 54 12 Q52 4 38 2 Q24 4 22 12 Z" fill="#8C6D53" />
+                <circle cx="32" cy="14" r="1.5" fill="#5C4033" />
+                <circle cx="44" cy="14" r="1.5" fill="#5C4033" />
+                <path d="M36 18 Q38 21 40 18" stroke="#DFA39A" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                <circle cx="55" cy="55" r="7" fill="#F4D0B2" />
               </g>
             </svg>
           </div>
 
-          {/* 文本内容区：3. 活动标题 4. 活动副标题 5. 现有活动分类标签 6. 橙色主按钮「▶ 开始陪伴」 */}
-          <div className="p-4 pt-3.5 bg-white rounded-b-3xl space-y-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-orange-50 text-orange-700 border border-orange-100/80">
-                  {currentActivity.category}
-                </span>
-                <span className="text-[11px] text-stone-400">
-                  适龄：{currentActivity.ageRange.replace('个月', '月龄')}
-                </span>
-              </div>
-              <h3 
-                onClick={() => onSelectActivity(currentActivity)}
-                className="text-lg font-bold text-stone-900 hover:text-orange-600 transition-colors cursor-pointer tracking-tight"
-              >
-                {currentActivity.title}
-              </h3>
-              <p className="text-xs text-stone-500 mt-1 leading-relaxed line-clamp-2">
-                {currentActivity.subtitle}
-              </p>
+          {/* 卡片文字与精致排版（一气呵成） */}
+          <div className="px-1 pb-1 space-y-2.5">
+            
+            {/* 玩法标题 */}
+            <h3
+              onClick={() => onSelectActivity(currentActivity)}
+              className="text-xl font-bold text-stone-800 hover:text-orange-600 transition-colors cursor-pointer tracking-tight"
+            >
+              {cleanTitle(currentActivity.title)}
+            </h3>
+
+            {/* 温暖导引语 */}
+            <p className="text-xs text-stone-600 leading-relaxed line-clamp-2">
+              {getFriendlyIntro(currentActivity)}
+            </p>
+
+            {/* 轻量标签 */}
+            <div className="flex items-center gap-1.5 pt-0.5 overflow-x-auto scrollbar-none">
+              <span className="bg-[#FAF7F2] text-stone-600 text-[11px] px-2.5 py-0.5 rounded-md font-medium border border-[#F1EAE0]">
+                {currentActivity.category}
+              </span>
+              <span className="bg-[#FAF7F2] text-stone-600 text-[11px] px-2.5 py-0.5 rounded-md font-medium border border-[#F1EAE0]">
+                亲子互动
+              </span>
             </div>
 
-            {/* 6. 橙色主按钮「▶ 开始陪伴」 */}
-            <div className="pt-1">
+            {/* 居中精致按钮（开始陪伴） */}
+            <div className="pt-3 pb-1">
               <button
                 onClick={() => onStartPlay(currentActivity)}
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 hover:opacity-95 active:scale-[0.98] transition-all text-white shadow-lg shadow-orange-300/40 cursor-pointer flex items-center justify-center gap-2 font-bold text-base tracking-wide"
+                className="mx-auto w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <Play className="w-4 h-4 fill-white" />
                 <span>开始陪伴</span>
               </button>
             </div>
+
           </div>
-        </section>
+        </div>
       ) : (
         /* 空状态卡片 */
-        <section className="bg-white rounded-3xl p-8 border border-[#F3EDE2] text-center space-y-3">
+        <div className="bg-white rounded-3xl p-8 border border-stone-100 text-center space-y-3">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-2xl">
             🌱
           </div>
@@ -262,54 +251,57 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
             为保障婴幼儿游戏安全性，所有亲子玩法均需通过专业审核。高风险或未复核内容已安全隔离，您可以前往活动库探索其他月龄。
           </p>
-          <button
-            onClick={() => onSelectTab('library')}
-            className="px-4 py-2 rounded-2xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 transition-colors cursor-pointer"
-          >
-            去活动宝库浏览 →
-          </button>
-        </section>
+          <div className="pt-2 flex justify-center">
+            <button
+              onClick={() => onSelectTab('library')}
+              className="w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>去活动宝库浏览 →</span>
+            </button>
+          </div>
+        </div>
       )}
 
-      {/* 3. 更多玩法区域（今天还想玩什么？） */}
-      <section className="space-y-2.5 pt-2">
+      {/* 3. 下方「今天还想玩什么？」三列插画画廊 */}
+      <div className="space-y-2.5 pt-3">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-sm font-bold text-stone-700 flex items-center gap-1.5">
-            <span>今天还想玩什么？</span>
-          </h3>
-          {backupActivities.length > 0 && (
-            <button
-              onClick={handleRefreshInspirations}
-              disabled={isRefreshingInspirations}
-              className="group min-h-[44px] min-w-[44px] py-2 px-3 rounded-xl hover:bg-stone-100 active:scale-95 flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-800 transition-all cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-50"
-              title="换一批推荐灵感"
-            >
-              <RefreshCw
-                className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-700 transition-transform duration-500 ease-out"
-                style={{ transform: `rotate(${rotationCount * 360}deg)` }}
-              />
-              <span className="font-medium">换一批</span>
-            </button>
-          )}
+          <h3 className="text-sm font-bold text-stone-800">今天还想玩什么？</h3>
+          <button
+            onClick={() => onSelectTab('library')}
+            className="text-xs text-amber-600 font-medium hover:text-amber-700 transition-colors cursor-pointer"
+          >
+            更多玩法 ›
+          </button>
         </div>
 
         {backupActivities.length > 0 ? (
-          <div className={`space-y-2.5 transition-all duration-400 ease-out ${isRefreshingInspirations ? 'opacity-0 translate-y-1 scale-[0.99]' : 'opacity-100 translate-y-0 scale-100'}`}>
+          <div className="grid grid-cols-3 gap-2.5">
             {backupActivities.map((act) => (
-              <ActivityItemCard
+              <div
                 key={act.id}
-                activity={act}
                 onClick={() => onSelectActivity(act)}
-                isVipUser={isVip}
-              />
+                className="bg-white rounded-2xl p-2.5 border border-stone-100 shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer group flex flex-col items-center text-center justify-between select-none"
+              >
+                <div className="w-full aspect-square rounded-2xl object-cover bg-amber-50/50 relative overflow-hidden flex items-center justify-center mb-2">
+                  <svg viewBox="0 0 100 100" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" aria-label="活动小图">
+                    <rect width="100" height="100" fill="#FDF8F0" />
+                    <circle cx="50" cy="50" r="26" fill="#FFE5CC" opacity="0.6" />
+                    <path d="M30 65 Q50 40 70 65 Z" fill="#E8B58D" />
+                    <circle cx="50" cy="38" r="10" fill="#DDB896" />
+                  </svg>
+                </div>
+                <h4 className="text-xs font-bold text-stone-800 line-clamp-1 group-hover:text-orange-600 transition-colors w-full px-0.5">
+                  {cleanTitle(act.title)}
+                </h4>
+              </div>
             ))}
           </div>
         ) : (
-          <div className="bg-stone-50 rounded-2xl p-6 text-center text-xs text-stone-400">
+          <div className="bg-white rounded-2xl p-6 text-center text-xs text-stone-400 border border-stone-100">
             暂无更多已审核的备选适龄活动
           </div>
         )}
-      </section>
+      </div>
 
     </div>
   );

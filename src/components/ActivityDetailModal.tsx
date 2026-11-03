@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Activity } from '../types';
-import { X, CheckCircle2 } from 'lucide-react';
+import { X, CheckCircle2, Play } from 'lucide-react';
 
 interface ActivityDetailModalProps {
   activity: Activity;
@@ -257,29 +257,29 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
             </div>
           )}
 
-          {/* Bottom Full-Width Action Button */}
-          <div className="pt-0.5">
+          {/* Bottom Action Button (Primary 精致居中胶囊规范) */}
+          <div className="pt-2 flex justify-center">
             {!activity.isReviewed && !(activity.isVip && isVip) ? (
               <button
                 disabled
-                className="w-full h-12 rounded-2xl bg-stone-200 text-stone-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed select-none opacity-80"
+                className="w-full h-11 rounded-full bg-stone-200 text-stone-500 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed select-none opacity-80"
               >
-                <span>⚠️ 内容审核隔离中 · 暂不支持体验</span>
+                <span>待安全审核隔离中</span>
               </button>
             ) : activity.isVip && !isVip ? (
               <button
                 onClick={onUpgradeVip}
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-orange-500/20 cursor-pointer active:scale-[0.98] transition-all"
+                className="mx-auto w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
-                <span>👑 解锁 VIP 特权体验</span>
+                <span>解锁 VIP 体验</span>
               </button>
             ) : (
               <button
                 onClick={() => onStartPlay(activity)}
-                className="w-full h-12 rounded-2xl bg-[#F28C45] hover:bg-[#e07b36] active:scale-[0.98] transition-all text-white font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-[#F28C45]/25 cursor-pointer"
+                className="mx-auto w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
-                <CheckCircle2 className="w-5 h-5 fill-white text-[#F28C45]" />
-                <span>{activity.isVip && !activity.isReviewed ? '▶ 开始计时陪伴（VIP内测体验）' : '▶ 开始计时陪伴'}</span>
+                <Play className="w-4 h-4 fill-white" />
+                <span>开始陪伴</span>
               </button>
             )}
           </div>

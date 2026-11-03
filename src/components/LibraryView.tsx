@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Activity, BabyProfile } from '../types';
-import { Lightbulb, ChevronRight } from 'lucide-react';
 import { ActivityItemCard } from './ActivityItemCard';
 import { getEffectiveBabyMonths } from '../utils/date';
 import { isActivityReviewed, parseAgeRange } from '../utils/activity';
@@ -22,7 +21,6 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('全部');
   const [selectedAgeBracket, setSelectedAgeBracket] = useState<string>('matched');
-  const [showExpertTip, setShowExpertTip] = useState(false);
 
   const categories: string[] = ['全部', '大运动', '精细动作', '感官认知', '社会情绪', '语言交流'];
 
@@ -111,31 +109,6 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             </button>
           ))}
         </div>
-
-        {/* 紧凑可折叠的月龄陪伴小贴士胶囊 Banner */}
-        <div
-          className="bg-amber-50/80 border border-amber-200/70 rounded-2xl px-3 py-2 flex items-center justify-between gap-2 shadow-xs cursor-pointer"
-          onClick={() => setShowExpertTip(!showExpertTip)}
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <Lightbulb className="w-4 h-4 text-amber-600 fill-amber-300 shrink-0" />
-            <span className="text-xs font-bold text-[#2C221E] truncate">
-              💡 月龄陪伴小贴士：7-12月龄趣味大动作与小手探索
-            </span>
-          </div>
-          <span className="text-[11px] text-amber-800 font-bold shrink-0 flex items-center gap-0.5">
-            {showExpertTip ? '收起' : '详情'}{' '}
-            <ChevronRight
-              className={`w-3.5 h-3.5 transition-transform ${showExpertTip ? 'rotate-90' : ''}`}
-            />
-          </span>
-        </div>
-
-        {showExpertTip && (
-          <div className="bg-amber-50/50 border border-amber-200/50 rounded-2xl p-3 text-xs text-[#786F6A] leading-relaxed animate-in fade-in">
-            7-12月龄的宝宝越来越活泼好动，开始喜欢稳稳独坐、到处探索爬行和用小手指抓取物品。每天抽一点时间和宝宝玩玩互动小游戏，在轻松欢笑中陪伴宝宝自由探索！
-          </div>
-        )}
       </div>
 
       {/* 2. Activity Cards Grid */}
