@@ -141,19 +141,19 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="w-full max-w-md bg-[#FAF8F5] rounded-3xl shadow-2xl border border-[#F3EDE2] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* 顶部标题栏（规范小叉号） */}
-        <div className="px-5 py-3.5 bg-[#FAF8F5] border-b border-[#F3EDE2] flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="w-full max-w-md bg-[#FAF9F2] rounded-3xl shadow-2xl border border-[#EDF4E9] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        {/* 顶部标题栏 */}
+        <div className="px-5 py-3.5 bg-[#FAF9F2] border-b border-[#EDF4E9] flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-orange-500" />
-            <h3 className="text-sm font-bold text-[#2C221E]">
+            <Sparkles className="w-4 h-4 text-[#62AD78]" />
+            <h3 className="text-sm font-bold text-[#45483F]">
               记录今天的亲子时光
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
+            className="p-1 rounded-full text-[#85877B] hover:text-[#45483F] hover:bg-[#EDF4E9] transition-colors cursor-pointer"
             aria-label="关闭"
           >
             <X className="w-5 h-5" />
@@ -163,18 +163,18 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
         {/* 核心轻量三步闭环 */}
         <div className="p-5 space-y-4">
           {/* 顶部战报胶囊 */}
-          <div className="bg-amber-50/70 border border-amber-100/60 rounded-2xl p-3.5 text-center">
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
+          <div className="bg-[#EDF4E9]/80 border border-[#62AD78]/30 rounded-2xl p-3.5 text-center">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#EDF4E9] text-[#3F8054]">
               ⏱️ 陪伴 {durationMinutes} 分钟
             </span>
-            <p className="text-xs font-bold text-stone-800 line-clamp-1 mt-1.5">
+            <p className="text-xs font-bold text-[#45483F] line-clamp-1 mt-1.5">
               {activity.title}
             </p>
           </div>
 
           {/* 第一项：宝宝状态（3 个大触控卡片） */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#786F6A]">宝宝状态</label>
+            <label className="text-xs font-bold text-[#85877B]">宝宝状态</label>
             <div className="grid grid-cols-3 gap-2.5">
               {reactionCards.map((r) => {
                 const isSelected = reaction === r.key;
@@ -185,14 +185,14 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
                     onClick={() => setReaction(r.key)}
                     className={`h-20 rounded-2xl text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
                       isSelected
-                        ? 'border-2 border-orange-500 bg-amber-50/60 shadow-xs'
-                        : 'border border-[#F3EDE2] bg-white/80 hover:bg-white text-stone-600'
+                        ? 'border-2 border-[#62AD78] bg-[#EDF4E9]/80 shadow-xs'
+                        : 'border border-[#EDF4E9] bg-white hover:bg-[#FAF9F2] text-[#85877B]'
                     }`}
                   >
                     <span className="text-2xl select-none leading-none">{r.emoji}</span>
                     <span
                       className={`text-sm font-bold ${
-                        isSelected ? 'text-orange-950' : 'text-stone-700'
+                        isSelected ? 'text-[#3F8054]' : 'text-[#45483F]'
                       }`}
                     >
                       {r.label}
@@ -205,7 +205,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
 
           {/* 第二项：拍照记录（图片上传组件） */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#786F6A]">拍照记录</label>
+            <label className="text-xs font-bold text-[#85877B]">拍照记录</label>
             <input
               ref={fileInputRef}
               type="file"
@@ -216,16 +216,16 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
 
             <div
               onClick={handleUploadClick}
-              className="border-2 border-dashed border-amber-200/80 bg-amber-50/30 rounded-2xl p-4 text-center cursor-pointer hover:bg-amber-50/60 transition-all"
+              className="border-2 border-dashed border-[#62AD78]/30 bg-[#EDF4E9]/30 rounded-xl p-4 text-center cursor-pointer hover:bg-[#EDF4E9]/60 transition-all"
             >
               {!photoDataUrl ? (
-                <div className="flex items-center justify-center gap-1.5 py-1 text-xs text-amber-900/60 font-medium">
-                  <Camera className="w-4 h-4 text-orange-500" />
+                <div className="flex items-center justify-center gap-1.5 py-1 text-xs text-[#3F8054] font-medium">
+                  <Camera className="w-4 h-4 text-[#62AD78]" />
                   <span>拍张宝宝玩耍照片（选填）</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden shadow-xs border border-amber-200/80">
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden shadow-xs border border-[#62AD78]/30">
                     <img
                       src={photoDataUrl}
                       alt="宝宝玩耍照片"
@@ -244,7 +244,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
                       ✕
                     </button>
                   </div>
-                  <span className="text-[11px] text-amber-900/60 font-medium hover:text-amber-900">
+                  <span className="text-[11px] text-[#3F8054] font-medium hover:text-[#3F8054]">
                     点击可更换照片
                   </span>
                 </div>
@@ -257,7 +257,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
             <button
               type="button"
               onClick={() => handleSave(true)}
-              className="w-3/5 max-w-[200px] h-11 bg-gradient-to-r from-amber-500 to-orange-400 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="w-3/5 max-w-[200px] h-11 bg-[#62AD78] hover:bg-[#3F8054] text-white font-medium text-sm rounded-full shadow-xs active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4 shrink-0" />
               <span>保存手账相片</span>
@@ -266,7 +266,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
             <button
               type="button"
               onClick={() => handleSave(false)}
-              className="h-10 px-5 rounded-full bg-amber-50/80 border border-amber-200/60 text-amber-900 font-medium text-xs active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+              className="h-10 px-5 rounded-full bg-[#EDF4E9] border border-[#62AD78]/30 text-[#3F8054] font-medium text-xs active:scale-95 transition-all cursor-pointer flex items-center justify-center hover:bg-[#62AD78]/10"
             >
               <span>仅完成打卡</span>
             </button>
@@ -274,7 +274,7 @@ export const PlayFeedbackModal: React.FC<PlayFeedbackModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="text-stone-400 hover:text-stone-600 text-xs py-1.5 block text-center transition-colors cursor-pointer w-full"
+              className="text-[#85877B] hover:text-[#45483F] text-xs py-1.5 block text-center transition-colors cursor-pointer w-full"
             >
               直接关闭
             </button>

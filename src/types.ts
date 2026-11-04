@@ -41,7 +41,9 @@ export interface PlayRecord {
   activityTitle: string;
   category: ActivityCategory;
   date: string; // YYYY-MM-DD
-  durationMinutes: number;
+  durationMinutes: number; // 向下取整显示的分钟数
+  durationSeconds?: number; // 真实累计秒数
+  sessionId?: string; // 陪玩会话唯一 ID
   reaction: BabyReaction;
   difficulty: ActivityDifficulty;
   completed: boolean;

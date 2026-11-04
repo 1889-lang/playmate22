@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Activity } from '../types';
-import { X, Download, CheckCircle2, Camera, Sparkles } from 'lucide-react';
+import { X, Download, CheckCircle2, Camera } from 'lucide-react';
 
 interface PolaroidModalProps {
   activity: Activity;
@@ -17,34 +17,86 @@ interface PolaroidModalProps {
   onClose: () => void;
   onUpdateBabyState?: (state: string) => void;
   onUpdatePhotoUrl?: (url: string | undefined) => void;
+  // Multi-record switcher support
+  totalRecordsCount?: number;
+  currentRecordIndex?: number;
+  onSwitchRecord?: (index: number) => void;
 }
+
+const cleanTitle = (title: string): string => {
+  if (!title) return '';
+  return title.replace(/[(（][^)）]*[)）]/g, '').trim();
+};
+
+const cleanPromptText = (prompt?: string): string => {
+  if (!prompt) return '';
+  return prompt.replace(/^["'“”]+|["'“”]+$/g, '').trim();
+};
+
+type ReactionKey = 'happy' | 'neutral' | 'sad';
 
 export const PolaroidModal: React.FC<PolaroidModalProps> = ({
   activity,
-  durationMinutes,
   date,
-  babyState = '开心',
+  babyState,
   photoUrl,
-  babyName = '宝宝',
   onClose,
   onUpdateBabyState,
   onUpdatePhotoUrl,
+  totalRecordsCount,
+  currentRecordIndex,
+  onSwitchRecord,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [renderedImageUrl, setRenderedImageUrl] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(true);
+  const [exportImageUrl, setExportImageUrl] = useState<string | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
-  
-  const [currentBabyState, setCurrentBabyState] = useState<string>(babyState);
+
+  // Reaction state: NULL if not explicitly selected
+  const [selectedReaction, setSelectedReaction] = useState<ReactionKey | null>(() => {
+    if (!babyState) return null;
+    if (babyState === '很喜欢' || babyState === '开心' || babyState === 'happy' || babyState === '😍') return 'happy';
+    if (babyState === '一般' || babyState === '平静' || babyState === 'neutral' || babyState === '🙂') return 'neutral';
+    if (babyState === '不太喜欢' || babyState === '累了' || babyState === 'sad' || babyState === '😢') return 'sad';
+    return null;
+  });
+
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | undefined>(photoUrl);
 
-  const reactionOptions = [
-    { key: '很喜欢', emoji: '😍', label: '很喜欢' },
-    { key: '挺开心', emoji: '😊', label: '挺开心' },
-    { key: '一般', emoji: '😐', label: '一般' },
-    { key: '不太感兴趣', emoji: '😣', label: '不太感兴趣' },
+  // Sync photoUrl state when prop changes due to record switching
+  useEffect(() => {
+    setCurrentPhotoUrl(photoUrl);
+  }, [photoUrl]);
+
+  // Sync babyState when prop changes due to record switching
+  useEffect(() => {
+    if (!babyState) {
+      setSelectedReaction(null);
+    } else if (babyState === '很喜欢' || babyState === '开心' || babyState === 'happy' || babyState === '😍') {
+      setSelectedReaction('happy');
+    } else if (babyState === '一般' || babyState === '平静' || babyState === 'neutral' || babyState === '🙂') {
+      setSelectedReaction('neutral');
+    } else if (babyState === '不太喜欢' || babyState === '累了' || babyState === 'sad' || babyState === '😢') {
+      setSelectedReaction('sad');
+    } else {
+      setSelectedReaction(null);
+    }
+  }, [babyState]);
+
+  const reactionButtons: { key: ReactionKey; emoji: string; label: string }[] = [
+    { key: 'happy', emoji: '😍', label: '很喜欢' },
+    { key: 'neutral', emoji: '🙂', label: '一般' },
+    { key: 'sad', emoji: '😢', label: '不太喜欢' },
   ];
+
+  const handleSelectReaction = (key: ReactionKey) => {
+    const nextValue = selectedReaction === key ? null : key;
+    setSelectedReaction(nextValue);
+    if (onUpdateBabyState) {
+      const mappedText = nextValue === 'happy' ? '很喜欢' : nextValue === 'neutral' ? '一般' : nextValue === 'sad' ? '不太喜欢' : '';
+      onUpdateBabyState(mappedText);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,53 +111,59 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
     reader.readAsDataURL(file);
   };
 
+  // Generate category illustration Data URL for picture slot fallback
+  const illustrationUrl = useMemo(() => {
+    if (typeof document === 'undefined') return '';
+    const canvas = document.createElement('canvas');
+    canvas.width = 520;
+    canvas.height = 520;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      drawThemeIllustration(ctx, 0, 0, 520, 520, activity);
+    }
+    return canvas.toDataURL('image/png');
+  }, [activity]);
+
+  const displayTitle = cleanTitle(activity.title);
+  const promptText = cleanPromptText(activity.parentPrompt);
+
+  // Canvas drawing for export PNG (Renders the single clean Polaroid card)
   useEffect(() => {
     let isCancelled = false;
 
-    const renderPoster = async () => {
-      setIsGenerating(true);
+    const renderExportCard = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // 640x920 px (2x Retina scale for Scandinavian Editorial Scrapbook Polaroid)
-      const width = 640;
-      const height = 920;
+      // Card Canvas dimensions: 600 x 780 px
+      const width = 600;
+      const height = 780;
       canvas.width = width;
       canvas.height = height;
 
-      // 1. 拍立得卡片底色 (#FAF7F2 背景外框，纸张 #FFFFFF)
-      ctx.fillStyle = '#FAF7F2';
+      // Card Background (Pure White Paper)
+      ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
 
-      // 纸张主体
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.roundRect(24, 24, width - 48, height - 48, 20);
-      ctx.shadowColor = 'rgba(69, 67, 63, 0.12)';
-      ctx.shadowBlur = 24;
-      ctx.shadowOffsetY = 8;
-      ctx.fill();
-      ctx.shadowColor = 'transparent'; // reset
-
-      // 纸张精致边框
+      // Outer Hairline Border
       ctx.lineWidth = 1.5;
-      ctx.strokeStyle = '#F1EAE0';
-      ctx.strokeRect(24, 24, width - 48, height - 48);
+      ctx.strokeStyle = '#EDF4E9';
+      ctx.strokeRect(1, 1, width - 2, height - 2);
 
-      // 2. 顶部微型手账日期标签
-      ctx.fillStyle = '#858078';
-      ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      // 1. Date (Top Center)
+      ctx.fillStyle = '#85877B';
+      ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`✨ ${date} · 玩伴日历成长手账`, width / 2, 62);
+      ctx.fillText(date, width / 2, 44);
 
-      // 3. 中间视觉主体区（Square Photo Area: 560 x 560 px）
+      // 2. Picture Area (x: 40, y: 64, w: 520, h: 520)
       const photoX = 40;
-      const photoY = 88;
-      const photoW = 560;
-      const photoH = 560;
+      const photoY = 64;
+      const photoW = 520;
+      const photoH = 520;
 
       if (currentPhotoUrl) {
         try {
@@ -120,7 +178,7 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
           if (!isCancelled) {
             ctx.save();
             ctx.beginPath();
-            ctx.roundRect(photoX, photoY, photoW, photoH, 14);
+            ctx.roundRect(photoX, photoY, photoW, photoH, 16);
             ctx.clip();
 
             const imgRatio = img.width / img.height;
@@ -143,74 +201,72 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
         drawThemeIllustration(ctx, photoX, photoY, photoW, photoH, activity);
       }
 
-      // 照片内边框
+      // Picture inner border
       ctx.lineWidth = 1;
-      ctx.strokeStyle = '#E8DFD5';
+      ctx.strokeStyle = '#EDF4E9';
       ctx.beginPath();
-      ctx.roundRect(photoX, photoY, photoW, photoH, 14);
+      ctx.roundRect(photoX, photoY, photoW, photoH, 16);
       ctx.stroke();
 
-      // 4. 底部记录区（清晰排版：活动名称 28px，时长与宝宝状态 17px）
-      // ① 活动名称
-      ctx.fillStyle = '#45433F';
-      ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(activity.title, width / 2, 705);
+      // 3. Clean Activity Title
+      ctx.fillStyle = '#45483F';
+      ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(displayTitle, width / 2, 626);
 
-      // ② 实际陪玩时长、宝宝状态与成长领域
-      const emojiMap: Record<string, string> = {
-        '很喜欢': '😍 很喜欢',
-        '挺开心': '😊 挺开心',
-        '一般': '😐 一般',
-        '不太感兴趣': '😣 不太感兴趣',
-        '开心': '😍 很喜欢',
-        '平静': '😊 挺开心',
-        '累了': '🥱 累了',
-      };
-      const stateText = emojiMap[currentBabyState] || `✨ ${currentBabyState}`;
-      ctx.fillStyle = '#858078';
-      ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(`⏱️ ${durationMinutes}分钟 · ${stateText} · 🌱 ${activity.category}`, width / 2, 755);
-
-      // ③ 温馨短句 / 手记（若有 parentPrompt 则展示，字号 15px 确保清晰）
-      if (activity.parentPrompt) {
-        const cleanPrompt = `“${activity.parentPrompt.replace(/^["'“”]+|["'“”]+$/g, '')}”`;
-        ctx.fillStyle = '#858078';
-        ctx.font = 'italic 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        const displayPrompt = cleanPrompt.length > 38 ? cleanPrompt.slice(0, 37) + '…”' : cleanPrompt;
-        ctx.fillText(displayPrompt, width / 2, 805);
+      // 4. Companion Sentence (if present)
+      let nextY = 662;
+      if (promptText) {
+        ctx.fillStyle = '#85877B';
+        ctx.font = '400 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const displayPrompt = promptText.length > 36 ? promptText.slice(0, 35) + '…' : promptText;
+        ctx.fillText(displayPrompt, width / 2, nextY);
+        nextY += 38;
       }
 
-      // ④ 底部纤细装饰分割线与手账印章
-      ctx.strokeStyle = '#F1EAE0';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(photoX + 24, 840);
-      ctx.lineTo(photoX + photoW - 24, 840);
-      ctx.stroke();
+      // 5. Selected Baby Reaction Stamp (ONLY if user selected a reaction)
+      if (selectedReaction) {
+        const selectedBtn = reactionButtons.find((b) => b.key === selectedReaction);
+        if (selectedBtn) {
+          const stampText = `${selectedBtn.emoji} ${selectedBtn.label}`;
+          ctx.fillStyle = '#3F8054';
+          ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          
+          // Draw subtle background capsule for status stamp
+          ctx.save();
+          const textMetrics = ctx.measureText(stampText);
+          const badgeW = textMetrics.width + 24;
+          const badgeH = 30;
+          const badgeX = (width - badgeW) / 2;
+          const badgeY = nextY - 20;
 
-      ctx.fillStyle = '#A8A29E';
-      ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(`宝宝档案：${babyName} · 玩伴日历成长印记`, width / 2, 872);
+          ctx.fillStyle = '#EDF4E9';
+          ctx.beginPath();
+          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 15);
+          ctx.fill();
+
+          ctx.fillStyle = '#3F8054';
+          ctx.fillText(stampText, width / 2, nextY);
+          ctx.restore();
+        }
+      }
 
       if (!isCancelled) {
-        setRenderedImageUrl(canvas.toDataURL('image/png'));
-        setIsGenerating(false);
+        setExportImageUrl(canvas.toDataURL('image/png'));
       }
     };
 
-    renderPoster();
+    renderExportCard();
 
     return () => {
       isCancelled = true;
     };
-  }, [activity, durationMinutes, date, currentBabyState, currentPhotoUrl, babyName]);
+  }, [activity, date, selectedReaction, currentPhotoUrl, displayTitle, promptText]);
 
   const handleDownload = () => {
-    if (!renderedImageUrl) return;
+    if (!exportImageUrl) return;
     const link = document.createElement('a');
-    link.href = renderedImageUrl;
-    link.download = `玩伴日历-拍立得-${activity.title}-${date}.png`;
+    link.href = exportImageUrl;
+    link.download = `陪伴手账-${displayTitle}-${date}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -219,144 +275,183 @@ export const PolaroidModal: React.FC<PolaroidModalProps> = ({
     setTimeout(() => setDownloadSuccess(false), 2500);
   };
 
+  const selectedBtnInfo = reactionButtons.find((b) => b.key === selectedReaction);
+
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-[#FAF7F2] rounded-3xl shadow-2xl border border-[#F1EAE0] overflow-hidden flex flex-col my-auto max-h-[95vh]">
-        {/* Top Header */}
-        <div className="px-5 py-3.5 bg-[#FAF7F2] border-b border-[#F1EAE0] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-base">✨</span>
-            <h3 className="text-sm font-bold text-[#45433F]">陪伴完成 · 拍立得手账已生成</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-200/50 transition-colors cursor-pointer"
-            aria-label="返回首页"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[80] flex flex-col items-center justify-between bg-[#FAF9F2] p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      <canvas ref={canvasRef} className="hidden" />
 
-        {/* Hidden Canvas */}
-        <canvas ref={canvasRef} className="hidden" />
+      {/* Region 1: Top Navigation Header with Multi-Record Switcher */}
+      <div className="w-full max-w-sm flex items-center justify-between py-2 shrink-0">
+        <h3 className="text-sm font-bold text-[#45483F]">
+          陪伴手账
+        </h3>
 
-        {/* Scrollable Preview Area */}
-        <div className="p-4 sm:p-5 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-[#FAF7F2] space-y-3">
-          
-          {/* 可选补充反馈：宝宝状态与拍照快捷栏 */}
-          <div className="w-full bg-white/85 rounded-2xl p-3 border border-[#F1EAE0] shadow-xs space-y-2">
-            <div className="flex items-center justify-between text-[11px] text-[#858078] font-medium px-1">
-              <span>宝宝状态（可随时调整）</span>
-              <span className="text-orange-600 font-semibold">足迹已自动保存</span>
-            </div>
-            
-            <div className="grid grid-cols-4 gap-1.5">
-              {reactionOptions.map((opt) => {
-                const isSelected = currentBabyState === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => {
-                      setCurrentBabyState(opt.key);
-                      if (onUpdateBabyState) onUpdateBabyState(opt.key);
-                    }}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                      isSelected
-                        ? 'bg-orange-500 text-white shadow-xs'
-                        : 'bg-[#FAF7F2] text-stone-600 border border-[#F1EAE0] hover:bg-stone-100'
-                    }`}
-                  >
-                    <span>{opt.emoji}</span>
-                    <span>{opt.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* 上传照片快捷按钮 */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+        {/* Multi-record Pagination Switcher */}
+        {totalRecordsCount && totalRecordsCount > 1 && onSwitchRecord && currentRecordIndex !== undefined && (
+          <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-[#EDF4E9] text-xs shadow-xs">
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full h-8 rounded-xl bg-amber-50/80 hover:bg-amber-100 text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-amber-200/50"
+              disabled={currentRecordIndex === 0}
+              onClick={() => onSwitchRecord(currentRecordIndex - 1)}
+              className="text-[#3F8054] disabled:opacity-30 disabled:cursor-not-allowed font-bold cursor-pointer hover:scale-110 transition-all select-none"
+              title="上一次陪伴"
             >
-              <Camera className="w-3.5 h-3.5 text-orange-500" />
-              <span>{currentPhotoUrl ? '更换相纸照片' : '上传一张宝宝玩耍照片（选填）'}</span>
+              ‹
+            </button>
+            <span className="text-[#85877B] font-mono text-[11px] select-none">
+              {currentRecordIndex + 1} / {totalRecordsCount} 次陪伴
+            </span>
+            <button
+              type="button"
+              disabled={currentRecordIndex === totalRecordsCount - 1}
+              onClick={() => onSwitchRecord(currentRecordIndex + 1)}
+              className="text-[#3F8054] disabled:opacity-30 disabled:cursor-not-allowed font-bold cursor-pointer hover:scale-110 transition-all select-none"
+              title="下一次陪伴"
+            >
+              ›
             </button>
           </div>
+        )}
 
-          {/* 拍立得预览大图 */}
-          {isGenerating ? (
-            <div className="py-12 flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs text-stone-500">正在生成北欧手账拍立得...</p>
-            </div>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-white hover:bg-[#EDF4E9] flex items-center justify-center text-[#85877B] hover:text-[#45483F] transition-colors cursor-pointer shadow-xs border border-[#EDF4E9]"
+          aria-label="关闭"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Region 2: Middle Hero Visual — Single Pure White Polaroid Card */}
+      <div className="w-full max-w-[280px] sm:max-w-[310px] bg-white rounded-2xl shadow-md border border-[#EDF4E9]/80 p-4 flex flex-col space-y-3 relative shrink-0 my-auto">
+        
+        {/* 1. Date */}
+        <div className="text-center text-xs font-mono text-[#85877B] font-medium tracking-wide">
+          {date}
+        </div>
+
+        {/* 2. Main Picture Area (Clean & Intact: Photo or Illustration) */}
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full aspect-square rounded-xl overflow-hidden bg-[#FAF9F2] border border-[#EDF4E9] relative cursor-pointer group shadow-inner flex items-center justify-center"
+          title={currentPhotoUrl ? '点击更换照片' : '点击上传照片'}
+        >
+          <img
+            src={currentPhotoUrl || illustrationUrl}
+            alt={currentPhotoUrl ? '宝宝照片' : '活动插画'}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
+          />
+        </div>
+
+        {/* 3. Activity Title */}
+        <h2 className="text-center text-base font-bold text-[#45483F] tracking-tight pt-0.5">
+          {displayTitle}
+        </h2>
+
+        {/* 4. Companion Sentence */}
+        {promptText && (
+          <p className="text-center text-xs text-[#85877B] leading-relaxed line-clamp-2 px-1">
+            {promptText}
+          </p>
+        )}
+
+        {/* 5. Baby Status Stamp (ONLY shown if user selected a reaction) */}
+        {selectedBtnInfo && (
+          <div className="flex items-center justify-center pt-0.5">
+            <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#EDF4E9] text-[#3F8054] text-xs font-medium rounded-full">
+              <span>{selectedBtnInfo.emoji}</span>
+              <span>{selectedBtnInfo.label}</span>
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Region 3: Single Row Lightweight Edit Bar directly below card */}
+      <div className="w-full max-w-sm flex items-center justify-center gap-2 py-2 select-none shrink-0">
+        {/* Expression Toggle */}
+        <div className="flex items-center gap-1.5">
+          {reactionButtons.map((btn) => {
+            const isSelected = selectedReaction === btn.key;
+            return (
+              <button
+                key={btn.key}
+                type="button"
+                onClick={() => handleSelectReaction(btn.key)}
+                className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-full text-xl flex items-center justify-center transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#EDF4E9] text-[#3F8054] shadow-xs scale-105'
+                    : 'bg-white/80 hover:bg-white text-[#85877B] opacity-75 hover:opacity-100 border border-transparent hover:border-[#EDF4E9]'
+                }`}
+                title={btn.label}
+                aria-label={btn.label}
+              >
+                <span>{btn.emoji}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Divider */}
+        <div className="w-[1px] h-5 bg-[#85877B]/20 mx-1 shrink-0" />
+
+        {/* Photo Entrance */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="min-h-[44px] px-2.5 text-xs font-medium text-[#45483F] hover:text-[#3F8054] flex items-center gap-1.5 transition-colors cursor-pointer rounded-lg hover:bg-white/60"
+        >
+          <Camera className="w-4 h-4 text-[#62AD78]" />
+          <span>{currentPhotoUrl ? '更换照片' : '添加照片'}</span>
+        </button>
+      </div>
+
+      {/* Region 4: Bottom Action Buttons */}
+      <div className="w-full max-w-sm flex flex-col items-center gap-2 shrink-0 py-2">
+        <button
+          type="button"
+          disabled={!exportImageUrl}
+          onClick={handleDownload}
+          className={`w-3/5 max-w-[200px] h-11 text-white font-medium text-sm rounded-full shadow-xs active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+            downloadSuccess
+              ? 'bg-[#3F8054]'
+              : 'bg-[#62AD78] hover:bg-[#3F8054]'
+          }`}
+        >
+          {downloadSuccess ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>已保存</span>
+            </>
           ) : (
-            renderedImageUrl && (
-              <div className="space-y-2 w-full flex flex-col items-center">
-                <div className="w-[280px] h-[402px] rounded-2xl overflow-hidden shadow-xl border border-[#F1EAE0] bg-white">
-                  <img
-                    src={renderedImageUrl}
-                    alt="拍立得成长手账海报"
-                    className="w-full h-full object-contain block select-none"
-                  />
-                </div>
-                <p className="text-[11px] text-[#858078] text-center font-medium">
-                  💡 手机端可长按上方图片直接保存到相册
-                </p>
-              </div>
-            )
+            <>
+              <Download className="w-4 h-4 shrink-0" />
+              <span>保存</span>
+            </>
           )}
-        </div>
+        </button>
 
-        {/* Bottom Actions: Primary 居中胶囊保存 + Ghost 文本返回首页 */}
-        <div className="p-4 sm:p-5 bg-white border-t border-[#F1EAE0] space-y-2 shrink-0">
-          <button
-            type="button"
-            disabled={isGenerating || !renderedImageUrl}
-            onClick={handleDownload}
-            className={`mx-auto w-3/5 max-w-[200px] h-11 text-white font-medium text-sm rounded-full shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              downloadSuccess
-                ? 'bg-emerald-600'
-                : 'bg-gradient-to-r from-amber-500 to-orange-400'
-            }`}
-          >
-            {downloadSuccess ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>已保存到相册</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 shrink-0" />
-                <span>保存拍立得</span>
-              </>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-stone-400 hover:text-stone-600 text-xs py-2 block text-center transition-colors cursor-pointer w-full"
-          >
-            返回首页
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[#85877B] hover:text-[#45483F] text-xs py-1.5 block text-center transition-colors cursor-pointer w-full"
+        >
+          返回
+        </button>
       </div>
     </div>
   );
 };
 
-
 // Helper: 绘制分类专属北欧温暖主题插画 (Scandinavian Editorial Illustration)
-function drawThemeIllustration(
+export function drawThemeIllustration(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -364,11 +459,11 @@ function drawThemeIllustration(
   h: number,
   activity: Activity
 ) {
-  const cat = activity.category;
+  const cat = activity.category || '';
 
   ctx.save();
   ctx.beginPath();
-  ctx.roundRect(x, y, w, h, 14);
+  ctx.roundRect(x, y, w, h, 16);
   ctx.clip();
 
   // 1. 北欧暖调渐变背景
@@ -386,7 +481,6 @@ function drawThemeIllustration(
     grad.addColorStop(0, '#FAF5FF');
     grad.addColorStop(1, '#DDD6FE');
   } else {
-    // 语言交流
     grad.addColorStop(0, '#F0F9FF');
     grad.addColorStop(1, '#BAE6FD');
   }
@@ -396,9 +490,8 @@ function drawThemeIllustration(
   const cx = x + w / 2;
   const cy = y + h / 2;
 
-  // 2. 根据不同活动类别绘制精美矢量儿童绘本插画
+  // 2. 根据不同活动类别绘制矢量儿童绘本插画
   if (cat.includes('大运动')) {
-    // 太阳与草地
     ctx.fillStyle = '#FDBA74';
     ctx.beginPath();
     ctx.arc(cx + 120, cy - 120, 45, 0, Math.PI * 2);
@@ -413,20 +506,17 @@ function drawThemeIllustration(
     ctx.closePath();
     ctx.fill();
 
-    // 小脚丫印记与运动符号
     ctx.fillStyle = '#EA580C';
     ctx.beginPath();
     ctx.ellipse(cx - 60, cy + 40, 24, 14, -0.3, 0, Math.PI * 2);
     ctx.ellipse(cx + 20, cy + 10, 24, 14, 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // 活跃小球
     ctx.fillStyle = '#F43F5E';
     ctx.beginPath();
     ctx.arc(cx + 110, cy - 20, 28, 0, Math.PI * 2);
     ctx.fill();
   } else if (cat.includes('精细')) {
-    // 积木与抓握
     ctx.fillStyle = '#FDA4AF';
     ctx.beginPath();
     ctx.roundRect(cx - 100, cy + 20, 80, 80, 16);
@@ -442,14 +532,12 @@ function drawThemeIllustration(
     ctx.roundRect(cx + 40, cy + 40, 70, 70, 16);
     ctx.fill();
 
-    // 星光点缀
     ctx.fillStyle = '#F43F5E';
     ctx.beginPath();
     ctx.arc(cx - 30, cy - 90, 12, 0, Math.PI * 2);
     ctx.arc(cx + 50, cy - 70, 8, 0, Math.PI * 2);
     ctx.fill();
   } else if (cat.includes('感官')) {
-    // 感知波纹同心圆
     ctx.strokeStyle = '#38BDF8';
     ctx.lineWidth = 5;
     ctx.setLineDash([12, 10]);
@@ -464,7 +552,6 @@ function drawThemeIllustration(
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 中心摇铃
     ctx.fillStyle = '#F97316';
     ctx.beginPath();
     ctx.arc(cx, cy, 45, 0, Math.PI * 2);
@@ -474,7 +561,6 @@ function drawThemeIllustration(
     ctx.arc(cx - 12, cy - 12, 12, 0, Math.PI * 2);
     ctx.fill();
   } else if (cat.includes('社会')) {
-    // 温暖拥抱
     ctx.fillStyle = '#C7D2FE';
     ctx.beginPath();
     ctx.arc(cx - 70, cy + 10, 70, 0, Math.PI * 2);
@@ -485,21 +571,18 @@ function drawThemeIllustration(
     ctx.arc(cx + 50, cy + 30, 60, 0, Math.PI * 2);
     ctx.fill();
 
-    // 飘动红心
     ctx.fillStyle = '#F43F5E';
     ctx.beginPath();
     ctx.arc(cx - 10, cy - 70, 18, 0, Math.PI * 2);
     ctx.arc(cx + 18, cy - 70, 18, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // 语言交流：书本与对话
     ctx.fillStyle = '#E9D5FF';
     ctx.beginPath();
     ctx.roundRect(cx - 130, cy - 40, 120, 110, 14);
     ctx.roundRect(cx + 10, cy - 40, 120, 110, 14);
     ctx.fill();
 
-    // 对话气泡
     ctx.fillStyle = '#FAF5FF';
     ctx.strokeStyle = '#A855F7';
     ctx.lineWidth = 3;
@@ -514,18 +597,6 @@ function drawThemeIllustration(
     ctx.textBaseline = 'middle';
     ctx.fillText('♪ 咿呀~ ♫', cx, cy - 92);
   }
-
-  // 3. 顶部微型分类标签（精致排版）
-  ctx.fillStyle = '#FFFFFFE6';
-  ctx.beginPath();
-  ctx.roundRect(cx - 90, y + 24, 180, 38, 19);
-  ctx.fill();
-
-  ctx.fillStyle = '#45433F';
-  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText(`✨ ${activity.category}`, cx, y + 49);
 
   ctx.restore();
 }

@@ -20,7 +20,7 @@ export const TabBar: React.FC<TabBarProps> = ({ currentTab, onSelectTab }) => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-t border-[#F3EDE2] px-2 py-1 shadow-[0_-4px_20px_rgba(44,34,30,0.05)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FAF9F2]/95 backdrop-blur-md border-t border-[#EDF4E9] px-2 py-1 shadow-xs">
       <div className="grid grid-cols-4 items-center h-16">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -30,11 +30,11 @@ export const TabBar: React.FC<TabBarProps> = ({ currentTab, onSelectTab }) => {
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
               className={`flex flex-col items-center justify-center h-full min-h-[44px] transition-all cursor-pointer ${
-                isActive ? 'text-[#2C221E] font-bold' : 'text-[#786F6A] hover:text-[#2C221E]'
+                isActive ? 'text-[#3F8054] font-bold' : 'text-[#85877B] hover:text-[#45483F]'
               }`}
             >
-              <div className={`p-1.5 rounded-2xl transition-colors ${isActive ? 'bg-orange-100/60 text-orange-600' : ''}`}>
-                <Icon className={`w-5 h-5 ${isActive ? 'text-orange-600' : 'text-[#786F6A]'}`} />
+              <div className={`p-1.5 rounded-2xl transition-colors ${isActive ? 'bg-[#EDF4E9] text-[#3F8054]' : ''}`}>
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[#3F8054]' : 'text-[#85877B]'}`} />
               </div>
               <span className="text-[10px] mt-0.5 tracking-tight">{tab.label}</span>
             </button>

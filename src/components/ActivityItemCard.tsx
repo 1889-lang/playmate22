@@ -97,10 +97,10 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="group bg-white rounded-2xl p-3 border border-stone-100 shadow-sm transition-all active:scale-[0.99] cursor-pointer flex items-center gap-3 hover:shadow-md hover:border-orange-200"
+      className="group bg-white rounded-2xl p-3 border border-[#EDF4E9] shadow-xs transition-all active:scale-[0.99] cursor-pointer flex items-center gap-3 hover:shadow-md hover:border-[#62AD78]/50"
     >
       {/* 1. 左侧 w-16 h-16 rounded-xl object-cover 绘本小插画 */}
-      <div className="w-16 h-16 rounded-xl overflow-hidden bg-amber-50/50 flex-shrink-0 flex items-center justify-center border border-stone-100 shadow-xs relative group-hover:scale-102 transition-transform">
+      <div className="w-16 h-16 rounded-xl overflow-hidden bg-[#EDF4E9]/60 flex-shrink-0 flex items-center justify-center border border-[#EDF4E9] shadow-xs relative group-hover:scale-102 transition-transform">
         <ActivityMiniIllustration category={activity.category} title={activity.title} />
       </div>
 
@@ -108,7 +108,7 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
       <div className="flex-1 min-w-0 flex flex-col justify-between h-16 py-0.5">
         {/* 第一行：玩法名称 + 预计时长 / VIP 解锁 */}
         <div className="flex items-center justify-between gap-2">
-          <h4 className="text-stone-800 font-bold text-sm truncate group-hover:text-orange-600 transition-colors">
+          <h4 className="text-[#45483F] font-bold text-sm truncate group-hover:text-[#3F8054] transition-colors">
             {cleanTitle(activity.title)}
           </h4>
 
@@ -116,39 +116,39 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 shrink-0 whitespace-nowrap ${
                 isLocked
-                  ? 'bg-amber-100 text-amber-800 border-amber-200'
-                  : 'bg-amber-50 text-amber-700 border-amber-200/60'
+                  ? 'bg-[#EDF4E9] text-[#3F8054] border-[#62AD78]/30'
+                  : 'bg-[#EDF4E9] text-[#3F8054] border-[#62AD78]/30'
               }`}
             >
               {isLocked ? (
-                <Lock className="w-2.5 h-2.5 text-amber-700" />
+                <Lock className="w-2.5 h-2.5 text-[#3F8054]" />
               ) : (
-                <Crown className="w-2.5 h-2.5 text-amber-600" />
+                <Crown className="w-2.5 h-2.5 text-[#3F8054]" />
               )}
               <span>{isLocked ? 'VIP 解锁' : 'VIP 专享'}</span>
             </span>
           ) : (
-            <span className="text-xs text-stone-400 font-medium shrink-0 whitespace-nowrap">
+            <span className="text-xs text-[#85877B] font-medium shrink-0 whitespace-nowrap">
               <span>{formattedDuration}</span>
             </span>
           )}
         </div>
 
         {/* 第二行：生活化短句玩法指引 */}
-        <p className="text-xs text-stone-500 line-clamp-1 mt-0.5 leading-relaxed">
+        <p className="text-xs text-[#85877B] line-clamp-1 mt-0.5 leading-relaxed">
           {activity.subtitle}
         </p>
 
         {/* 第三行：1~2个浅色轻量小标签 */}
         <div className="flex items-center gap-1.5 mt-1.5 overflow-x-auto scrollbar-none">
-          <span className="bg-stone-50 text-stone-600 text-[10px] px-2 py-0.5 rounded-md font-medium border border-stone-100 shrink-0">
+          <span className="bg-[#EDF4E9] text-[#3F8054] text-[10px] px-2 py-0.5 rounded-md font-medium border border-[#62AD78]/20 shrink-0">
             #{activity.category}
           </span>
-          <span className="bg-stone-50 text-stone-600 text-[10px] px-2 py-0.5 rounded-md font-medium border border-stone-100 shrink-0">
+          <span className="bg-[#EDF4E9] text-[#3F8054] text-[10px] px-2 py-0.5 rounded-md font-medium border border-[#62AD78]/20 shrink-0">
             亲子互动
           </span>
           {todayActivityCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 shrink-0">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EDF4E9] text-[#3F8054] border border-[#62AD78]/30 shrink-0">
               今日陪玩 {todayActivityCount} 次
             </span>
           )}

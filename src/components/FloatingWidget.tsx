@@ -133,8 +133,8 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
     };
   }, [checkStatus]);
 
-  // 当用户未录入婴儿档案且没有暂存的会话时，不渲染悬浮挂件
-  if (!profile && !pausedSession) {
+  // 当无暂存会话时不渲染悬浮挂件，移除首页常驻悬浮框
+  if (!pausedSession) {
     return null;
   }
 
@@ -157,10 +157,10 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
       onClick={handleClick}
       className={`fixed right-4 bottom-20 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer transition-all hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
         pausedSession
-          ? 'bg-amber-50/95 backdrop-blur-md shadow-[0_4px_16px_rgba(245,158,11,0.3)] border-2 border-amber-400 ring-2 ring-amber-400/20'
+          ? 'bg-[#EDF4E9]/95 backdrop-blur-md shadow-xs border-2 border-[#62AD78] ring-2 ring-[#62AD78]/20'
           : effectiveIsVip
-          ? 'bg-gradient-to-r from-amber-50/95 via-orange-50/95 to-amber-50/90 backdrop-blur-md shadow-[0_4px_16px_rgba(245,158,11,0.25)] border border-amber-300/80 ring-1 ring-amber-300/40'
-          : 'bg-white/95 backdrop-blur-md shadow-[0_4px_16px_rgba(251,146,60,0.18)] border border-orange-100/80'
+          ? 'bg-[#EDF4E9]/95 backdrop-blur-md shadow-xs border border-[#62AD78]/80'
+          : 'bg-white/95 backdrop-blur-md shadow-xs border border-[#EDF4E9]'
       }`}
       title={
         pausedSession
@@ -170,10 +170,6 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
           : '点击查看宝宝档案与会员状态'
       }
     >
-      {/* 
-        头像外层定位容器：
-        ⚠️ 绝不设置 overflow-hidden，确保突出的皇冠不会被截断裁切！
-      */}
       <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
         {effectiveIsVip && (
           <span
@@ -189,40 +185,37 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
         <div
           className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center font-bold shadow-xs transition-colors ${
             pausedSession
-              ? 'bg-amber-500 text-white'
+              ? 'bg-[#62AD78] text-white'
               : effectiveIsVip
-              ? 'bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-300/90 text-amber-800'
-              : 'bg-emerald-100 border border-emerald-300 text-emerald-800'
+              ? 'bg-[#EDF4E9] border border-[#62AD78]/50 text-[#3F8054]'
+              : 'bg-[#EDF4E9] border border-[#62AD78]/30 text-[#3F8054]'
           }`}
         >
           {pausedSession ? (
             <Play className="w-3.5 h-3.5 fill-white text-white ml-0.5" />
           ) : (
             <Baby
-              className={`w-4 h-4 ${
-                effectiveIsVip ? 'text-amber-700' : 'text-emerald-700'
-              }`}
+              className="w-4 h-4 text-[#3F8054]"
             />
           )}
         </div>
       </div>
 
-      {/* 陪伴计时显示：若有暂存会话展示待继续时间，否则展示今日累计 */}
+      {/* 陪伴计时显示：若有暂存会话展示待继续时间，否则展示宝宝名称 */}
       {pausedSession ? (
         <div className="flex items-center gap-1.5 pr-0.5">
-          <div className="flex items-center gap-1 font-mono text-xs font-bold text-amber-900">
-            <span className="text-[10px] text-amber-600">⏸</span>
+          <div className="flex items-center gap-1 font-mono text-xs font-bold text-[#3F8054]">
+            <span className="text-[10px] text-[#3F8054]">⏸</span>
             <span>{formatTimer(pausedSession.elapsedSeconds)}</span>
           </div>
-          <span className="text-[10px] bg-amber-200/80 text-amber-900 font-semibold px-1.5 py-0.5 rounded-full leading-none">
+          <span className="text-[10px] bg-[#62AD78] text-white font-semibold px-1.5 py-0.5 rounded-full leading-none">
             继续
           </span>
         </div>
       ) : (
         <div className="flex items-center gap-1.5 pr-0.5">
-          <span className="text-xs">⏰</span>
-          <span className="text-xs font-extrabold text-orange-600 font-mono">
-            {todayTotalMinutes}m
+          <span className="text-xs font-semibold text-[#3F8054]">
+            {profile?.name || '宝宝'}
           </span>
         </div>
       )}

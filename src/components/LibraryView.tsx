@@ -84,8 +84,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
               onClick={() => setSelectedAgeBracket(bracket.key)}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 selectedAgeBracket === bracket.key
-                  ? 'bg-orange-500 text-white shadow-xs font-bold'
-                  : 'bg-white text-stone-600 border border-[#F3EDE2] hover:bg-[#FAF8F5]'
+                  ? 'bg-[#62AD78] text-white shadow-xs font-bold'
+                  : 'bg-white text-[#45483F] border border-[#EDF4E9] hover:bg-[#EDF4E9]/60'
               }`}
             >
               {bracket.label}
@@ -99,10 +99,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-[#2C221E] text-white shadow-xs'
-                  : 'bg-white text-[#2C221E]/80 border border-[#F3EDE2] hover:bg-[#FAF8F5]'
+                  ? 'bg-[#3F8054] text-white shadow-xs'
+                  : 'bg-white text-[#45483F] border border-[#EDF4E9] hover:bg-[#EDF4E9]/60'
               }`}
             >
               {cat}

@@ -1,99 +1,177 @@
-# 玩伴日历 UI 设计规范与交互规则 (V1.0)
+# 玩伴日历 UI 视觉设计规范与交互规则 (V2.0)
 
-### 一、交互逻辑修复（点击开玩拦截）
-1. **档案校验逻辑**：
-   - 用户点击“直接开玩”按钮时进行校验。
-   - 若本地（localStorage）无宝宝档案数据，严禁直接进入游戏页面。
-   - 拦截并自动唤起“完善宝宝档案”半模态弹窗，提示：“请先填入宝宝信息，以便为你匹配适龄玩法与生成打卡海报”。
-   - 建档成功后，重新计算匹配月龄并自动进入今日游戏。
+## 一、产品视觉定位与设计目标
 
-### 二、全局视觉风格（Design System）重构
-1. **色彩与质感体系**：
-   - 全局背景：温暖柔和的奶白/米黄色调（`#FAF8F5`），去除生硬冷白。
-   - 文本配色：主标题深暖咖色（`#2C221E`），辅助与次级说明文字柔和燕麦暖灰（`#786F6A`），禁用纯黑 `#000000`。
-   - 辅助功能标签：马卡龙微透胶囊色（感官认知：淡薄荷绿；大运动：柔鹅黄；精细动作：暖珊瑚粉）。
-   - 阴影与边框：扩散式暖调微阴影（`0 10px 30px -10px rgba(234, 138, 92, 0.08)`）。
-2. **圆角与空间节奏**：
-   - 容器与卡片统一大圆角（`rounded-3xl`，约 24px - 28px）。
-   - 按钮与标签统一胶囊形或丰润中圆角（`rounded-2xl` / `rounded-full`）。
-3. **核心模块重做**：
-   - 顶部未建档栏：重构为“定制礼包卡”，暖色渐变底色配微光泽。
-   - 主玩法推荐卡片：封面增强场景感，属性（耗时、材料）抽离为图标小胶囊，高亮核心育儿价值点。
-   - 核心行动按钮：暖日落橙微渐变（`from-orange-400 to-amber-500`），主副文案排版（主：“开始 5 分钟游戏”，副：“免准备 · 随手即玩”）。
-   - 底部导航栏：磨砂毛玻璃半透明（`backdrop-blur-md bg-white/85`），选中态配小圆点指示。
+### 1.1 视觉定位
+**自然绘本风 × 北欧生活方式 × 明亮鲜活的生命力**
+
+使年轻父母和家庭长辈打开产品时感受到：
+- **温暖、自然、轻松、有生命力**：犹如和宝宝一起探索世界的小花园。
+- **品质感与轻盈感**：去商业化、去营销感、去骚扰化，摒弃保险与广告促销式的强刺激视觉。
+- **直觉可读与无门槛**：全人群（包括长辈）都能毫秒级轻松理解并流畅使用。
+
+### 1.2 颜色主次比例 (60 - 30 - 10 法则)
+- **60% 主画布背景**：阳光奶油白（`#FAF9F2`）与纯净白色（`#FFFFFF`），保持整体明亮透气。
+- **30% 结构与分区**：浅植物绿（`#EDF4E9`）、自然深灰（`#45483F`）与柔和灰（`#85877B`），构建层次分明而温润的容器与文本。
+- **10% 品牌与高亮**：鲜活植物绿（`#62AD78`）作为主品牌色与核心操作点，辅助珊瑚/阳光黄/晴空蓝/柔和粉作为语义化微强调。
 
 ---
 
-# 玩伴日历 Design System & 交互规范 (V1.1)
+## 二、完整颜色体系 (Color Palette Tokens)
 
-### 一、全局设计基底与色彩收敛 (Global Base & Color Tokens)
-1. **背景底色**：
-   - 全局背景统一采用暖米白底色（`bg-[#FFFDF9]` / `stone-50`），彻底摒弃生冷纯白与高饱和黄色。
-2. **文字阶梯**：
-   - 主标题：`text-stone-900 font-bold`（深暖石墨黑，温润清晰）
-   - 正文与说明：`text-stone-600`（温和舒适可读性）
-   - 时间/辅助信息：`text-stone-400 text-xs`
-3. **领域标签系统（马卡龙柔色胶囊）**：
-   - 统一尺寸：`rounded-full px-2 py-0.5 text-[11px] font-medium border`
-   - 大运动（橙）：`bg-orange-50 text-orange-700 border-orange-200/60`
-   - 精细动作（黄/琥珀）：`bg-amber-50 text-amber-800 border-amber-200/60`
-   - 感官认知（绿）：`bg-emerald-50 text-emerald-700 border-emerald-200/60`
-   - 语言社交（蓝）：`bg-sky-50 text-sky-700 border-sky-200/60`
-   - 社会情绪（紫）：`bg-purple-50 text-purple-700 border-purple-200/60`
+| 角色 | 颜色名称 | HEX 色值 | Tailwind / CSS Token | 核心使用场景 |
+|---|---|---|---|---|
+| **页面主背景** | 阳光奶油白 | `#FAF9F2` | `bg-[#FAF9F2]` | 全局页面背景、模态框底层 |
+| **品牌主色** | 鲜活植物绿 | `#62AD78` | `bg-[#62AD78]` / `text-[#62AD78]` | 品牌标识、主行动按钮（Primary）、选中导航 |
+| **品牌深色** | 森林绿 | `#3F8054` | `bg-[#3F8054]` / `text-[#3F8054]` | 按钮 Hover/Active 悬停态、深绿文字 |
+| **辅助色 1** | 活力珊瑚 | `#F17D70` | `bg-[#F17D70]` / `text-[#F17D70]` | 情绪反馈、少量暖意强调 |
+| **辅助色 2** | 阳光黄 | `#F5CF65` | `bg-[#F5CF65]` / `text-[#F5CF65]` | 贴士徽章、小面积装饰 |
+| **辅助色 3** | 晴空蓝 | `#8DC6D5` | `bg-[#8DC6D5]` / `text-[#8DC6D5]` | 探索类内容、辅助说明 |
+| **辅助色 4** | 柔和粉 | `#E9A9B0` | `bg-[#E9A9B0]` / `text-[#E9A9B0]` | 亲子互动、情绪与喜好场景 |
+| **卡片背景** | 温暖白 | `#FFFFFF` | `bg-white` | 各种功能与内容卡片背景 |
+| **柔和分区** | 浅植物绿 | `#EDF4E9` | `bg-[#EDF4E9]` | 轻量内容分区、次级按钮背景 |
+| **主要文字** | 自然深灰 | `#45483F` | `text-[#45483F]` | 页面标题、主卡片标题、正文 |
+| **次要文字** | 柔和灰 | `#85877B` | `text-[#85877B]` | 副标题、时间戳、辅助说明文案 |
 
----
-
-### 二、卡片与列表组件全面并轨 (Component Unification)
-1. **通用活动卡片（ActivityItemCard）**：
-   - **复用范围**：首页底部备选推荐卡与【活动宝库】列表卡全面统一复用。
-   - **布局结构**：统一为“左图右文·绘本杂志规范”。
-     * 左侧插画封面：`w-[76px] h-[76px] rounded-2xl overflow-hidden bg-amber-50/80 flex-shrink-0 flex items-center justify-center border border-amber-100/50 shadow-xs`
-     * 右侧精炼呈现：
-       - 顶行：玩法标题（`text-stone-900 font-bold text-sm truncate`） + 极简耗时（`⏱ 5分`，`text-xs text-stone-400`）
-       - 中行：一句话核心发育启发亮点（`text-xs text-stone-600 line-clamp-1`）
-       - 底行：柔色马卡龙领域徽章 + 适龄月龄胶囊
-   - **交互原则**：整卡均为点击热区，彻底移除宝库卡片中冗余的“开始玩”橙色按键与分割横线。
-2. **成长足迹卡片（RecordCard）**：
-   - **左侧时光徽章**：`rounded-2xl w-12 h-12 bg-amber-100/60 flex items-center justify-center text-amber-800 text-lg shrink-0`
-   - **右上角时间戳**：`text-xs text-stone-400 font-medium`（如 `10月28日 · 5分钟`）
-   - **去伪存真**：彻底移除“✓已打卡”字样徽章。
-   - **动态评语便签**：
-     * 无真实手记时：严禁展示占位长句或空便签气泡，卡片高度紧凑自适应，右下角提供次级引导 `✏️ 补写手记`。
-     * 有真实手记时：展示温暖奶黄随笔便签（`bg-amber-50/80 rounded-xl p-2.5 text-xs text-stone-600 border border-amber-100/50`）。
+### 2.1 颜色使用硬性禁忌
+- **禁止纯黑 `#000000`**：统一使用自然深灰 `#45483F`，避免视觉刺眼。
+- **禁止高饱和霸屏大橙条/大红条**：植物绿取代橙色作为主要操作色。
+- **禁止脏橙色、灰黄色与大面积深棕**：确保界面干净透亮。
+- **禁止荧光色与无语义色彩堆叠**：标签颜色需有明确的月龄或分类语义。
 
 ---
 
-### 三、弹窗双按钮系统规范 (Modal Action Button Standard)
-陪玩弹窗（CoachModeModal）与打卡记录弹窗（PlayFeedbackModal）底部双按钮严格并轨：
-1. **主操作按钮（Primary Action）**：
-   - **容器规范**：`w-full h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-sm shadow-md shadow-orange-500/20 flex items-center justify-center gap-1.5 active:scale-[0.99] transition-all`
-   - **陪玩弹窗文案**：`🎉 完成陪伴，去打卡`
-   - **打卡弹窗文案**：`✓ 记录这次陪伴`（严格单对勾规范）
-2. **次操作按钮（Secondary Action）**：
-   - **容器规范**：`w-full h-11 rounded-2xl bg-stone-50/70 hover:bg-stone-100 text-stone-600 border border-stone-200/50 text-xs font-medium flex items-center justify-center gap-1.5 mt-2.5 active:scale-[0.99] transition-all`
-   - **陪玩弹窗文案**：`稍后再玩 · 保存进度`
-   - **打卡弹窗文案**：`📷 生成拍立得手账海报`
+## 三、组件设计规范 (Component Specifications)
+
+### 3.1 3 级按钮设计规范（严禁通栏霸屏）
+
+1. **Primary（主行动点）**：
+   - **应用场景**：首页【开始陪伴】、档案页【保存完成】、打卡页【保存手账相片】、陪玩【结束陪伴】等核心提交点。
+   - **尺寸与对齐**：高度统一 `h-11`（约 44px 舒适防误触），宽度居中胶囊 `w-3/5 max-w-[200px] mx-auto`。
+   - **样式类**：`bg-[#62AD78] hover:bg-[#3F8054] text-white font-medium text-sm rounded-full shadow-xs active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer`
+
+2. **Secondary（次级/完成态操作）**：
+   - **应用场景**：首页【去活动宝库浏览】、打卡【仅完成打卡】、陪玩【稍后再玩】。
+   - **尺寸与对齐**：`h-10 px-5 rounded-full font-medium text-xs`，自适应内容宽度。
+   - **样式类**：`bg-[#EDF4E9] text-[#3F8054] border border-[#62AD78]/30 hover:bg-[#62AD78]/10 active:scale-95 flex items-center justify-center transition-all cursor-pointer`
+
+3. **Ghost / Link（轻量文本链接）**：
+   - **应用场景**：【暂不建档，返回继续】、【跳过】、【查看全部】。
+   - **样式类**：`text-[#85877B] hover:text-[#45483F] text-xs py-1.5 transition-colors cursor-pointer`
+
+### 3.2 卡片与列表规范 (Card Standard)
+- **通用卡片容器**：大圆角 `rounded-3xl` 或 `rounded-2xl`，背景 `bg-white`，轻量暖边框 `border border-[#F1EAE0]`，微阴影 `shadow-xs`。
+- **活动列表卡片（ActivityItemCard）**：
+  - 左侧插画：`w-16 h-16 rounded-xl bg-[#EDF4E9]/60 flex-shrink-0 flex items-center justify-center`
+  - 右侧标题：`text-[#45483F] font-bold text-sm truncate`
+  - 试玩耗时与适龄：`text-xs text-[#85877B]` Clean Inline Text。
+
+### 3.3 标签与状态 (Tags & Status Badges)
+- **月龄与分类筛选 Tabs**：
+  - Active 选中态：`bg-[#62AD78] text-white font-bold shadow-xs`
+  - Inactive 未选中态：`bg-white text-[#45483F] border border-[#F1EAE0] hover:bg-[#EDF4E9]/50`
+- **领域轻量标签**：
+  - 统一为软调文本轻量封装，避免粗暴荧光色。
+
+### 3.4 导航与交互 (Navigation & Hotspots)
+- **顶部 Navbar & 底部 TabBar**：
+  - 背景：`bg-[#FAF9F2]/95 backdrop-blur-md border-[#F1EAE0]`
+  - 选中态：图标与文字均为植物绿 `text-[#62AD78]`，辅以浅绿微透地盘 `bg-[#EDF4E9]`。
+  - 未选中态：`text-[#85877B]`
+- **可点击区域**：所有交互控件热区 $\ge 44\times 44\text{px}$，优先 $48\times 48\text{px}$。
+
+### 3.5 表单控件与交互组件规范 (Form Controls & Input Specifications)
+
+#### 3.5.1 基础几何尺寸与排版规范
+所有普通单行文本输入框（`<input type="text">`）、选择框（`<select>` 或自定义下拉触发框）、多行输入框与搜索框统一使用以下物理参数：
+
+| 规格属性 | 统一设计 Token / CSS Class | 具体数值说明 |
+|---|---|---|
+| **控件高度** | `h-12` | 48px 统一基础高度（保障移动端舒适触控与高品质连贯性） |
+| **圆角** | `rounded-xl` | 12px 统一圆角（与卡片 16/24px 形成优雅的层次阶梯） |
+| **左右内边距** | `px-4` | 16px 水平内边距 |
+| **边框粗细与颜色** | `border border-[#EDF4E9]` | 1px 浅植物绿边框（严禁使用高饱和黄色或粗暴黑灰边框） |
+| **背景色** | `bg-[#FAF9F2]` | 阳光奶油白背景（保持整体温暖舒缓质感） |
+| **文字字号与行高** | `text-base` / `leading-none` | 16px 字号（规避移动端/iOS 输入框聚焦页面自动强行放大） |
+| **文字基线与垂直对齐** | `flex items-center` / `leading-normal` | 垂直居中，基线对齐 |
+| **图标尺寸与间距** | 图标 `w-4.5 h-4.5` (18-20px)，间距 `gap-2.5` | 8-10px 间距，垂直居中对齐 |
+
+#### 3.5.2 控件五大交互状态 (Interactive States)
+1. **Default（默认态）**：
+   - 样式：`bg-[#FAF9F2] border border-[#EDF4E9] text-[#45483F]`
+   - Placeholder：`placeholder-[#85877B] text-base`（柔和自然灰，兼顾对比度与透气感）
+2. **Focus / Hover（聚焦/悬停态）**：
+   - 样式：`focus:outline-none focus:border-[#62AD78] hover:border-[#62AD78]/60 transition-colors`
+   - 说明：高亮品牌植物绿边框，提供即时、顺滑的响应反馈。
+3. **Selected（已选/选中态）**：
+   - 样式：`bg-[#EDF4E9] border border-[#62AD78]/40 text-[#3F8054] font-bold`
+   - 说明：用于下拉/网格选中项或月龄选择框已填状态，清晰辨识。
+4. **Disabled（禁用态）**：
+   - 样式：`bg-[#F5F5F0] border border-[#E5E5E0] text-[#A0A098] cursor-not-allowed opacity-60`
+   - 说明：降低对比度同时确保文案可读性。
+5. **Error（错误/校验失败态）**：
+   - 样式：`border-[#F17D70] bg-[#FFF5F5] text-[#45483F]`
+   - 说明：使用克制的活力珊瑚红 `#F17D70` 配合下方显式文字提示 `text-[#F17D70] text-xs mt-1 flex items-center gap-1`，不单依赖颜色表达错误。
+
+#### 3.5.3 控件分类详述
+- **普通文本输入框 (`Input`)**：如昵称、小名、搜索。统一 `w-full h-12 px-4 rounded-xl bg-[#FAF9F2] border border-[#EDF4E9] text-base text-[#45483F] placeholder-[#85877B] focus:outline-none focus:border-[#62AD78]`。
+- **选择框与模拟下拉 (`Select / Picker Trigger`)**：如「宝宝目前多大」月龄触发框。外观与 Input 完全一致，高度 48px，`rounded-xl`，背景 `#FAF9F2`，右侧配 chevron 图标 ` text-[#85877B]`，选中展示深绿粗体 `#3F8054`。
+- **多行文本域 (`Textarea`)**：如备注、手账心得。保持 `rounded-xl`，`p-3.5`，`bg-[#FAF9F2]`，`border border-[#EDF4E9]`，最小高度 `min-h-[96px]` (2 倍 48px)。
+- **特殊选择网格/ Tabs (`Special Selection Controls`)**：如 0-36 月龄网格按钮、状态情绪卡片。统一 `rounded-xl` 圆角，高 `h-11` 或 `h-12`，选中态 `bg-[#62AD78] text-white shadow-xs`。
+
+#### 3.5.4 移动端触控与响应式规范
+- **最小热区**：所有独立点击点与图标按钮热区 $\ge 44 \times 44\text{px}$，输入框与触发框保持 $48\text{px}$ 高度。
+- **窄屏适配**：`w-full` 自适应父容器，无横向溢出，Placeholder 与选中内容不被裁剪（必要时搭配 `truncate` 或 `line-clamp-1`）。
+- **新组件强约束**：后续所有新增页面、组件与模态框表单控件，必须强制继承本规范，严禁私自声明 `h-14`、`h-10` 或高饱和度外边框。
+
+### 3.6 陪玩进行中与拍立得结果页规范 (In-Play & Polaroid Result Modal Specifications)
+
+#### 3.6.1 陪玩进行中页面规范 (`CoachModeModal.tsx`)
+1. **顶部区域 (Top Header)**：
+   - 移除冗余的「指南」按钮与分类标签。
+   - 居中展示轻量状态提示：`陪伴互动中...` (`px-3 py-1 rounded-full bg-[#EDF4E9] border border-[#62AD78]/30 text-xs font-semibold text-[#3F8054]`)。
+   - 右侧保留安全的关闭按钮 `✕`。
+2. **中间插画与玩法说明**：
+   - 保留精美绘本插画，删除下方独立气泡卡片，玩法引导文字直接以透气自然文本展示在插画上方/下方。
+3. **陪玩三步法 (Three-Step Guidance)**：
+   - 彻底去卡片化，禁止嵌套多层外框与独立小卡片。
+   - 采用清爽的 3 行文字列表，左侧统一为序号加粗绿字 (`1. 看一看：...`)，右侧为自然正文。
+4. **底部操作区域 (Bottom Actions)**：
+   - 删除「稍后再玩 · 保存进度」冗余入口与计时器展示。
+   - 保持唯一的Primary品牌植物绿 `#62AD78` 居中胶囊按钮：「结束陪伴」(`w-3/5 max-w-[200px] h-11 rounded-full`)。
+
+#### 3.6.2 拍立得成长纪念卡规范 V2 (`PolaroidModal.tsx`)
+1. **三大区域架构 (Three-Region Structure)**：
+   - **顶部**：页面导航 `陪伴完成 · 成长手账` + 右侧关闭 `✕`。
+   - **中间**：唯一的成长纪念相纸（`w-full max-w-[310px] sm:max-w-[330px]`），无多层外框与浅灰内衬。
+   - **底部**：`保存` (Primary 植物绿胶囊 `#62AD78`) + `返回` (Ghost 轻链接)。
+2. **相纸内部布局 (Inside Card)**：
+   - 顺序：日期 (仅数字 `2026-11-03`) ➔ 清洁活动名 (去括号备注) ➔ 图片区域 (点击触发照片上传/更换隐形入口) ➔ 活动分类 (仅显示 1 次) ➔ 横向 3 表情互动行 (`😍`, `🙂`, `😢`) ➔ 陪伴记录短句。
+   - 彻底删除：陪玩时长、重复分类、重复状态、"宝宝档案：宝宝"、"玩伴日历成长印记/手账" 水印。
+3. **图像导出规则 (Export Spec)**：
+   - 点击「保存」导出的 PNG 海报仅包含相纸本身，若用户选择了表情则在海报上仅绘制单只选中表情，未选择则不绘制。不导出页面背景与编辑按钮。
 
 ---
 
-### 四、去营销感与去骚扰化规范 (Calm & Respectful UX)
-1. **宝宝档案（ProfileView）**：
-   - 彻底移除大阴影 VIP 营销横幅；
-   - 会员身份降维收敛为宝宝昵称右侧的精致内嵌标签（`👑 VIP年卡`）；
-   - 保存反馈：采用非阻塞的顶部轻量浮动 Toast 提示（1.5秒自动淡出），严禁挤压或位移表单 DOM。
-2. **活动宝库（LibraryView）**：
-   - 搜索栏右侧移除突兀的 “👑 VIP” 按钮框，搜索输入框全宽铺满。
-3. **陪玩弹窗（CoachModeModal）顶栏防爆框**：
-   - 计时器暂停时：图标切换 `⏸` 到 `▶`，数字保持 `00:23` 呼吸动效，严禁在胶囊内追加汉字（如“【已暂停】”）；
-   - 顶栏所有子项强制声明 `whitespace-nowrap flex-shrink-0`，杜绝折行变形。
-4. **未建档状态（!activeProfile）**：
-   - 隐藏右下角悬浮时钟挂件；
-   - 保持全宽 Hero 推荐卡片标准骨架，移除“本次启蒙重点”框与封面右上角“换一个”按钮。
+## 四、字体、字号与间距规范
+
+- **字号阶梯**：
+  - Hero Display 标题：`text-xl` (20px) ~ `text-2xl` (24px) font-bold
+  - 模块 / 卡片标题：`text-base` (16px) ~ `text-lg` (18px) font-bold
+  - 正文 / 按钮：`text-sm` (14px) / `text-xs` (12px)
+  - 辅助说明 / 时间戳：`text-[11px]` (11px) / `text-[10px]` (10px)
+- **圆角阶梯**：
+  - 页面大卡片 / 模态框：`rounded-3xl` (24px)
+  - 普通卡片 / 图像容器：`rounded-2xl` (16px)
+  - 按钮与标签：`rounded-full` (9999px) / `rounded-xl` (12px)
 
 ---
 
-### 五、品牌标语（Brand Slogan）体系
-1. **首页顶部副标**：`每天轻松找玩法 · 真正陪孩子玩一会儿`（`text-xs text-stone-500/80`）
-2. **成长足迹空状态**：`真正陪孩子玩一会儿，在这里留下珍贵的成长片段吧`
-3. **宝宝档案底端初心**：`玩伴日历 · 帮家长每天轻松陪玩的小工具`（`text-[11px] text-stone-400`）
+## 五、更新历史与版本记录
 
+- **V1.0 (2026-10-20)**：初始日落橙 UI 规范建立。
+- **V1.1 (2026-10-28)**：组件与弹窗双按钮初次并轨。
+- **V2.0 (2026-11-03)**：全面升级为《北欧自然绘本风 V1》，以植物绿 `#62AD78` 为品牌主色，阳光奶油白 `#FAF9F2` 为全局背景，全组件并轨 3 级温润胶囊按钮标准。
+- **V2.1 (2026-11-03)**：完成全局表单控件一致性检查与修复，新增《3.5 表单控件与交互组件规范》，统一 48px 高度、12px 圆角、16px 内边距、16px 字号与奶油白背景连贯标准。
+- **V2.2 (2026-11-03)**：完成陪玩进行中与拍立得结果页精简重构，新增《3.6 陪玩进行中与拍立得结果页规范》，彻底消除多层卡片嵌套与页面穿模裁切问题。
+- **V2.3 (2026-11-03)**：完成拍立得成长手账页面重新整理 V2，重构为单一成长纪念卡，融入隐形照片上传入口与 3 表情互动行，更新《3.6.2 拍立得成长纪念卡规范 V2》。
