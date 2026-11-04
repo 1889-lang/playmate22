@@ -19,23 +19,22 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   onSelectActivity,
   isVip,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('全部');
-  const [selectedAgeBracket, setSelectedAgeBracket] = useState<string>('matched');
+  const [selectedCategory, setSelectedCategory] = useState<string>('全部类别');
+  const [selectedAgeBracket, setSelectedAgeBracket] = useState<string>('all');
 
-  const categories: string[] = ['全部', '大运动', '精细动作', '感官认知', '社会情绪', '语言交流'];
+  const categories: string[] = ['全部类别', '大运动', '精细动作', '感官认知', '社会情绪', '语言交流'];
 
   // 严格统一月龄来源（未建档时为 null，绝不隐式回退到 6 个月）
   const effectiveMonths = getEffectiveBabyMonths(profile);
 
   const ageBrackets = [
-    {
-      key: 'matched',
-      label: effectiveMonths !== null ? `适合宝宝 (${effectiveMonths}月龄)` : '推荐探索',
-    },
+    { key: 'all', label: '全部月龄' },
+    ...(effectiveMonths !== null
+      ? [{ key: 'matched', label: `适合宝宝 (${effectiveMonths}月龄)` }]
+      : []),
     { key: '0-6', label: '0-6个月' },
     { key: '7-12', label: '7-12个月' },
     { key: '1-3', label: '1-3岁' },
-    { key: 'all', label: '全部月龄' },
   ];
 
   const filteredActivities = activities.filter((act) => {
@@ -45,16 +44,19 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
     }
 
     // 1. 分类匹配
-    const matchesCategory = selectedCategory === '全部' || act.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === '全部类别' || selectedCategory === '全部' || act.category === selectedCategory;
 
     // 2. 严格月龄过滤（统一由 parseAgeRange 处理）
     const { min, max } = parseAgeRange(act.ageRange);
     let matchesAge = true;
-    if (selectedAgeBracket === 'matched') {
+
+    if (selectedAgeBracket === 'all') {
+      matchesAge = true;
+    } else if (selectedAgeBracket === 'matched') {
       if (effectiveMonths !== null) {
         matchesAge = effectiveMonths >= min && effectiveMonths <= max;
       } else {
-        // 未建档时展示全部已审核玩法，不伪造 6 个月专属过滤
         matchesAge = true;
       }
     } else if (selectedAgeBracket === '0-6') {
@@ -74,40 +76,50 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
 
   return (
     <div className="space-y-3.5 pb-24 md:pb-12 animate-in fade-in duration-200 px-3.5 sm:px-4 max-w-4xl mx-auto">
-      {/* 1. 月龄过滤与分类 Tabs */}
-      <div className="space-y-2.5">
-        {/* 月龄过滤胶囊栏 */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-          {ageBrackets.map((bracket) => (
-            <button
-              key={bracket.key}
-              onClick={() => setSelectedAgeBracket(bracket.key)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
-                selectedAgeBracket === bracket.key
-                  ? 'bg-[#62AD78] text-white shadow-xs font-bold'
-                  : 'bg-white text-[#45483F] border border-[#EDF4E9] hover:bg-[#EDF4E9]/60'
-              }`}
-            >
-              {bracket.label}
-            </button>
-          ))}
+      {/* 1. 月龄过滤与分类 Tabs 容器 */}
+      <div className="space-y-2.5 my-1">
+        {/* 月龄过滤胶囊栏 - 支持原生平滑横向滑动与首尾防截断内边距 */}
+        <div className="overflow-x-auto scrollbar-none -mx-3.5 sm:-mx-4">
+          <div
+            className="flex items-center gap-2 px-4 py-1.5 flex-nowrap min-w-max"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {ageBrackets.map((bracket) => (
+              <button
+                key={bracket.key}
+                onClick={() => setSelectedAgeBracket(bracket.key)}
+                className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  selectedAgeBracket === bracket.key
+                    ? 'bg-[#62AD78] text-white shadow-xs font-bold'
+                    : 'bg-white text-[#45483F] border border-[#EDF4E9] hover:bg-[#EDF4E9]/60'
+                }`}
+              >
+                {bracket.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 分类筛选横向滑动栏 */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-[#3F8054] text-white shadow-xs'
-                  : 'bg-white text-[#45483F] border border-[#EDF4E9] hover:bg-[#EDF4E9]/60'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="overflow-x-auto scrollbar-none -mx-3.5 sm:-mx-4">
+          <div
+            className="flex items-center gap-2 px-4 py-1.5 flex-nowrap min-w-max"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-[#3F8054] text-white shadow-xs'
+                    : 'bg-white text-[#45483F] border border-[#EDF4E9] hover:bg-[#EDF4E9]/60'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -135,3 +147,4 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
     </div>
   );
 };
+
