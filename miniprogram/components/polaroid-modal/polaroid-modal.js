@@ -10,30 +10,32 @@ Component({
     },
     initialIndex: {
       type: Number,
-      value: 0,
-      observer(newVal) {
-        this.setData({ currentIndex: newVal });
-      }
+      value: 0
     }
   },
-
   data: {
     currentIndex: 0
   },
-
+  observers: {
+    'visible': function(val) {
+      if (val) {
+        this.setData({ currentIndex: 0 });
+      }
+    },
+    'initialIndex': function(val) {
+      this.setData({ currentIndex: val || 0 });
+    }
+  },
   methods: {
     onSwiperChange(e) {
-      this.setData({
-        currentIndex: e.detail.current
-      });
+      this.setData({ currentIndex: e.detail.current });
     },
-
     handleClose() {
       this.triggerEvent('close');
     },
-
-    preventBubble() {
-      // 阻止事件冒泡
-    }
+    onCloseModal() {
+      this.triggerEvent('close');
+    },
+    preventProp() {}
   }
 });

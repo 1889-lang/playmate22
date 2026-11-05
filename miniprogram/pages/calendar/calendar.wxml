@@ -1,61 +1,76 @@
-<!-- miniprogram/pages/calendar/calendar.wxml -->
-<view class="container">
-  <!-- 1. 顶部周历条 WeekStrip -->
-  <week-strip 
-    selectedDate="{{selectedDate}}" 
-    checkedInDates="{{checkedInDates}}" 
-    bind:selectDate="onSelectDate" 
-  />
-
-  <!-- 2. 当日陪伴手账列表区 -->
-  <view class="footprint-section">
-    <!-- 纯文本日期标题（彻底删除“查看全部”胶囊按钮及多余边框） -->
-    <text class="date-header">{{selectedDate ? selectedDate + ' 陪伴手账' : '成长陪伴手账'}}</text>
-
-    <!-- 空状态 -->
-    <view class="empty-card" wx:if="{{filteredRecords.length === 0}}">
-      <view class="empty-icon">📅</view>
-      <text class="empty-title">这一天还没有留下陪伴印记</text>
-      <text class="empty-sub">和宝宝玩一会儿，在这里留下轻松的亲子陪伴瞬间吧</text>
+<view class="history-page">
+  <view class="week-calendar-card">
+    <view class="calendar-top-bar">
+      <view class="calendar-title-box">
+        <text class="calendar-month-text">{{currentMonthLabel}}</text>
+        <text class="calendar-sub-text">和宝宝一起度过的日子</text>
+      </view>
+      <view class="calendar-nav-actions">
+        <view class="nav-circle-btn" bindtap="handlePrevWeek">‹</view>
+        <view class="current-week-tag" wx:if="{{weekOffset !== 0}}" bindtap="handleResetWeek">本周</view>
+        <view class="nav-circle-btn" bindtap="handleNextWeek">›</view>
+      </view>
     </view>
 
-    <!-- 当日手账卡片列表 -->
-    <view class="records-list" wx:else>
-      <block wx:for="{{filteredRecords}}" wx:key="id">
-        <view 
-          class="record-card" 
-          bindtap="onOpenPolaroidModal" 
-          data-index="{{index}}"
-        >
-          <view class="card-info">
-            <text class="activity-title">{{item.activityTitle}}</text>
-            <view class="badge-row">
-              <text class="tag-badge">{{item.reaction || '😍 开心'}}</text>
-              <text class="duration-text">陪伴 {{item.durationMinutes || 10}} 分钟</text>
+    <view class="week-grid">
+      <block wx:for="{{weekDays}}" wx:key="dateStr">
+        <view class="day-col" bindtap="handleSelectDate" data-date="{{item.dateStr}}">
+          <text class="day-name">{{item.dayName}}</text>
+          <view class="day-badge-box">
+            <view class="day-badge {{item.dateStr === selectedDate ? 'selected' : ''}}">
+              <text class="day-num {{item.isToday && item.dateStr !== selectedDate ? 'today' : ''}}">{{item.dateNum}}</text>
+              <view class="dot-indicator {{item.hasCheckedIn ? (item.dateStr === selectedDate ? 'white-dot' : 'green-dot') : 'hidden-dot'}}"></view>
             </view>
-          </view>
-
-          <!-- 右侧打卡封面相纸 ＋ 引导箭头 › -->
-          <view class="card-right">
-            <view class="thumb-frame">
-              <image 
-                src="{{item.photoUrl || '/assets/activities/seek_hide_seek_detail.png'}}" 
-                mode="aspectFill" 
-                class="thumb-img"
-              />
-            </view>
-            <text class="arrow-icon">›</text>
           </view>
         </view>
       </block>
     </view>
   </view>
 
-  <!-- 3. 原地呼出拍立得详情弹窗 (PolaroidModal) -->
+  <view class="records-container">
+    <view class="records-header">
+      <text class="records-title">{{selectedDate ? selectedDate + ' 陪伴手账' : '成长陪伴手账'}}</text>
+    </view>
+
+    <block wx:if="{{groupedRecords.length > 0}}">
+      <block wx:for="{{groupedRecords}}" wx:key="dateStr" wx:for-item="group">
+        <view class="date-group-box">
+          <view class="group-date-header">
+            <view class="green-dot-bullet"></view>
+            <text class="group-date-title">{{group.dateHeader}}</text>
+          </view>
+
+          <view class="group-items-list">
+            <block wx:for="{{group.activities}}" wx:key="activityId">
+              <view class="handbook-entry-card" bindtap="openPolaroidModal" data-index="{{item.firstRecordIndex}}">
+                <view class="entry-left-meta">
+                  <text class="entry-activity-title">{{item.cleanTitle}}</text>
+                  <text class="entry-duration-meta">陪伴 {{item.totalDuration}} 分钟 · 共 {{item.totalCount}} 次</text>
+                </view>
+                <view class="entry-right-thumb">
+                  <view class="thumb-frame">
+                    <image class="thumb-img" src="{{item.coverImage}}" mode="aspectFill" />
+                  </view>
+                  <text class="entry-chevron">›</text>
+                </view>
+              </view>
+            </block>
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <view wx:else class="empty-state-card">
+      <text class="empty-icon">🌱</text>
+      <text class="empty-title">这一天还没有留下陪伴印记</text>
+      <text class="empty-desc">去活动库挑选一个喜欢的玩法，记录宝贝的成长吧</text>
+    </view>
+  </view>
+
   <polaroid-modal 
-    wx:if="{{isPolaroidModalOpen}}" 
-    records="{{filteredRecords}}" 
-    initialIndex="{{modalIndex}}" 
-    bind:close="onClosePolaroidModal" 
+    visible="{{isPolaroidOpen}}" 
+    records="{{allRecords}}" 
+    initialIndex="{{polaroidIndex}}"
+    bind:close="closePolaroidModal"
   />
 </view>

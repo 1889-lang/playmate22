@@ -1,6 +1,10 @@
 {
-  "navigationBarTitleText": "今日推荐玩法",
+  "navigationBarTitleText": "玩伴日历",
+  "navigationBarBackgroundColor": "#FAF9F2",
+  "navigationBarTextStyle": "black",
   "usingComponents": {
-    "activity-modal": "../../components/activity-modal/activity-modal"
+    "activity-modal": "/components/activity-modal/activity-modal",
+    "journal-modal": "/components/journal-modal/journal-modal",
+    "polaroid-modal": "/components/polaroid-modal/polaroid-modal"
   }
 }

@@ -1,66 +1,74 @@
-// pages/profile/profile.js
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    babyName: '小芽芽',
+    babyAge: 7,
+    showAgeModal: false
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
   onShow() {
-
+    const profile = wx.getStorageSync('baby_profile');
+    if (profile) {
+      this.setData({
+        babyName: profile.name || '小芽芽',
+        babyAge: typeof profile.currentMonths === 'number' ? profile.currentMonths : 7
+      });
+    }
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
+  onNameInput(e) {
+    const name = e.detail.value;
+    this.setData({ babyName: name });
+    this.saveProfile(name, this.data.babyAge);
   },
 
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
+  openAgeModal() {
+    this.setData({ showAgeModal: true });
   },
 
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
+  closeAgeModal() {
+    this.setData({ showAgeModal: false });
   },
 
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
+  selectMonth(e) {
+    const month = e.currentTarget.dataset.month;
+    this.setData({
+      babyAge: month,
+      showAgeModal: false
+    });
+    this.saveProfile(this.data.babyName, month);
+    wx.showToast({ title: '月龄已更新', icon: 'success' });
   },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
+  saveProfile(name, age) {
+    wx.setStorageSync('baby_profile', {
+      name: name || '小芽芽',
+      currentMonths: age
+    });
+  },
 
-  }
-})
+  copyWeChat() {
+    wx.setClipboardData({
+      data: 'wanbandaili_helper',
+      success: () => {
+        wx.showToast({ title: '微信号已复制', icon: 'success' });
+      }
+    });
+  },
+
+  handleReset() {
+    wx.showModal({
+      title: '确认清空',
+      content: '确定要清空所有档案与手账记录并恢复初始状态吗？',
+      confirmColor: '#E06D53',
+      success: (res) => {
+        if (res.confirm) {
+          wx.clearStorageSync();
+          this.setData({ babyName: '小芽芽', babyAge: 7 });
+          wx.showToast({ title: '已恢复初始状态', icon: 'success' });
+        }
+      }
+    });
+  },
+
+  preventBubble() {}
+});

@@ -1,118 +1,161 @@
-/* miniprogram/pages/vault/vault.wxss */
-.container {
-  padding: 24rpx 0 60rpx 0;
-  background-color: #FBF9F5;
+.vault-page {
   min-height: 100vh;
+  background-color: #FAF9F2;
+  padding: 24rpx 32rpx 120rpx;
+  box-sizing: border-box;
 }
 
-.category-scroll {
+.filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 28rpx;
+}
+
+.horizontal-scroll {
   width: 100%;
   white-space: nowrap;
-  margin-bottom: 16rpx;
 }
 
-.scroll-track {
+.scroll-inner {
   display: flex;
-  align-items: center;
+  flex-direction: row;
   gap: 16rpx;
-  padding: 4rpx 32rpx;
+  padding: 6rpx 4rpx;
 }
 
-.pill-tag {
+.filter-pill {
   flex-shrink: 0;
-  white-space: nowrap;
-  padding: 10rpx 28rpx;
-  border-radius: 999rpx;
-  background-color: #FFFFFF;
-  color: #57534E;
+  display: inline-block;
+  padding: 12rpx 32rpx;
+  border-radius: 36rpx;
   font-size: 24rpx;
-  border: 1rpx solid #E7E5E4;
+  font-weight: 600;
+  background-color: #FFFFFF;
+  color: #45483F;
+  border: 1rpx solid #EDF4E9;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.02);
 }
 
-.active-pill {
-  background-color: #2E5A44;
+.age-pill.active {
+  background-color: #62AD78;
   color: #FFFFFF;
-  border-color: #2E5A44;
-  font-weight: 600;
+  border-color: #62AD78;
+}
+
+.cat-pill.active {
+  background-color: #3F8054;
+  color: #FFFFFF;
+  border-color: #3F8054;
 }
 
 .vault-list {
-  padding: 12rpx 32rpx;
   display: flex;
   flex-direction: column;
   gap: 20rpx;
 }
 
-.vault-card {
+.vault-activity-card {
   background-color: #FFFFFF;
-  border-radius: 28rpx;
-  padding: 28rpx;
+  border-radius: 36rpx;
+  padding: 24rpx;
   border: 1rpx solid #EDF4E9;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.02);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.02);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 24rpx;
 }
 
-.vault-card:active {
-  transform: scale(0.99);
+.card-thumb-frame {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background-color: #FAF9F2;
+  border: 1rpx solid #EDF4E9;
+  flex-shrink: 0;
 }
 
-.vault-info {
+.card-thumb-image {
+  width: 100%;
+  height: 100%;
+}
+
+.card-info-box {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
-  flex: 1;
-  padding-right: 16rpx;
+  gap: 10rpx;
 }
 
-.tag-row {
+.card-top-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12rpx;
-  flex-wrap: wrap;
 }
 
-.cat-badge {
-  background-color: #ECFDF5;
-  color: #047857;
-  font-size: 20rpx;
-  padding: 2rpx 14rpx;
-  border-radius: 8rpx;
-  font-weight: 600;
-}
-
-.review-badge {
-  background-color: #FFF1F2;
-  color: #BE123C;
-  font-size: 20rpx;
-  padding: 2rpx 14rpx;
-  border-radius: 8rpx;
-  font-weight: 600;
-}
-
-.age-badge {
-  font-size: 20rpx;
-  color: #78716C;
-}
-
-.vault-title {
+.card-title-text {
   font-size: 30rpx;
   font-weight: 700;
   color: #292524;
 }
 
-.vault-sub {
+.card-tag-badge {
+  font-size: 20rpx;
+  color: #2E5A44;
+  background-color: #E8F2EC;
+  padding: 4rpx 16rpx;
+  border-radius: 12rpx;
+  font-weight: 600;
+}
+
+.card-subtitle-desc {
   font-size: 24rpx;
-  color: #78716C;
+  color: #85877B;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.arrow-wrap {
-  padding-left: 12rpx;
+.card-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4rpx;
 }
 
-.arrow {
-  font-size: 36rpx;
-  color: #D6D3D1;
-  font-weight: 300;
+.card-duration-text {
+  font-size: 22rpx;
+  color: #A8A29E;
+}
+
+.card-action-text {
+  font-size: 22rpx;
+  color: #2E5A44;
+  font-weight: 700;
+}
+
+.empty-box {
+  background-color: #FFFFFF;
+  border-radius: 36rpx;
+  padding: 80rpx
+32rpx;
+  border: 1rpx solid #EDF4E9;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.empty-icon {
+  font-size: 56rpx;
+}
+
+.empty-msg {
+  font-size: 26rpx;
+  color: #85877B;
+  font-weight: 600;
 }

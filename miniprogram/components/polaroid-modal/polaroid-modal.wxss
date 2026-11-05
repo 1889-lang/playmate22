@@ -1,46 +1,44 @@
-/* miniprogram/components/polaroid-modal/polaroid-modal.wxss */
-.polaroid-mask {
+.polaroid-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.65);
+  background-color: rgba(30, 27, 25, 0.75);
   backdrop-filter: blur(8px);
+  z-index: 99999;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 32rpx;
+  box-sizing: border-box;
 }
 
-.modal-body {
+.polaroid-wrapper {
   width: 100%;
-  max-width: 640rpx;
+  max-width: 620rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.header-bar {
+.modal-top-bar {
   width: 100%;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 24rpx;
-  color: #FFFFFF;
 }
 
-.title {
+.top-title {
+  color: #FFFFFF;
   font-size: 32rpx;
-  font-weight: 700;
-  color: #FFFFFF;
+  font-weight: 800;
 }
 
-.close-btn {
-  width: 56rpx;
-  height: 56rpx;
+.close-circle-btn {
+  width: 60rpx;
+  height: 60rpx;
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.2);
   color: #FFFFFF;
@@ -50,12 +48,12 @@
   font-size: 28rpx;
 }
 
-.swiper-box {
+.polaroid-swiper {
   width: 100%;
   height: 720rpx;
 }
 
-.swiper-item {
+.swiper-item-box {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -64,26 +62,24 @@
 .polaroid-card {
   width: 540rpx;
   background-color: #FFFFFF;
-  border-radius: 32rpx;
-  padding: 32rpx;
+  border-radius: 28rpx;
+  padding: 24rpx 24rpx 36rpx;
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.15);
-  border: 1rpx solid #F5F5F4;
 }
 
 .card-date {
-  font-size: 24rpx;
-  font-family: monospace;
-  color: #858078;
+  font-size: 22rpx;
+  color: #85877B;
   margin-bottom: 16rpx;
 }
 
-.picture-frame {
-  width: 476rpx;
-  height: 476rpx;
-  border-radius: 24rpx;
+.polaroid-photo-frame {
+  width: 100%;
+  height: 440rpx;
+  border-radius: 20rpx;
   overflow: hidden;
   background-color: #FAF9F2;
   border: 1rpx solid #EDF4E9;
@@ -94,66 +90,59 @@
   height: 100%;
 }
 
-.card-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #292524;
+.card-caption {
   margin-top: 20rpx;
-  margin-bottom: 12rpx;
-  text-align: center;
-}
-
-.stamp-wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
 }
 
-.stamp-badge {
-  background-color: #FEF3C7;
-  color: #92400E;
+.act-name {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #292524;
+}
+
+.mood-stamp-badge {
+  background-color: #FEF3E2;
+  border: 1rpx solid #FDBA74;
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
   font-size: 22rpx;
-  font-weight: 500;
-  padding: 8rpx 24rpx;
-  border-radius: 999rpx;
+  color: #EA580C;
+  font-weight: 600;
 }
 
 .page-indicator {
-  font-size: 26rpx;
-  color: #E7E5E4;
-  font-weight: 500;
-  margin-top: 20rpx;
-  margin-bottom: 24rpx;
-  letter-spacing: 4rpx;
+  margin-top: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 24rpx;
+  font-weight: 600;
 }
 
-.action-bar {
+.action-footer {
+  margin-top: 32rpx;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16rpx;
+  gap: 20rpx;
 }
 
 .share-btn {
-  width: 360rpx !important;
+  width: 440rpx !important;
   height: 88rpx;
-  background-color: #57A773 !important;
+  line-height: 88rpx;
+  background-color: #559E75 !important;
   color: #FFFFFF !important;
-  border-radius: 999rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4rpx 16rpx rgba(87, 167, 115, 0.3);
+  border-radius: 44rpx;
+  font-size: 28rpx !important;
+  font-weight: 700;
 }
 
-.share-btn:active {
-  opacity: 0.9;
-}
-
-.close-text-btn {
-  font-size: 24rpx;
-  color: #D6D3D1;
-  padding: 12rpx;
+.text-close-link {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 26rpx;
+  padding: 8rpx 20rpx;
 }

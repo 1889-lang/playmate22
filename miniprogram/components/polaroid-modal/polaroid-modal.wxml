@@ -1,42 +1,22 @@
-<!-- miniprogram/components/polaroid-modal/polaroid-modal.wxml -->
-<view class="polaroid-mask" bindtap="onCloseModal">
-  <view class="modal-body" catchtap="preventProp">
-    <!-- Header -->
-    <view class="header-bar">
-      <text class="title">历史陪伴手账</text>
-      <view class="close-btn" bindtap="onCloseModal">✕</view>
+<view wx:if="{{visible}}" class="polaroid-overlay" catchtouchmove="preventProp" bindtap="handleClose">
+  <view class="polaroid-wrapper" catchtap="preventProp">
+    <view class="modal-top-bar">
+      <text class="top-title">陪伴手账已生成</text>
+      <view class="close-circle-btn" bindtap="handleClose">✕</view>
     </view>
 
-    <!-- Swiper Container (Strictly NO indicator dots) -->
-    <swiper 
-      class="swiper-box" 
-      current="{{currentIndex}}" 
-      indicator-dots="{{false}}" 
-      circular="{{false}}" 
-      bindchange="onSwiperChange"
-    >
+    <swiper class="polaroid-swiper" current="{{currentIndex}}" bindchange="onSwiperChange">
       <block wx:for="{{records}}" wx:key="id">
-        <swiper-item class="swiper-item">
+        <swiper-item class="swiper-item-box">
           <view class="polaroid-card">
-            <!-- Archived Date -->
             <text class="card-date">{{item.date}}</text>
-
-            <!-- Cover Picture -->
-            <view class="picture-frame">
-              <image 
-                src="{{item.photoUrl || '/assets/activities/seek_hide_seek_detail.png'}}" 
-                mode="aspectFill" 
-                class="photo-img"
-              />
+            <view class="polaroid-photo-frame">
+              <image class="photo-img" src="{{item.coverImage}}" mode="aspectFill" />
             </view>
-
-            <!-- Title -->
-            <text class="card-title">{{item.activityTitle}}</text>
-
-            <!-- Stamp Badge -->
-            <view class="stamp-wrapper">
-              <view class="stamp-badge">
-                <text>{{item.reaction || '😍 开心'}} · 陪伴 {{item.durationMinutes || 10}} 分钟</text>
+            <view class="card-caption">
+              <text class="act-name">{{item.activityTitle}}</text>
+              <view class="mood-stamp-badge">
+                <text>{{item.mood || '好奇探索 · 幸福 🌟'}}</text>
               </view>
             </view>
           </view>
@@ -44,15 +24,17 @@
       </block>
     </swiper>
 
-    <!-- Centered Single-Line Page Number (No dots) -->
     <view class="page-indicator" wx:if="{{records.length > 1}}">
       <text>{{currentIndex + 1}} / {{records.length}}</text>
     </view>
 
-    <!-- Native Share & Close Actions -->
-    <view class="action-bar">
-      <button class="share-btn" open-type="share">📤 分享给家人</button>
-      <view class="close-text-btn" bindtap="onCloseModal">关闭</view>
+    <view class="action-footer">
+      <button class="share-btn" open-type="share">
+        <text>📤 分享给家人</text>
+      </button>
+      <view class="text-close-link" bindtap="handleClose">
+        <text>完成记录</text>
+      </view>
     </view>
   </view>
 </view>

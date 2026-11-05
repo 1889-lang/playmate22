@@ -1,134 +1,212 @@
-/* miniprogram/pages/index/index.wxss */
-.container {
-  padding: 24rpx 28rpx 60rpx 28rpx;
-  background-color: #FBF9F5;
+.home-container {
   min-height: 100vh;
+  background-color: #FAF9F2;
+  padding: 24rpx 32rpx 100rpx;
+  box-sizing: border-box;
 }
 
-.hero-card {
-  background-color: #2E5A44;
-  color: #FFFFFF;
-  border-radius: 32rpx;
-  padding: 32rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 4rpx 16rpx rgba(46, 90, 68, 0.15);
-}
-
-.baby-info {
+/* 顶部 Header */
+.home-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 4rpx 28rpx;
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-title {
+  font-size: 42rpx;
+  font-weight: 800;
+  color: #45483F;
+  letter-spacing: -0.5rpx;
+}
+
+.app-subtitle {
+  font-size: 24rpx;
+  color: #85877B;
+  margin-top: 8rpx;
+}
+
+.mode-pill {
+  background-color: #EDF4E9;
+  border: 1rpx solid rgba(98, 173, 120, 0.35);
+  padding: 8rpx 22rpx;
+  border-radius: 40rpx;
+}
+
+.mode-pill-text {
+  font-size: 22rpx;
+  color: #3F8054;
+  font-weight: 600;
+}
+
+/* 今日主推荐卡片 */
+.featured-card {
+  background-color: #FFFFFF;
+  border-radius: 44rpx;
+  padding: 24rpx;
+  border: 1rpx solid #EDF4E9;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.02);
+  margin-bottom: 36rpx;
+}
+
+.cover-box {
+  width: 100%;
+  height: 440rpx;
+  border-radius: 36rpx;
+  overflow: hidden;
+  background-color: rgba(237, 244, 233, 0.4);
+}
+
+.cover-image {
+  width: 100%;
+  height: 100%;
+}
+
+.card-content {
+  padding: 24rpx 8rpx 8rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 38rpx;
+  font-weight: 800;
+  color: #45483F;
+  letter-spacing: -0.5rpx;
+}
+
+.card-intro {
+  font-size: 25rpx;
+  color: #85877B;
+  line-height: 1.55;
+  margin-top: 14rpx;
+}
+
+.tags-row {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.tag-pill {
+  background-color: #EDF4E9;
+  color: #3F8054;
+  font-size: 22rpx;
+  padding: 6rpx 20rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(98, 173, 120, 0.25);
+  font-weight: 500;
+}
+
+.start-btn-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 32rpx;
   margin-bottom: 12rpx;
 }
 
-.baby-name {
-  font-size: 34rpx;
-  font-weight: 700;
-}
-
-.baby-age {
-  font-size: 24rpx;
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
-}
-
-.hero-subtitle {
-  font-size: 24rpx;
-  opacity: 0.9;
-}
-
-.section-title-bar {
-  margin-bottom: 20rpx;
-}
-
-.section-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #292524;
-}
-
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
-
-.activity-card {
-  background-color: #FFFFFF;
-  border-radius: 32rpx;
-  border: 1rpx solid #EDF4E9;
-  padding: 28rpx;
+.start-play-btn {
+  width: 380rpx !important;
+  height: 88rpx;
+  background-color: #62AD78;
+  color: #FFFFFF;
+  border-radius: 44rpx;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
-  transition: transform 0.15s ease;
-}
-
-.activity-card:active {
-  transform: scale(0.99);
-}
-
-.card-left {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-  padding-right: 20rpx;
-}
-
-.tag-row {
-  display: flex;
-  align-items: center;
+  justify-content: center;
   gap: 12rpx;
-  flex-wrap: wrap;
+  box-shadow: 0 8rpx 20rpx rgba(98, 173, 120, 0.3);
+  border: none;
 }
 
-.cat-tag {
-  background-color: #ECFDF5;
-  color: #047857;
-  font-size: 22rpx;
-  font-weight: 600;
-  padding: 4rpx 16rpx;
-  border-radius: 12rpx;
+.start-play-btn:active {
+  background-color: #3F8054;
+  transform: scale(0.98);
 }
 
-.review-tag {
-  background-color: #FFF1F2;
-  color: #BE123C;
-  font-size: 20rpx;
-  font-weight: 600;
-  padding: 2rpx 12rpx;
-  border-radius: 8rpx;
-}
-
-.duration-tag {
-  font-size: 22rpx;
-  color: #78716C;
-}
-
-.act-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #292524;
-}
-
-.act-sub {
+.play-icon {
   font-size: 24rpx;
-  color: #78716C;
 }
 
-.card-right {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 20rpx;
-  overflow: hidden;
-  background-color: #FAF9F2;
+.btn-label {
+  font-size: 28rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+
+/* 下方 3 列灵感画廊 */
+.gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.gallery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4rpx;
+}
+
+.gallery-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #45483F;
+}
+
+.more-link {
+  font-size: 24rpx;
+  color: #3F8054;
+  font-weight: 600;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18rpx;
+}
+
+.gallery-item {
+  background-color: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 16rpx 14rpx 20rpx;
   border: 1rpx solid #EDF4E9;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.cover-thumb {
+.gallery-item:active {
+  transform: scale(0.97);
+}
+
+.gallery-thumb-box {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 22rpx;
+  overflow: hidden;
+  background-color: rgba(237, 244, 233, 0.5);
+  margin-bottom: 14rpx;
+}
+
+.gallery-thumb {
   width: 100%;
   height: 100%;
+}
+
+.gallery-item-title {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #45483F;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }

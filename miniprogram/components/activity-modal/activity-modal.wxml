@@ -1,53 +1,37 @@
-<!-- miniprogram/components/activity-modal/activity-modal.wxml -->
-<view class="modal-mask" bindtap="onCloseModal">
-  <view class="modal-card" catchtap="preventProp">
-    <!-- Top Bar -->
-    <view class="modal-header">
-      <view class="header-tags">
-        <text class="cat-pill">{{activity.category}}</text>
-        <text class="review-pill" wx:if="{{!activity.isReviewed}}">⚠️ 待安全复核</text>
-        <text class="info-text">适龄: {{activity.ageRange}} · {{activity.duration}}</text>
+<view wx:if="{{visible}}" class="modal-overlay" catchtouchmove="preventProp" bindtap="handleClose">
+  <view class="sheet-container" catchtap="preventProp">
+    <view class="sheet-header">
+      <view class="title-meta">
+        <text class="activity-title">{{activity.title}}</text>
+        <view class="category-pill">{{activity.category}}</view>
       </view>
-      <view class="close-icon" bindtap="onCloseModal">✕</view>
+      <view class="round-icon-btn" bindtap="handleClose">✕</view>
     </view>
 
-    <!-- Content Body -->
-    <view class="modal-body">
-      <!-- Title -->
-      <view class="title-group">
-        <text class="act-title">{{activity.title}}</text>
-        <text class="act-sub">{{activity.subtitle}}</text>
-      </view>
+    <view class="illustration-frame">
+      <image class="cover-art" src="{{activity.coverImage}}" mode="aspectFill" />
+    </view>
 
-      <!-- Illustration Area -->
-      <view class="illustration-frame shadow-sm">
-        <image 
-          src="/assets/activities/seek_hide_seek_detail.png" 
-          mode="aspectFill" 
-          class="illustration-img"
-        />
-      </view>
-
-      <!-- Key Tip Card -->
-      <view class="tip-card">
-        <text class="tip-icon">💡</text>
-        <view class="tip-content">
-          <text class="tip-label">要点：</text>
-          <text class="tip-text">{{activity.id === 'act-05' ? '观察宝宝是否会主动伸手寻找被遮挡的物品' : (activity.observationTips[0] || '看着宝宝眼睛，像日常互动一样轻松自然。')}}</text>
+    <view class="steps-section">
+      <text class="section-badge">极简三步法</text>
+      <view class="step-row" wx:for="{{activity.steps}}" wx:key="index">
+        <view class="step-number">{{index + 1}}</view>
+        <view class="step-text-wrap">
+          <text class="step-bold" wx:if="{{item.title}}">{{item.title}}：</text>
+          <text class="step-bold" wx:elif="{{item.bold}}">{{item.bold}}：</text>
+          <text class="step-desc">{{item.description || item.desc || item}}</text>
         </view>
       </view>
+    </view>
 
-      <!-- Audit Reason Warning if not reviewed -->
-      <view class="warning-card" wx:if="{{!activity.isReviewed}}">
-        <text class="warning-title">⚠️ 待安全复核隔离说明</text>
-        <text class="warning-text">{{activity.auditReason || '该玩法涉及待复核的安全动作，已临时隔离。'}}</text>
-      </view>
+    <view class="tips-box" wx:if="{{activity.safetyReminder || activity.tips}}">
+      <text class="tips-heading">💡 陪伴互动锦囊</text>
+      <text class="tips-body">{{activity.safetyReminder || activity.tips}}</text>
+    </view>
 
-      <!-- Forest Green Primary Action Button -->
-      <view class="action-wrap">
-        <button class="forest-btn" bindtap="onStartPlay">
-          <text>开始陪伴</text>
-        </button>
+    <view class="sheet-bottom">
+      <view class="primary-green-btn" catchtap="onFinishTap">
+        <text>结束陪伴</text>
       </view>
     </view>
   </view>

@@ -1,59 +1,65 @@
-<!-- miniprogram/pages/vault/vault.wxml -->
-<view class="container">
-  <!-- 分类筛选轨道 (原生 scroll-view scroll-x) -->
-  <scroll-view class="category-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
-    <view class="scroll-track">
-      <block wx:for="{{categories}}" wx:key="*this">
-        <view 
-          class="pill-tag {{selectedCategory === item ? 'active-pill' : ''}}" 
-          bindtap="onSelectCategory" 
-          data-cat="{{item}}"
-        >
-          <text>{{item}}</text>
-        </view>
-      </block>
-    </view>
-  </scroll-view>
-
-  <!-- 月龄筛选轨道 -->
-  <scroll-view class="category-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
-    <view class="scroll-track">
-      <block wx:for="{{ageRanges}}" wx:key="*this">
-        <view 
-          class="pill-tag {{selectedAge === item ? 'active-pill' : ''}}" 
-          bindtap="onSelectAge" 
-          data-age="{{item}}"
-        >
-          <text>{{item}}</text>
-        </view>
-      </block>
-    </view>
-  </scroll-view>
-
-  <!-- 52条完整活动卡片列表 -->
-  <view class="vault-list">
-    <block wx:for="{{filteredActivities}}" wx:key="id">
-      <view class="vault-card" bindtap="onOpenActivityModal" data-id="{{item.id}}">
-        <view class="vault-info">
-          <view class="tag-row">
-            <text class="cat-badge">{{item.category}}</text>
-            <text class="review-badge" wx:if="{{!item.isReviewed}}">⚠️ 待安全复核</text>
-            <text class="age-badge">{{item.ageRange}} · {{item.duration}}</text>
+<view class="vault-page">
+  <view class="filters-container">
+    <scroll-view scroll-x="true" class="horizontal-scroll" enable-flex="true">
+      <view class="scroll-inner">
+        <block wx:for="{{ageBrackets}}" wx:key="key">
+          <view 
+            class="filter-pill age-pill {{item.key === selectedAge ? 'active' : ''}}"
+            bindtap="onSelectAge" 
+            data-key="{{item.key}}"
+          >
+            {{item.label}}
           </view>
-          <text class="vault-title">{{item.title}}</text>
-          <text class="vault-sub">{{item.subtitle}}</text>
-        </view>
-        <view class="arrow-wrap">
-          <text class="arrow">›</text>
-        </view>
+        </block>
       </view>
-    </block>
+    </scroll-view>
+
+    <scroll-view scroll-x="true" class="horizontal-scroll" enable-flex="true">
+      <view class="scroll-inner">
+        <block wx:for="{{categories}}" wx:key="*this">
+          <view 
+            class="filter-pill cat-pill {{item === selectedCategory ? 'active' : ''}}"
+            bindtap="onSelectCategory" 
+            data-cat="{{item}}"
+          >
+            {{item}}
+          </view>
+        </block>
+      </view>
+    </scroll-view>
   </view>
 
-  <!-- 活动详情弹窗 -->
+  <view class="vault-list">
+    <block wx:if="{{filteredActivities.length > 0}}">
+      <block wx:for="{{filteredActivities}}" wx:key="id">
+        <view class="vault-activity-card" bindtap="handleOpenDetail" data-id="{{item.id}}">
+          <view class="card-thumb-frame">
+            <image class="card-thumb-image" src="{{item.coverImage}}" mode="aspectFill" />
+          </view>
+          <view class="card-info-box">
+            <view class="card-top-row">
+              <text class="card-title-text">{{item.cleanTitle}}</text>
+              <text class="card-tag-badge">{{item.category}}</text>
+            </view>
+            <text class="card-subtitle-desc">{{item.subtitle}}</text>
+            <view class="card-bottom-row">
+              <text class="card-duration-text">⏱ {{item.duration}}</text>
+              <text class="card-action-text">查看玩法 ›</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+    <view wx:else class="empty-box">
+      <text class="empty-icon">🌱</text>
+      <text class="empty-msg">未找到符合条件的已审核玩法</text>
+    </view>
+  </view>
+
   <activity-modal 
-    wx:if="{{selectedActivity}}" 
+    visible="{{isModalOpen}}" 
     activity="{{selectedActivity}}" 
-    bind:close="onCloseActivityModal" 
+    bind:close="handleCloseDetail"
+    bind:finish="handleFinishPlay"
   />
 </view>

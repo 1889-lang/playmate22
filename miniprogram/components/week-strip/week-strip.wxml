@@ -1,27 +1,22 @@
-<!-- miniprogram/components/week-strip/week-strip.wxml -->
-<view class="week-strip-card">
-  <!-- 顶栏：年月与导航手势按钮 -->
-  <view class="header-bar">
-    <view class="title-group">
-      <text class="month-label">{{currentMonthYearLabel}}</text>
-      <text class="subtitle">和宝宝一起度过的日子</text>
-    </view>
-    <view class="nav-buttons">
-      <view class="nav-btn" bindtap="onPrevWeek">‹</view>
-      <view class="today-btn" wx:if="{{weekOffset !== 0}}" bindtap="onResetWeek">本周</view>
-      <view class="nav-btn" bindtap="onNextWeek">›</view>
+<view style="padding: 16rpx 24rpx; background: #FFFFFF; border-radius: 28rpx; margin-bottom: 24rpx; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.02);">
+  <view style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx;">
+    <text style="font-size: 26rpx; color: #78716C; font-weight: 500;">和宝宝一起度过的日子</text>
+    <view style="display: flex; gap: 16rpx; align-items: center;">
+      <view style="width: 44rpx; height: 44rpx; background: #F5F5F4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx;" bindtap="handlePrevWeek">‹</view>
+      <text style="font-size: 24rpx; color: #2E5A44; background: #E8F2EC; padding: 4rpx 16rpx; border-radius: 20rpx;">本周</text>
+      <view style="width: 44rpx; height: 44rpx; background: #F5F5F4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx;" bindtap="handleNextWeek">›</view>
     </view>
   </view>
-
-  <!-- 7等分网格： Sunday - Saturday -->
-  <view class="grid-7">
-    <block wx:for="{{weekDays}}" wx:key="dateStr">
-      <view class="day-col" bindtap="onTapDay" data-datestr="{{item.dateStr}}">
-        <text class="day-name">{{item.dayName}}</text>
-        <view class="day-num-box {{selectedDate === item.dateStr ? 'active-box' : ''}}">
-          <text class="day-num {{item.isToday && selectedDate !== item.dateStr ? 'today-text' : ''}}">{{item.dateNum}}</text>
-          <view class="dot {{item.hasCheckedIn ? 'dot-active' : 'dot-hidden'}}"></view>
-        </view>
+  <view style="display: flex; justify-content: space-between;">
+    <block wx:for="{{weekDays}}" wx:key="dateString">
+      <view 
+        style="display: flex; flex-direction: column; align-items: center; width: 72rpx; padding: 8rpx 0; border-radius: 20rpx; {{item.dateString === selectedDate ? 'background: #2E5A44;' : ''}}"
+        bindtap="onTapDay" 
+        data-date="{{item.dateString}}"
+      >
+        <text style="font-size: 20rpx; margin-bottom: 6rpx; {{item.dateString === selectedDate ? 'color: #FFFFFF;' : 'color: #A8A29E;'}}">{{item.weekdayName}}</text>
+        <text style="font-size: 26rpx; font-weight: 600; {{item.dateString === selectedDate ? 'color: #FFFFFF;' : 'color: #292524;'}}">{{item.dayNum}}</text>
+        <view style="height: 8rpx; width: 8rpx; border-radius: 50%; margin-top: 6rpx; background: {{item.hasRecord ? (item.dateString === selectedDate ? '#FFFFFF' : '#57A773') : 'transparent'}};"></view>
       </view>
     </block>
   </view>
