@@ -7,13 +7,13 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#FBF9F5",
+    "navigationBarBackgroundColor": "#FAF9F2",
     "navigationBarTitleText": "玩伴日历",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FBF9F5"
+    "backgroundColor": "#FAF9F2"
   },
   "tabBar": {
-    "color": "#858078",
+    "color": "#85877B",
     "selectedColor": "#2E5A44",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",

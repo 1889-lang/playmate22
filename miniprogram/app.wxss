@@ -1,32 +1,11 @@
-/** miniprogram/app.wxss **/
 page {
-  background-color: #FBF9F5;
+  background-color: #FAF9F2;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: #292524;
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   font-size: 28rpx;
-  line-height: 1.5;
   box-sizing: border-box;
 }
 
-view, text, scroll-view, swiper, button, image {
+view, text, button, input, textarea {
   box-sizing: border-box;
-}
-
-.primary-btn {
-  background-color: #57A773;
-  color: #FFFFFF;
-  border-radius: 999px;
-  font-weight: 500;
-  text-align: center;
-}
-
-.primary-btn:active {
-  opacity: 0.9;
-}
-
-.card {
-  background-color: #FFFFFF;
-  border-radius: 32rpx;
-  border: 1rpx solid #EDF4E9;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
 }
