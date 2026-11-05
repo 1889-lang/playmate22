@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "成长足迹",
+  "usingComponents": {
+    "week-strip": "../../components/week-strip/week-strip",
+    "polaroid-modal": "../../components/polaroid-modal/polaroid-modal"
+  }
+}

@@ -1,0 +1,89 @@
+/* miniprogram/pages/profile/profile.wxss */
+.container {
+  padding: 24rpx 32rpx;
+  background-color: #FBF9F5;
+  min-height: 100vh;
+}
+
+.profile-card {
+  background-color: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 40rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1rpx solid #EDF4E9;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.02);
+}
+
+.avatar-circle {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: #ECFDF5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56rpx;
+  margin-bottom: 16rpx;
+}
+
+.baby-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #292524;
+  margin-bottom: 8rpx;
+}
+
+.baby-detail {
+  font-size: 24rpx;
+  color: #78716C;
+}
+
+.info-card {
+  background-color: #FEF3C7;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  border: 1rpx solid #FDE68A;
+  margin-bottom: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.info-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #92400E;
+}
+
+.info-desc {
+  font-size: 24rpx;
+  color: #78350F;
+  line-height: 1.5;
+}
+
+.menu-list {
+  background-color: #FFFFFF;
+  border-radius: 28rpx;
+  border: 1rpx solid #EDF4E9;
+  overflow: hidden;
+}
+
+.menu-item {
+  padding: 28rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-label {
+  font-size: 28rpx;
+  color: #292524;
+}
+
+.menu-arrow {
+  font-size: 32rpx;
+  color: #A8A29E;
+}

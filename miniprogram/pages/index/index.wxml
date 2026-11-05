@@ -1,0 +1,39 @@
+<!-- miniprogram/pages/index/index.wxml -->
+<view class="container">
+  <!-- 头部宝宝概览卡片 -->
+  <view class="hero-card">
+    <view class="baby-info">
+      <text class="baby-name">👶 小芽芽</text>
+      <text class="baby-age">7个月（适龄 6–8 个月）</text>
+    </view>
+    <text class="hero-subtitle">每天打开就能找到适合当前月龄的亲子玩法</text>
+  </view>
+
+  <!-- 今日精选推荐活动 -->
+  <view class="section-title-bar">
+    <text class="section-title">✨ 今日精选推荐</text>
+  </view>
+
+  <view class="activity-list">
+    <block wx:for="{{dailyActivities}}" wx:key="id">
+      <view class="activity-card" bindtap="onOpenActivityModal" data-id="{{item.id}}">
+        <view class="card-left">
+          <view class="tag-row">
+            <text class="cat-tag">{{item.category}}</text>
+            <text class="age-tag">{{item.ageRange}}</text>
+          </view>
+          <text class="act-title">{{item.title}}</text>
+          <text class="act-sub">{{item.subtitle}}</text>
+        </view>
+
+        <view class="card-right">
+          <image 
+            src="{{item.id === 'act-05' ? '/assets/activities/seek_hide_seek_detail.png' : '/assets/activities/seek_hide_seek_detail.png'}}" 
+            mode="aspectFill" 
+            class="cover-thumb"
+          />
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

@@ -1,0 +1,61 @@
+<!-- miniprogram/pages/calendar/calendar.wxml -->
+<view class="container">
+  <!-- 1. 顶部周历条 WeekStrip -->
+  <week-strip 
+    selectedDate="{{selectedDate}}" 
+    checkedInDates="{{checkedInDates}}" 
+    bind:selectDate="onSelectDate" 
+  />
+
+  <!-- 2. 当日陪伴手账列表区 -->
+  <view class="footprint-section">
+    <!-- 纯文本日期标题（彻底删除“查看全部”胶囊按钮及多余边框） -->
+    <text class="date-header">{{selectedDate ? selectedDate + ' 陪伴手账' : '成长陪伴手账'}}</text>
+
+    <!-- 空状态 -->
+    <view class="empty-card" wx:if="{{filteredRecords.length === 0}}">
+      <view class="empty-icon">📅</view>
+      <text class="empty-title">这一天还没有留下陪伴印记</text>
+      <text class="empty-sub">和宝宝玩一会儿，在这里留下轻松的亲子陪伴瞬间吧</text>
+    </view>
+
+    <!-- 当日手账卡片列表 -->
+    <view class="records-list" wx:else>
+      <block wx:for="{{filteredRecords}}" wx:key="id">
+        <view 
+          class="record-card" 
+          bindtap="onOpenPolaroidModal" 
+          data-index="{{index}}"
+        >
+          <view class="card-info">
+            <text class="activity-title">{{item.activityTitle}}</text>
+            <view class="badge-row">
+              <text class="tag-badge">{{item.reaction || '😍 开心'}}</text>
+              <text class="duration-text">陪伴 {{item.durationMinutes || 10}} 分钟</text>
+            </view>
+          </view>
+
+          <!-- 右侧打卡封面相纸 ＋ 引导箭头 › -->
+          <view class="card-right">
+            <view class="thumb-frame">
+              <image 
+                src="{{item.photoUrl || '/assets/activities/seek_hide_seek_detail.png'}}" 
+                mode="aspectFill" 
+                class="thumb-img"
+              />
+            </view>
+            <text class="arrow-icon">›</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 3. 原地呼出拍立得详情弹窗 (PolaroidModal) -->
+  <polaroid-modal 
+    wx:if="{{isPolaroidModalOpen}}" 
+    records="{{filteredRecords}}" 
+    initialIndex="{{modalIndex}}" 
+    bind:close="onClosePolaroidModal" 
+  />
+</view>

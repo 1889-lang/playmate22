@@ -1,0 +1,18 @@
+{
+  "miniprogramRoot": "miniprogram/",
+  "projectname": "playmate-calendar",
+  "description": "玩伴日历 - 0–36个月亲子陪伴与成长足迹",
+  "appid": "touristappid",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "compileHotReframe": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "2.32.3",
+  "packOptions": {
+    "ignore": []
+  }
+}

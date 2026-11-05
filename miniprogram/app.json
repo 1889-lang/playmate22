@@ -1,0 +1,41 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/calendar/calendar",
+    "pages/vault/vault",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FBF9F5",
+    "navigationBarTitleText": "玩伴日历",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FBF9F5"
+  },
+  "tabBar": {
+    "color": "#858078",
+    "selectedColor": "#2E5A44",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "今日推荐"
+      },
+      {
+        "pagePath": "pages/calendar/calendar",
+        "text": "成长足迹"
+      },
+      {
+        "pagePath": "pages/vault/vault",
+        "text": "活动宝库"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "宝宝档案"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

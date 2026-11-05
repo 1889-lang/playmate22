@@ -1,0 +1,28 @@
+<!-- miniprogram/components/week-strip/week-strip.wxml -->
+<view class="week-strip-card">
+  <!-- 顶栏：年月与导航手势按钮 -->
+  <view class="header-bar">
+    <view class="title-group">
+      <text class="month-label">{{currentMonthYearLabel}}</text>
+      <text class="subtitle">和宝宝一起度过的日子</text>
+    </view>
+    <view class="nav-buttons">
+      <view class="nav-btn" bindtap="onPrevWeek">‹</view>
+      <view class="today-btn" wx:if="{{weekOffset !== 0}}" bindtap="onResetWeek">本周</view>
+      <view class="nav-btn" bindtap="onNextWeek">›</view>
+    </view>
+  </view>
+
+  <!-- 7等分网格： Sunday - Saturday -->
+  <view class="grid-7">
+    <block wx:for="{{weekDays}}" wx:key="dateStr">
+      <view class="day-col" bindtap="onTapDay" data-datestr="{{item.dateStr}}">
+        <text class="day-name">{{item.dayName}}</text>
+        <view class="day-num-box {{selectedDate === item.dateStr ? 'active-box' : ''}}">
+          <text class="day-num {{item.isToday && selectedDate !== item.dateStr ? 'today-text' : ''}}">{{item.dateNum}}</text>
+          <view class="dot {{item.hasCheckedIn ? 'dot-active' : 'dot-hidden'}}"></view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
