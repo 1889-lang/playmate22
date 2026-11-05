@@ -1,91 +1,84 @@
-// miniprogram/components/week-strip/week-strip.ts
-import { getLocalDateStr } from '../../utils/date';
-
 Component({
   properties: {
     selectedDate: {
       type: String,
       value: '',
-    },
-    checkedInDates: {
-      type: Array,
-      value: [],
-      observer() {
-        this.updateWeekDays();
+      observer(newVal) {
+        if (newVal) this.initWeek(new Date(newVal));
       }
+    },
+    markedDates: {
+      type: Array,
+      value: []
     }
   },
 
   data: {
-    weekOffset: 0,
-    currentMonthYearLabel: '',
-    weekDays: [] as any[],
+    currentYearMonth: '',
+    weekDays: []
   },
 
-  attached() {
-    this.updateWeekDays();
+  lifetimes: {
+    attached() {
+      const initial = this.data.selectedDate ? new Date(this.data.selectedDate) : new Date();
+      this.initWeek(initial);
+    }
   },
 
   methods: {
-    updateWeekDays() {
-      const { weekOffset } = this.data;
-      const checkedInDates = (this.properties.checkedInDates || []) as string[];
-      const todayStr = getLocalDateStr();
+    formatDateStr(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
 
-      const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon ...
-      const sunday = new Date(now);
-      sunday.setDate(now.getDate() - dayOfWeek + weekOffset * 7);
+    initWeek(anchorDate) {
+      const current = new Date(anchorDate);
+      const dayOfWeek = current.getDay();
+      const startOfWeek = new Date(current);
+      startOfWeek.setDate(current.getDate() - dayOfWeek);
 
-      const year = sunday.getFullYear();
-      const month = sunday.getMonth() + 1;
-      const currentMonthYearLabel = `${year}年${month}月`;
+      const weekdaysNames = ['日', '一', '二', '三', '四', '五', '六'];
+      const todayStr = this.formatDateStr(new Date());
+      const days = [];
 
-      const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
-      const weekDays = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(sunday);
-        d.setDate(sunday.getDate() + i);
-        const dateStr = getLocalDateStr(d);
-        const hasCheckedIn = checkedInDates.includes(dateStr);
-        const isToday = dateStr === todayStr;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek);
+        d.setDate(startOfWeek.getDate() + i);
+        const dateStr = this.formatDateStr(d);
 
-        return {
-          dayName: dayNames[i],
-          dateNum: d.getDate(),
-          dateStr,
-          hasCheckedIn,
-          isToday,
-        };
-      });
+        days.push({
+          dateString: dateStr,
+          dayNum: d.getDate(),
+          weekdayName: weekdaysNames[i],
+          isToday: dateStr === todayStr,
+          hasRecord: (this.data.markedDates || []).includes(dateStr)
+        });
+      }
 
+      const yearMonth = `${startOfWeek.getFullYear()}年${startOfWeek.getMonth() + 1}月`;
       this.setData({
-        currentMonthYearLabel,
-        weekDays,
+        currentYearMonth: yearMonth,
+        weekDays: days
       });
     },
 
-    onPrevWeek() {
-      this.setData({ weekOffset: this.data.weekOffset - 1 }, () => {
-        this.updateWeekDays();
-      });
+    onTapDay(e) {
+      const date = e.currentTarget.dataset.date;
+      this.triggerEvent('selectDate', { date });
     },
 
-    onNextWeek() {
-      this.setData({ weekOffset: this.data.weekOffset + 1 }, () => {
-        this.updateWeekDays();
-      });
+    handlePrevWeek() {
+      const first = new Date(this.data.weekDays[0].dateString);
+      first.setDate(first.getDate() - 7);
+      this.initWeek(first);
     },
 
-    onResetWeek() {
-      this.setData({ weekOffset: 0 }, () => {
-        this.updateWeekDays();
-      });
-    },
-
-    onTapDay(e: any) {
-      const { datestr } = e.currentTarget.dataset;
-      const nextSelected = this.properties.selectedDate === datestr ? '' : datestr;
-      this.triggerEvent('selectDate', { dateStr: nextSelected });
+    handleNextWeek() {
+      const first = new Date(this.data.weekDays[0].dateString);
+      first.setDate(first.getDate() + 7);
+      this.initWeek(first);
     }
   }
 });
