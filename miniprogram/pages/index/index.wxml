@@ -15,12 +15,13 @@
   </view>
 
   <view class="activity-list">
-    <block wx:for="{{dailyActivities}}" wx:key="id">
+    <block wx:for="{{recommendedActivities}}" wx:key="id">
       <view class="activity-card" bindtap="onOpenActivityModal" data-id="{{item.id}}">
         <view class="card-left">
           <view class="tag-row">
             <text class="cat-tag">{{item.category}}</text>
-            <text class="age-tag">{{item.ageRange}}</text>
+            <text class="review-tag" wx:if="{{!item.isReviewed}}">⚠️ 待复核</text>
+            <text class="duration-tag">{{item.duration}}</text>
           </view>
           <text class="act-title">{{item.title}}</text>
           <text class="act-sub">{{item.subtitle}}</text>
@@ -28,7 +29,7 @@
 
         <view class="card-right">
           <image 
-            src="{{item.id === 'act-05' ? '/assets/activities/seek_hide_seek_detail.png' : '/assets/activities/seek_hide_seek_detail.png'}}" 
+            src="/assets/activities/seek_hide_seek_detail.png" 
             mode="aspectFill" 
             class="cover-thumb"
           />
@@ -36,4 +37,11 @@
       </view>
     </block>
   </view>
+
+  <!-- 活动详情弹窗 -->
+  <activity-modal 
+    wx:if="{{selectedActivity}}" 
+    activity="{{selectedActivity}}" 
+    bind:close="onCloseActivityModal" 
+  />
 </view>

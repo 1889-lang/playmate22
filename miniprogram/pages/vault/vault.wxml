@@ -1,6 +1,6 @@
 <!-- miniprogram/pages/vault/vault.wxml -->
 <view class="container">
-  <!-- 滚动横向分类标签 (原生 scroll-view scroll-x) -->
+  <!-- 分类筛选轨道 (原生 scroll-view scroll-x) -->
   <scroll-view class="category-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
     <view class="scroll-track">
       <block wx:for="{{categories}}" wx:key="*this">
@@ -15,20 +15,45 @@
     </view>
   </scroll-view>
 
-  <!-- 活动列表 -->
+  <!-- 月龄筛选轨道 -->
+  <scroll-view class="category-scroll" scroll-x="{{true}}" enable-flex="{{true}}" show-scrollbar="{{false}}">
+    <view class="scroll-track">
+      <block wx:for="{{ageRanges}}" wx:key="*this">
+        <view 
+          class="pill-tag {{selectedAge === item ? 'active-pill' : ''}}" 
+          bindtap="onSelectAge" 
+          data-age="{{item}}"
+        >
+          <text>{{item}}</text>
+        </view>
+      </block>
+    </view>
+  </scroll-view>
+
+  <!-- 52条完整活动卡片列表 -->
   <view class="vault-list">
     <block wx:for="{{filteredActivities}}" wx:key="id">
-      <view class="vault-card">
+      <view class="vault-card" bindtap="onOpenActivityModal" data-id="{{item.id}}">
         <view class="vault-info">
           <view class="tag-row">
             <text class="cat-badge">{{item.category}}</text>
             <text class="review-badge" wx:if="{{!item.isReviewed}}">⚠️ 待安全复核</text>
-            <text class="age-badge">{{item.ageRange}}</text>
+            <text class="age-badge">{{item.ageRange}} · {{item.duration}}</text>
           </view>
           <text class="vault-title">{{item.title}}</text>
           <text class="vault-sub">{{item.subtitle}}</text>
         </view>
+        <view class="arrow-wrap">
+          <text class="arrow">›</text>
+        </view>
       </view>
     </block>
   </view>
+
+  <!-- 活动详情弹窗 -->
+  <activity-modal 
+    wx:if="{{selectedActivity}}" 
+    activity="{{selectedActivity}}" 
+    bind:close="onCloseActivityModal" 
+  />
 </view>

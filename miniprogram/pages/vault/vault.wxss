@@ -8,24 +8,24 @@
 .category-scroll {
   width: 100%;
   white-space: nowrap;
-  margin-bottom: 24rpx;
+  margin-bottom: 16rpx;
 }
 
 .scroll-track {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  padding: 8rpx 32rpx;
+  padding: 4rpx 32rpx;
 }
 
 .pill-tag {
   flex-shrink: 0;
   white-space: nowrap;
-  padding: 12rpx 28rpx;
+  padding: 10rpx 28rpx;
   border-radius: 999rpx;
   background-color: #FFFFFF;
   color: #57534E;
-  font-size: 26rpx;
+  font-size: 24rpx;
   border: 1rpx solid #E7E5E4;
 }
 
@@ -37,7 +37,7 @@
 }
 
 .vault-list {
-  padding: 0 32rpx;
+  padding: 12rpx 32rpx;
   display: flex;
   flex-direction: column;
   gap: 20rpx;
@@ -49,18 +49,28 @@
   padding: 28rpx;
   border: 1rpx solid #EDF4E9;
   box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vault-card:active {
+  transform: scale(0.99);
 }
 
 .vault-info {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
+  flex: 1;
+  padding-right: 16rpx;
 }
 
 .tag-row {
   display: flex;
   align-items: center;
   gap: 12rpx;
+  flex-wrap: wrap;
 }
 
 .cat-badge {
@@ -69,6 +79,7 @@
   font-size: 20rpx;
   padding: 2rpx 14rpx;
   border-radius: 8rpx;
+  font-weight: 600;
 }
 
 .review-badge {
@@ -77,6 +88,7 @@
   font-size: 20rpx;
   padding: 2rpx 14rpx;
   border-radius: 8rpx;
+  font-weight: 600;
 }
 
 .age-badge {
@@ -93,4 +105,14 @@
 .vault-sub {
   font-size: 24rpx;
   color: #78716C;
+}
+
+.arrow-wrap {
+  padding-left: 12rpx;
+}
+
+.arrow {
+  font-size: 36rpx;
+  color: #D6D3D1;
+  font-weight: 300;
 }
