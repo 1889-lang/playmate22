@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "今日推荐玩法",
-  "usingComponents": {}
+  "usingComponents": {
+    "activity-modal": "../../components/activity-modal/activity-modal"
+  }
 }

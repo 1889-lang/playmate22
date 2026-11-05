@@ -1344,4 +1344,18 @@ export const INITIAL_ACTIVITIES: Activity[] = [
   }
 ];
 
+export const ACTIVITIES = INITIAL_ACTIVITIES;
 
+export function getRecommendedActivities(monthAge: number = 7) {
+  const matched = INITIAL_ACTIVITIES.filter(a => {
+    if (a.ageRange.includes('6-8个月') || a.ageRange.includes('0-36') || a.ageRange.includes(`${monthAge}个`)) {
+      return true;
+    }
+    return false;
+  });
+  return matched.length >= 3 ? matched : INITIAL_ACTIVITIES.slice(0, 6);
+}
+
+export function getActivityById(id: string) {
+  return INITIAL_ACTIVITIES.find(a => a.id === id) || INITIAL_ACTIVITIES[0];
+}

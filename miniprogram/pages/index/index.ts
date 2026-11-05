@@ -1,24 +1,30 @@
 // miniprogram/pages/index/index.ts
-import { INITIAL_ACTIVITIES } from '../../data/activities';
+import { getRecommendedActivities, getActivityById } from '../../data/activities';
 
 Page({
   data: {
-    dailyActivities: [] as any[],
+    recommendedActivities: [] as any[],
+    selectedActivity: null as any,
   },
 
   onLoad() {
-    // Select 3 sample daily activities (act-04, act-05, act-08)
-    const daily = INITIAL_ACTIVITIES.filter(a => ['act-04', 'act-05', 'act-08'].includes(a.id));
+    const recommended = getRecommendedActivities(7);
     this.setData({
-      dailyActivities: daily.length ? daily : INITIAL_ACTIVITIES.slice(0, 3)
+      recommendedActivities: recommended
     });
   },
 
   onOpenActivityModal(e: any) {
     const { id } = e.currentTarget.dataset;
-    wx.showToast({
-      title: '正在载入玩法...',
-      icon: 'none'
+    const activity = getActivityById(id);
+    this.setData({
+      selectedActivity: activity,
+    });
+  },
+
+  onCloseActivityModal() {
+    this.setData({
+      selectedActivity: null,
     });
   }
 });

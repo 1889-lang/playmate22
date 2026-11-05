@@ -63,6 +63,11 @@
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
+  transition: transform 0.15s ease;
+}
+
+.activity-card:active {
+  transform: scale(0.99);
 }
 
 .card-left {
@@ -77,6 +82,7 @@
   display: flex;
   align-items: center;
   gap: 12rpx;
+  flex-wrap: wrap;
 }
 
 .cat-tag {
@@ -88,7 +94,16 @@
   border-radius: 12rpx;
 }
 
-.age-tag {
+.review-tag {
+  background-color: #FFF1F2;
+  color: #BE123C;
+  font-size: 20rpx;
+  font-weight: 600;
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.duration-tag {
   font-size: 22rpx;
   color: #78716C;
 }
@@ -110,6 +125,7 @@
   border-radius: 20rpx;
   overflow: hidden;
   background-color: #FAF9F2;
+  border: 1rpx solid #EDF4E9;
 }
 
 .cover-thumb {

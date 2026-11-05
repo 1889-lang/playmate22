@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "活动宝库",
-  "usingComponents": {}
+  "usingComponents": {
+    "activity-modal": "../../components/activity-modal/activity-modal"
+  }
 }
