@@ -94,20 +94,62 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
           </div>
 
           {/* Central High-Quality Picture Book Illustration (P0 Zero-Bubble Pure Image Layer) */}
-          {activity.id === 'act-05' || activity.title.includes('躲猫猫') ? (
-            <div className="w-full rounded-2xl overflow-hidden shadow-sm bg-white border border-stone-100/80">
-              <img
-                src="/assets/activities/seek_hide_seek_detail.png"
-                alt={activity.title}
-                className="w-full h-auto rounded-2xl object-cover"
-              />
-            </div>
-          ) : (
-            <div className="relative w-full aspect-[16/10] sm:h-[240px] rounded-2xl bg-gradient-to-b from-[#EDF4E9]/80 via-[#FAF9F2] to-[#EDF4E9] border border-[#62AD78]/20 shadow-sm flex items-center justify-center p-3 overflow-visible">
-              {/* High-Fidelity Scandinavian Editorial Illustration */}
-              {getActivityIllustration(activity.id, activity.category)}
-            </div>
-          )}
+          {(() => {
+            let imgSrc = activity.coverImage || '/assets/activities/seek_hide_seek_detail.png';
+            if (!activity.coverImage) {
+              if (activity.id === 'act-01' || activity.title.includes('沙沙响') || activity.title.includes('纸条')) {
+                imgSrc = '/assets/activities/paper_sound_detail.png';
+              } else if (activity.id === 'act-02' || activity.title.includes('飞机')) {
+                imgSrc = '/assets/activities/airplane_tummy_detail.png';
+              } else if (activity.id === 'act-03' || activity.title.includes('触觉盒') || activity.title.includes('抓抓乐')) {
+                imgSrc = '/assets/activities/sensory_box_detail.png';
+              } else if (activity.id === 'act-04' || activity.title.includes('照镜子') || activity.title.includes('鬼脸')) {
+                imgSrc = '/assets/activities/mirror_face_detail.png';
+              } else if (activity.id === 'act-06' || activity.title.includes('小星星') || activity.title.includes('瓶子')) {
+                imgSrc = '/assets/activities/glitter_bottle_detail.png';
+              } else if (activity.id === 'act-07' || activity.title.includes('拍拍鼓') || activity.title.includes('节奏')) {
+                imgSrc = '/assets/activities/drum_rhythm_detail.png';
+              } else if (activity.id === 'act-08' || activity.title.includes('抓大球') || activity.title.includes('抓握')) {
+                imgSrc = '/assets/activities/ball_grasp_detail.png';
+              } else if (activity.id === 'act-09' || activity.title.includes('声音模仿') || activity.title.includes('双向对话')) {
+                imgSrc = '/assets/activities/vocal_imitation_detail.png';
+              } else if (activity.id === 'act-11' || activity.title.includes('拉长音') || activity.title.includes('小动物')) {
+                imgSrc = '/assets/activities/animal_sounds_detail.png';
+              } else if (activity.id === 'act-12' || activity.title.includes('手绢') || activity.title.includes('抽抽乐')) {
+                imgSrc = '/assets/activities/handkerchief_pull_detail.png';
+              } else if (activity.id === 'act-13' || activity.title.includes('脚丫')) {
+                imgSrc = '/assets/activities/foot_discovery_detail.png';
+              } else if (activity.id === 'act-16' || activity.title.includes('搬运工') || activity.title.includes('积木')) {
+                imgSrc = '/assets/activities/soft_block_mover_detail.png';
+              } else if (activity.id === 'act-18' || activity.title.includes('鼓掌') || activity.title.includes('拍手')) {
+                imgSrc = '/assets/activities/hand_clapping_detail.png';
+              } else if (activity.id === 'act-10' || activity.title.includes('推推乐')) {
+                imgSrc = '/assets/activities/block_stack_push_detail.png';
+              } else if (activity.id === 'act-14' || activity.title.includes('抱抱')) {
+                imgSrc = '/assets/activities/teddy_hug_detail.png';
+              } else if (activity.id === 'act-15' || activity.title.includes('寻宝')) {
+                imgSrc = '/assets/activities/cup_treasure_detail.png';
+              } else if (activity.id === 'act-17' || activity.title.includes('摇摆时光') || activity.title.includes('摇摇乐')) {
+                imgSrc = '/assets/activities/music_sway_detail.png';
+              } else if (activity.id === 'act-19' || activity.title.includes('嗅觉')) {
+                imgSrc = '/assets/activities/scent_sniff_detail.png';
+              } else if (activity.id === 'act-20' || activity.title.includes('爬行') || activity.title.includes('向前够')) {
+                imgSrc = '/assets/activities/tummy_crawling_detail.png';
+              } else if (activity.id === 'act-23' || activity.title.includes('黑白卡')) {
+                imgSrc = '/assets/activities/black_white_cards_detail.png';
+              }
+            }
+
+            return (
+              <div className="w-full rounded-2xl overflow-hidden shadow-sm bg-white border border-stone-100/80">
+                <img
+                  src={imgSrc}
+                  alt={activity.title}
+                  className="w-full h-auto rounded-2xl object-cover"
+                />
+              </div>
+            );
+          })()}
 
           {/* Bottom Key Point Card (💡 要点卡片) */}
           <div className="mt-4 p-3 bg-amber-50/40 border border-amber-100/60 rounded-xl flex items-start gap-2 text-xs text-stone-600 leading-relaxed shadow-2xs">

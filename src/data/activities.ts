@@ -24,6 +24,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '早期感官游戏指导手册（第四版）',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/paper_sound_detail.png',
     accentColor: 'sage'
   },
   {
@@ -50,6 +51,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '涉及双手托举婴儿腹部离地悬空飞翔，存在身体施力与跌落安全隐患，待儿科运动发育专业人员复核。',
+    coverImage: '/assets/activities/airplane_tummy_detail.png',
     accentColor: 'apricot'
   },
   {
@@ -76,6 +78,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '触觉盒包含棉花与粗麻纤维，口欲期婴儿易扯落放入口中导致误吞窒息，待材料安全性审核。',
+    coverImage: '/assets/activities/sensory_box_detail.png',
     accentColor: 'coral'
   },
   {
@@ -101,6 +104,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '幼儿心理发展研究指引',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/mirror_face_detail.png',
     accentColor: 'blue'
   },
   {
@@ -126,6 +130,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '皮亚杰认知发展观察法',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/seek_hide_seek_detail.png',
     accentColor: 'sage'
   },
   {
@@ -152,6 +157,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '涉及吸水彩球（水宝宝）与强力胶自制瓶口，存在极高误吞膨胀窒息及化学胶水接触风险，已安全隔离。',
+    coverImage: '/assets/activities/glitter_bottle_detail.png',
     accentColor: 'apricot'
   },
   {
@@ -177,6 +183,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '音乐启蒙游戏教程',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/drum_rhythm_detail.png',
     accentColor: 'coral'
   },
   {
@@ -202,6 +209,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '婴儿精细动作训练指南',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/ball_grasp_detail.png',
     accentColor: 'blue'
   },
   {
@@ -227,6 +235,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '家庭趣味发音互动小锦囊',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/vocal_imitation_detail.png',
     accentColor: 'sage'
   },
   {
@@ -253,6 +262,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '涉及独坐前倾重心转移，待平衡与防磕碰安全标准复核。',
+    coverImage: '/assets/activities/block_stack_push_detail.png',
     accentColor: 'apricot'
   },
   {
@@ -278,6 +288,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '早期阅读与听觉启蒙',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/animal_sounds_detail.png',
     accentColor: 'coral'
   },
   {
@@ -303,6 +314,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '蒙台梭利早期精细动作游戏',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/handkerchief_pull_detail.png',
     accentColor: 'blue'
   },
   {
@@ -328,6 +340,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '婴儿身体感知训练',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/foot_discovery_detail.png',
     accentColor: 'sage'
   },
   {
@@ -354,6 +367,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '布偶毛绒纤维及装饰眼珠需经小零件拉力测试，待实物安全审核。',
+    coverImage: '/assets/activities/teddy_hug_detail.png',
     accentColor: 'apricot'
   },
   {
@@ -380,6 +394,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '木珠与小球存在严重气道异物梗阻与误吞窒息风险，不能仅凭文字说明保障安全，待专业安全审核隔离。',
+    coverImage: '/assets/activities/cup_treasure_detail.png',
     accentColor: 'coral'
   },
   {
@@ -405,6 +420,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '儿童早期发展活动精选',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/soft_block_mover_detail.png',
     accentColor: 'blue'
   },
   {
@@ -431,6 +447,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '待音量分贝控制标准与摇晃幅度规范复核。',
+    coverImage: '/assets/activities/music_sway_detail.png',
     accentColor: 'sage'
   },
   {
@@ -456,6 +473,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '婴幼儿社会性互动指南',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/hand_clapping_detail.png',
     accentColor: 'apricot'
   },
   {
@@ -482,6 +500,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '涉及香囊挥发性气味物质与柑橘精油刺激，婴幼儿呼吸道粘膜娇嫩且存在未知致敏风险，待医疗卫生专业审核隔离。',
+    coverImage: '/assets/activities/scent_sniff_detail.png',
     accentColor: 'coral'
   },
   {
@@ -507,6 +526,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     source: '亲子大动作陪伴小灵感',
     isReviewed: true,
     reviewStatus: 'approved',
+    coverImage: '/assets/activities/tummy_crawling_detail.png',
     accentColor: 'blue'
   },
   {
@@ -586,6 +606,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
     isReviewed: false,
     reviewStatus: 'pending_safety_audit',
     auditReason: '新新增0-36个月亲子活动内容，待专业安全复核隔离中。',
+    coverImage: '/assets/activities/black_white_cards_detail.png',
     accentColor: 'blue'
   },
   {

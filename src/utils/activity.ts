@@ -186,3 +186,38 @@ export const checkIsCompletedByDuration = (elapsedSeconds: number, durationStr: 
   return elapsedSeconds >= minRequiredSeconds;
 };
 
+/**
+ * 获取活动的专属高精绘本插画路径（带全量关键词智能回退）
+ */
+export const getActivityCoverImage = (activity: Partial<Activity> | null | undefined): string => {
+  if (!activity) return '/assets/activities/seek_hide_seek_detail.png';
+  if (activity.coverImage) return activity.coverImage;
+
+  const id = activity.id || '';
+  const title = activity.title || '';
+
+  if (id === 'act-01' || title.includes('沙沙响') || title.includes('纸条')) return '/assets/activities/paper_sound_detail.png';
+  if (id === 'act-02' || title.includes('飞机')) return '/assets/activities/airplane_tummy_detail.png';
+  if (id === 'act-03' || title.includes('触觉盒') || title.includes('抓抓乐')) return '/assets/activities/sensory_box_detail.png';
+  if (id === 'act-04' || title.includes('照镜子') || title.includes('鬼脸')) return '/assets/activities/mirror_face_detail.png';
+  if (id === 'act-05' || title.includes('躲猫猫')) return '/assets/activities/seek_hide_seek_detail.png';
+  if (id === 'act-06' || title.includes('小星星') || title.includes('瓶子')) return '/assets/activities/glitter_bottle_detail.png';
+  if (id === 'act-07' || title.includes('拍拍鼓') || title.includes('节奏')) return '/assets/activities/drum_rhythm_detail.png';
+  if (id === 'act-08' || title.includes('抓大球') || title.includes('大球') || title.includes('小手抓')) return '/assets/activities/ball_grasp_detail.png';
+  if (id === 'act-09' || title.includes('声音模仿') || title.includes('双向对话')) return '/assets/activities/vocal_imitation_detail.png';
+  if (id === 'act-10' || title.includes('推推乐')) return '/assets/activities/block_stack_push_detail.png';
+  if (id === 'act-11' || title.includes('拉长音') || title.includes('小动物')) return '/assets/activities/animal_sounds_detail.png';
+  if (id === 'act-12' || title.includes('手绢') || title.includes('抽抽乐')) return '/assets/activities/handkerchief_pull_detail.png';
+  if (id === 'act-13' || title.includes('脚丫')) return '/assets/activities/foot_discovery_detail.png';
+  if (id === 'act-14' || title.includes('抱抱')) return '/assets/activities/teddy_hug_detail.png';
+  if (id === 'act-15' || title.includes('寻宝')) return '/assets/activities/cup_treasure_detail.png';
+  if (id === 'act-16' || title.includes('搬运工') || title.includes('积木')) return '/assets/activities/soft_block_mover_detail.png';
+  if (id === 'act-17' || title.includes('摇摆时光') || title.includes('摇摇乐')) return '/assets/activities/music_sway_detail.png';
+  if (id === 'act-18' || title.includes('鼓掌') || title.includes('拍手')) return '/assets/activities/hand_clapping_detail.png';
+  if (id === 'act-19' || title.includes('嗅觉')) return '/assets/activities/scent_sniff_detail.png';
+  if (id === 'act-20' || title.includes('爬行') || title.includes('向前够') || title.includes('俯卧')) return '/assets/activities/tummy_crawling_detail.png';
+  if (id === 'act-23' || title.includes('黑白卡')) return '/assets/activities/black_white_cards_detail.png';
+
+  return '/assets/activities/seek_hide_seek_detail.png';
+};
+

@@ -7,6 +7,7 @@ import React from 'react';
 import { Activity, PlayRecord } from '../types';
 import { Lock, Crown } from 'lucide-react';
 import { getLocalDateString } from '../utils/date';
+import { getActivityCoverImage } from '../utils/activity';
 
 interface ActivityItemCardProps {
   activity: Activity;
@@ -101,7 +102,11 @@ export const ActivityItemCard: React.FC<ActivityItemCardProps> = ({
     >
       {/* 1. 左侧 w-16 h-16 rounded-xl object-cover 绘本小插画 */}
       <div className="w-16 h-16 rounded-xl overflow-hidden bg-[#EDF4E9]/60 flex-shrink-0 flex items-center justify-center border border-[#EDF4E9] shadow-xs relative group-hover:scale-102 transition-transform">
-        <ActivityMiniIllustration category={activity.category} title={activity.title} />
+        <img
+          src={getActivityCoverImage(activity)}
+          alt={cleanTitle(activity.title)}
+          className="w-full h-full object-cover rounded-xl transition-transform duration-200 group-hover:scale-105"
+        />
       </div>
 
       {/* 2. 右侧信息区 */}

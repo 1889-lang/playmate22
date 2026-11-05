@@ -7,7 +7,7 @@ import React, { useState, useMemo } from 'react';
 import { Activity, PlayRecord, BabyProfile } from '../types';
 import { Play, AlertCircle } from 'lucide-react';
 import { getLocalDateStr, getEffectiveBabyMonths } from '../utils/date';
-import { getReviewedActivities, parseAgeRange } from '../utils/activity';
+import { getReviewedActivities, parseAgeRange, getActivityCoverImage } from '../utils/activity';
 
 interface HomeViewProps {
   activities: Activity[];
@@ -150,36 +150,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {currentActivity ? (
         <div className="bg-white rounded-3xl p-3 shadow-xs border border-[#EDF4E9] space-y-3">
           
-          {/* 纯净插画区（无任何悬浮横幅或遮挡胶囊） */}
+          {/* 纯净插画区（显示高精绘本插画） */}
           <div 
             onClick={() => onSelectActivity(currentActivity)}
             className="w-full aspect-[4/3] rounded-2xl object-cover bg-[#EDF4E9]/40 relative overflow-hidden flex items-center justify-center cursor-pointer group"
           >
-            <svg viewBox="0 0 320 240" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102" aria-label="北欧绘本育儿插画">
-              <defs>
-                <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FAF9F2" />
-                  <stop offset="100%" stopColor="#EDF4E9" />
-                </linearGradient>
-              </defs>
-              <rect width="320" height="240" fill="url(#bgGrad)" />
-              <rect x="0" y="170" width="320" height="70" fill="#A8B9A0" opacity="0.35" />
-              <ellipse cx="160" cy="190" rx="130" ry="16" fill="#62AD78" opacity="0.2" />
-              
-              <circle cx="65" cy="140" r="16" fill="#62AD78" opacity="0.5" />
-              <rect x="235" y="135" width="22" height="22" rx="4" fill="#F5CF65" opacity="0.75" />
-              <rect x="255" y="125" width="18" height="32" rx="4" fill="#E9A9B0" opacity="0.75" />
-
-              <g transform="translate(130, 75)">
-                <path d="M15 35 Q32 15 55 25 L65 85 Q35 105 5 95 Z" fill="#F17D70" opacity="0.9" />
-                <circle cx="38" cy="14" r="16" fill="#F5CF65" opacity="0.9" />
-                <path d="M22 12 Q38 -2 54 12 Q52 4 38 2 Q24 4 22 12 Z" fill="#3F8054" />
-                <circle cx="32" cy="14" r="1.5" fill="#45483F" />
-                <circle cx="44" cy="14" r="1.5" fill="#45483F" />
-                <path d="M36 18 Q38 21 40 18" stroke="#E9A9B0" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                <circle cx="55" cy="55" r="7" fill="#F5CF65" opacity="0.9" />
-              </g>
-            </svg>
+            <img
+              src={getActivityCoverImage(currentActivity)}
+              alt={cleanTitle(currentActivity.title)}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
+            />
           </div>
 
           {/* 卡片文字与精致排版（一气呵成） */}
@@ -265,12 +245,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 className="bg-white rounded-2xl p-2.5 border border-[#EDF4E9] shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer group flex flex-col items-center text-center justify-between select-none"
               >
                 <div className="w-full aspect-square rounded-2xl object-cover bg-[#EDF4E9]/50 relative overflow-hidden flex items-center justify-center mb-2">
-                  <svg viewBox="0 0 100 100" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" aria-label="活动小图">
-                    <rect width="100" height="100" fill="#FAF9F2" />
-                    <circle cx="50" cy="50" r="26" fill="#A8B9A0" opacity="0.4" />
-                    <path d="M30 65 Q50 40 70 65 Z" fill="#62AD78" opacity="0.8" />
-                    <circle cx="50" cy="38" r="10" fill="#F5CF65" />
-                  </svg>
+                  <img
+                    src={getActivityCoverImage(act)}
+                    alt={cleanTitle(act.title)}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
                 </div>
                 <h4 className="text-xs font-bold text-[#45483F] line-clamp-1 group-hover:text-[#3F8054] transition-colors w-full px-0.5">
                   {cleanTitle(act.title)}

@@ -29,6 +29,7 @@ export interface Activity {
   reviewStatus?: ReviewStatus; // 明确审核状态
   auditReason?: string; // 审核说明或隔离原因
   accentColor: 'sage' | 'apricot' | 'coral' | 'blue';
+  coverImage?: string;
   isVip?: boolean; // 是否为VIP高级活动
 }
 
