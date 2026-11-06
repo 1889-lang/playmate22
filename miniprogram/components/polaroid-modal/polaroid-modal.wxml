@@ -13,7 +13,7 @@
       <view class="polaroid-photo-box" bindtap="handleChoosePhoto">
         <image class="photo-img" src="{{customPhoto || record.coverImage}}" mode="aspectFill" />
         <view class="camera-floating-btn">
-          <text class="camera-icon">��</text>
+          <text class="camera-icon">📷</text>
         </view>
       </view>
 

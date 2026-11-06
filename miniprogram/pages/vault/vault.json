@@ -2,6 +2,7 @@
   "navigationBarTitleText": "",
   "usingComponents": {
     "activity-modal": "/components/activity-modal/activity-modal",
+    "theme-modal": "/components/theme-modal/theme-modal",
     "polaroid-modal": "/components/polaroid-modal/polaroid-modal"
   }
 }

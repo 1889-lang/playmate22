@@ -1,100 +1,98 @@
 <view class="vault-container">
-  <!-- 顶部分段切换 (Segment Bar) -->
-  <view class="segment-wrapper">
-    <view class="segment-bar">
-      <view 
-        class="segment-item {{activeSegment === 'category' ? 'active' : ''}}" 
-        bindtap="switchSegment" 
-        data-segment="category"
-      >
-        <text>按分类浏览</text>
-      </view>
-      <view 
-        class="segment-item {{activeSegment === 'theme' ? 'active' : ''}}" 
-        bindtap="switchSegment" 
-        data-segment="theme"
-      >
-        <text>精选主题</text>
-      </view>
+  <!-- 顶部：精选活动主题横向滚动区域 -->
+  <view class="theme-section">
+    <view class="theme-section-header">
+      <text class="section-title">精选活动主题</text>
+      <text class="section-sub">横向滑动按主题精选玩法</text>
     </view>
+
+    <scroll-view scroll-x class="theme-scroll-row" enable-flex show-scrollbar="{{false}}">
+      <!-- 0. 全量活动卡片 -->
+      <view 
+        class="theme-card-item {{selectedThemeId === 'all' ? 'active' : ''}}" 
+        bindtap="onSelectTheme" 
+        data-id="all"
+      >
+        <view class="theme-card-bg-fallback default-bg">
+          <text class="fallback-icon">🌈</text>
+        </view>
+        <view class="theme-card-overlay"></view>
+        <view class="theme-card-content">
+          <view class="theme-card-badge">全量玩法</view>
+          <text class="theme-card-title">全部活动</text>
+          <text class="theme-card-sub">完整互动宝库</text>
+          <view class="theme-card-foot">
+            <text class="theme-card-count">{{totalApprovedCount}}条可用</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 1, 2, 3. 三个精选主题卡片 -->
+      <block wx:for="{{themes}}" wx:key="id">
+        <view 
+          class="theme-card-item {{selectedThemeId === item.id ? 'active' : ''}}" 
+          bindtap="onSelectTheme" 
+          data-id="{{item.id}}"
+        >
+          <image class="theme-card-bg" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+          <view class="theme-card-overlay"></view>
+          <view class="theme-card-content">
+            <view class="theme-card-badge">{{item.ageRange}}</view>
+            <text class="theme-card-title">{{item.title}}</text>
+            <text class="theme-card-sub">{{item.subtitle}}</text>
+            <view class="theme-card-foot">
+              <text class="theme-card-count">{{item.approvedCount}}条玩法</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
   </view>
 
-  <!-- 1. 按分类浏览视图 -->
-  <block wx:if="{{activeSegment === 'category'}}">
-    <view class="filter-section">
-      <scroll-view scroll-x class="tag-row" enable-flex show-scrollbar="{{false}}">
-        <block wx:for="{{ageFilters}}" wx:key="*this">
-          <view 
-            class="filter-tag {{selectedAge === item ? 'active' : ''}}" 
-            data-age="{{item}}" 
-            bindtap="onSelectAge"
-          >{{item}}</view>
-        </block>
-      </scroll-view>
-
-      <scroll-view scroll-x class="tag-row tag-row-sub" enable-flex show-scrollbar="{{false}}">
-        <block wx:for="{{categoryFilters}}" wx:key="*this">
-          <view 
-            class="filter-tag {{selectedCategory === item ? 'active' : ''}}" 
-            data-category="{{item}}" 
-            bindtap="onSelectCategory"
-          >{{item}}</view>
-        </block>
-      </scroll-view>
-    </view>
-
-    <scroll-view scroll-y class="activity-list" enable-back-to-top>
-      <block wx:for="{{filteredActivities}}" wx:key="id">
-        <view class="activity-card" bindtap="handleSelectActivity" data-id="{{item.id}}">
-          <image class="card-thumb" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
-          <view class="card-info">
-            <view class="card-head">
-              <text class="card-title">{{item.cleanTitle || item.title}}</text>
-              <text class="card-badge">{{item.category}}</text>
-            </view>
-            <text class="card-sub">{{item.friendlyIntro || item.subtitle || item.description}}</text>
-            <view class="card-foot">
-              <text class="card-duration">⏱ {{item.duration || '5-8分钟'}}</text>
-              <text class="card-link">查看玩法 ›</text>
-            </view>
-          </view>
-        </view>
+  <!-- 中间：月龄与五大领域筛选胶囊 -->
+  <view class="filter-section">
+    <scroll-view scroll-x class="tag-row" enable-flex show-scrollbar="{{false}}">
+      <block wx:for="{{ageFilters}}" wx:key="*this">
+        <view 
+          class="filter-tag {{selectedAge === item ? 'active' : ''}}" 
+          data-age="{{item}}" 
+          bindtap="onSelectAge"
+        >{{item}}</view>
       </block>
     </scroll-view>
-  </block>
 
-  <!-- 2. 精选主题视图 -->
-  <block wx:if="{{activeSegment === 'theme'}}">
-    <scroll-view scroll-y class="theme-list" enable-back-to-top>
-      <block wx:for="{{themes}}" wx:key="id">
-        <view class="theme-card" bindtap="handleSelectTheme" data-id="{{item.id}}">
-          <image class="theme-cover" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
-          <view class="theme-info">
-            <view class="theme-head">
-              <text class="theme-age">{{item.ageRange}}</text>
-              <text class="theme-count">{{item.approvedCount}}条玩法</text>
-            </view>
-            <text class="theme-title">{{item.title}}</text>
-            <text class="theme-sub">{{item.subtitle}}</text>
-            <view class="theme-foot">
-              <text class="theme-explore">探索主题 ›</text>
-            </view>
-          </view>
-        </view>
+    <scroll-view scroll-x class="tag-row tag-row-sub" enable-flex show-scrollbar="{{false}}">
+      <block wx:for="{{categoryFilters}}" wx:key="*this">
+        <view 
+          class="filter-tag {{selectedCategory === item ? 'active' : ''}}" 
+          data-category="{{item}}" 
+          bindtap="onSelectCategory"
+        >{{item}}</view>
       </block>
     </scroll-view>
-  </block>
+  </view>
 
-  <!-- 3. 主题详情弹窗 -->
-  <theme-modal 
-    visible="{{isThemeModalOpen}}" 
-    theme="{{selectedTheme}}" 
-    activities="{{selectedThemeActivities}}" 
-    bind:close="handleCloseThemeModal"
-    bind:select-activity="handleThemeSelectActivity"
-  />
+  <!-- 下方：动态活动卡片列表 -->
+  <scroll-view scroll-y class="activity-list" enable-back-to-top>
+    <block wx:for="{{filteredActivities}}" wx:key="id">
+      <view class="activity-card" bindtap="handleSelectActivity" data-id="{{item.id}}">
+        <image class="card-thumb" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+        <view class="card-info">
+          <view class="card-head">
+            <text class="card-title">{{item.cleanTitle || item.title}}</text>
+            <text class="card-badge">{{item.category}}</text>
+          </view>
+          <text class="card-sub">{{item.friendlyIntro || item.subtitle || item.description}}</text>
+          <view class="card-foot">
+            <text class="card-duration">⏱ {{item.duration || '5-8分钟'}}</text>
+            <text class="card-link">查看玩法 ›</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </scroll-view>
 
-  <!-- 4. 复用的活动详情弹窗 -->
+  <!-- 复用的活动详情弹窗 -->
   <activity-modal 
     visible="{{isModalOpen}}" 
     activity="{{selectedActivity}}" 

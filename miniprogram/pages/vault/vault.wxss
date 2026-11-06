@@ -10,41 +10,158 @@ page {
   min-height: 100vh;
 }
 
-/* 顶部分段控件 */
-.segment-wrapper {
+/* 顶部：精选活动主题横向滚动 */
+.theme-section {
   margin-bottom: 24rpx;
-  display: flex;
-  justify-content: center;
 }
 
-.segment-bar {
+.theme-section-header {
   display: flex;
-  background-color: #EDF4E9;
-  border-radius: 40rpx;
-  padding: 6rpx;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16rpx;
+  padding: 0 4rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2D3748;
+}
+
+.section-sub {
+  font-size: 22rpx;
+  color: #A0AEC0;
+}
+
+.theme-scroll-row {
   width: 100%;
-  max-width: 520rpx;
+  white-space: nowrap;
+  display: flex;
   box-sizing: border-box;
 }
 
-.segment-item {
-  flex: 1;
-  text-align: center;
-  padding: 12rpx 0;
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #555A4E;
-  border-radius: 34rpx;
-  transition: all 0.2s ease;
+.theme-card-item {
+  display: inline-block;
+  vertical-align: top;
+  width: 320rpx;
+  height: 200rpx;
+  margin-right: 20rpx;
+  border-radius: 28rpx;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  border: 4rpx solid transparent;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-.segment-item.active {
-  background-color: #4D7C5F;
-  color: #FFFFFF;
+.theme-card-item:last-child {
+  margin-right: 8rpx;
+}
+
+.theme-card-item.active {
+  border-color: #4D7C5F;
+  box-shadow: 0 8rpx 24rpx rgba(77, 124, 95, 0.3);
+  transform: translateY(-2rpx);
+}
+
+.theme-card-bg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.theme-card-bg-fallback.default-bg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(135deg, #8AA693 0%, #4D7C5F 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fallback-icon {
+  font-size: 64rpx;
+  opacity: 0.35;
+}
+
+.theme-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.65) 100%);
+}
+
+.theme-card-content {
+  position: relative;
+  z-index: 2;
+  padding: 18rpx 20rpx;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  white-space: normal;
+}
+
+.theme-card-badge {
+  align-self: flex-start;
+  font-size: 18rpx;
   font-weight: 700;
-  box-shadow: 0 4rpx 12rpx rgba(77, 124, 95, 0.2);
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2rpx 12rpx;
+  border-radius: 10rpx;
 }
 
+.theme-card-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.3;
+  margin-top: 4rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.4);
+}
+
+.theme-card-sub {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.theme-card-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.theme-card-count {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #FAF9F2;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+/* 中间：筛选器区 */
 .filter-section {
   margin-bottom: 24rpx;
 }
@@ -75,6 +192,7 @@ page {
   border-color: #4D7C5F;
 }
 
+/* 下方：活动卡片列表 */
 .activity-list {
   width: 100%;
 }
@@ -87,6 +205,11 @@ page {
   margin-bottom: 24rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
   border: 1rpx solid #F0EFEA;
+}
+
+.activity-card:active {
+  transform: scale(0.99);
+  background-color: #FDFCF7;
 }
 
 .card-thumb {
@@ -151,103 +274,5 @@ page {
 .card-link {
   font-size: 24rpx;
   font-weight: 500;
-  color: #2E5A44;
-}
-
-/* 精选主题列表样式 */
-.theme-list {
-  width: 100%;
-}
-
-.theme-card {
-  display: flex;
-  background: #FFFFFF;
-  border-radius: 28rpx;
-  padding: 24rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
-  border: 1rpx solid #F0EFEA;
-  align-items: center;
-}
-
-.theme-card:active {
-  transform: scale(0.99);
-  background-color: #FDFCF7;
-}
-
-.theme-cover {
-  width: 190rpx;
-  height: 190rpx;
-  border-radius: 20rpx;
-  background-color: #F5F4EE;
-  flex-shrink: 0;
-}
-
-.theme-info {
-  flex: 1;
-  margin-left: 24rpx;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 190rpx;
-  padding: 4rpx 0;
-  box-sizing: border-box;
-}
-
-.theme-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.theme-age {
-  font-size: 20rpx;
-  font-weight: 600;
-  color: #3F8054;
-  background: #EAF3EC;
-  padding: 4rpx 14rpx;
-  border-radius: 12rpx;
-}
-
-.theme-count {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #4D7C5F;
-  background: #EDF4E9;
-  padding: 4rpx 16rpx;
-  border-radius: 14rpx;
-}
-
-.theme-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #2D3748;
-  margin-top: 8rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.theme-sub {
-  font-size: 24rpx;
-  color: #718096;
-  line-height: 1.4;
-  margin-top: 6rpx;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.theme-foot {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 12rpx;
-}
-
-.theme-explore {
-  font-size: 26rpx;
-  font-weight: 600;
   color: #2E5A44;
 }
