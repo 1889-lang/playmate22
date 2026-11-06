@@ -11,8 +11,7 @@ Page({
     activities: [],
     filteredActivities: [],
     themes: [],
-    selectedThemeId: 'all', // 'all' | 'theme-sensory-land' | 'theme-parent-interaction' | 'theme-movement-exploration'
-    totalApprovedCount: 0,
+    selectedThemeId: null, // null (无主题选中) | 'theme-sensory-land' | 'theme-parent-interaction' | 'theme-movement-exploration'
     ageFilters: ['全部月龄', '0-6个月', '7-12个月', '1-3岁'],
     categoryFilters: ['全部类别', '大运动', '精细动作', '感官认知', '语言沟通', '社会情绪'],
     selectedAge: '全部月龄',
@@ -31,8 +30,6 @@ Page({
       cleanTitle: item.cleanTitle || cleanTitle(item.title),
       friendlyIntro: item.friendlyIntro || item.subtitle || item.description
     }));
-
-    const totalApproved = list.filter(a => a.isReviewed === true && a.reviewStatus === 'approved').length;
 
     // 动态计算每个主题中真实通过审核的活动数量
     const processedThemes = (THEMES || [])
@@ -56,7 +53,6 @@ Page({
 
     this.setData({
       activities: list,
-      totalApprovedCount: totalApproved || list.length,
       themes: processedThemes
     }, () => {
       this.applyFilter();
@@ -69,13 +65,25 @@ Page({
     }
   },
 
+  // 点选或取消主题选择（不影响已有的 selectedAge 与 selectedCategory 筛选状态）
   onSelectTheme(e) {
     const id = e.currentTarget.dataset.id;
-    if (id && id !== this.data.selectedThemeId) {
+    if (this.data.selectedThemeId === id) {
+      // 再次点击已选中的主题，轻量取消主题点选状态
+      this.setData({ selectedThemeId: null }, () => {
+        this.applyFilter();
+      });
+    } else {
       this.setData({ selectedThemeId: id }, () => {
         this.applyFilter();
       });
     }
+  },
+
+  clearThemeSelection() {
+    this.setData({ selectedThemeId: null }, () => {
+      this.applyFilter();
+    });
   },
 
   onSelectAge(e) {
@@ -92,12 +100,13 @@ Page({
     });
   },
 
+  // 严格按公式取交集：最终列表 = 审核通过活动 ∩ 主题关联活动(若有) ∩ 月龄条件 ∩ 领域条件
   applyFilter() {
     const { activities, selectedThemeId, selectedAge, selectedCategory } = this.data;
     let pool = activities;
 
-    // 1. 若选中具体主题，裁剪为该主题关联且严格通过审核的活动列表
-    if (selectedThemeId && selectedThemeId !== 'all') {
+    // 1. 若选中具体主题，先交集该主题关联且严格通过审核的活动
+    if (selectedThemeId) {
       const relations = (THEME_RELATIONS || []).filter(r => r.themeId === selectedThemeId);
       const relMap = new Map();
       relations.forEach(r => relMap.set(String(r.activityId), r));
@@ -108,7 +117,7 @@ Page({
         return item.isReviewed === true && item.reviewStatus === 'approved';
       });
 
-      // 保持主题内定义的展示顺序
+      // 保持主题定义好的展示顺序
       pool.sort((a, b) => {
         const orderA = relMap.get(String(a.id))?.sortOrder || 99;
         const orderB = relMap.get(String(b.id))?.sortOrder || 99;
@@ -116,12 +125,12 @@ Page({
       });
     }
 
-    // 2. 组合月龄筛选
+    // 2. 组合原有月龄筛选条件（保持 selectedAge 状态）
     if (selectedAge !== '全部月龄') {
       pool = pool.filter(item => item.ageRange === selectedAge || (item.age && item.age.includes(selectedAge)));
     }
 
-    // 3. 组合分类筛选
+    // 3. 组合原有五大领域分类筛选条件（保持 selectedCategory 状态）
     if (selectedCategory !== '全部类别') {
       pool = pool.filter(item => item.category === selectedCategory);
     }
