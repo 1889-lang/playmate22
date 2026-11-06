@@ -1,0 +1,52 @@
+<view class="theme-modal-mask {{visible ? 'visible' : ''}}" bindtap="handleCloseMask">
+  <view class="theme-modal-card" catchtap="preventBubble">
+    <!-- 头部栏 -->
+    <view class="theme-header">
+      <view class="theme-title-box">
+        <text class="theme-age-badge">{{theme.ageRange || '6-8个月'}}</text>
+        <text class="theme-title-text">{{theme.title}}</text>
+      </view>
+      <view class="close-btn" bindtap="handleClose">✕</view>
+    </view>
+
+    <scroll-view scroll-y class="theme-body">
+      <!-- 陪伴目标拉条 -->
+      <view class="goal-box">
+        <view class="goal-title">🌱 陪伴目标</view>
+        <text class="goal-desc">{{theme.targetGoal}}</text>
+      </view>
+
+      <!-- 主题介绍导读 -->
+      <view class="intro-box">
+        <text class="intro-text">{{theme.description}}</text>
+      </view>
+
+      <!-- 包含的已审核活动列表 -->
+      <view class="activities-section">
+        <view class="section-title">
+          <text class="title-text">包含精选玩法</text>
+          <text class="count-tag">{{activities.length}}条可玩</text>
+        </view>
+
+        <view class="activities-list">
+          <block wx:for="{{activities}}" wx:key="id">
+            <view class="theme-act-card" bindtap="handleSelectActivity" data-id="{{item.id}}">
+              <image class="act-cover" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+              <view class="act-content">
+                <view class="act-head">
+                  <text class="act-title">{{item.cleanTitle || item.title}}</text>
+                  <text class="act-cat">{{item.category}}</text>
+                </view>
+                <text class="act-sub">{{item.friendlyIntro || item.subtitle}}</text>
+                <view class="act-foot">
+                  <text class="role-tag" wx:if="{{item.roleTag}}">✨ {{item.roleTag}}</text>
+                  <text class="act-duration">⏱ {{item.duration || '5分钟'}}</text>
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

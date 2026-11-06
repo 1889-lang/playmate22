@@ -1,45 +1,100 @@
 <view class="vault-container">
-  <view class="filter-section">
-    <scroll-view scroll-x class="tag-row" enable-flex show-scrollbar="{{false}}">
-      <block wx:for="{{ageFilters}}" wx:key="*this">
-        <view 
-          class="filter-tag {{selectedAge === item ? 'active' : ''}}" 
-          data-age="{{item}}" 
-          bindtap="onSelectAge"
-        >{{item}}</view>
-      </block>
-    </scroll-view>
-
-    <scroll-view scroll-x class="tag-row tag-row-sub" enable-flex show-scrollbar="{{false}}">
-      <block wx:for="{{categoryFilters}}" wx:key="*this">
-        <view 
-          class="filter-tag {{selectedCategory === item ? 'active' : ''}}" 
-          data-category="{{item}}" 
-          bindtap="onSelectCategory"
-        >{{item}}</view>
-      </block>
-    </scroll-view>
+  <!-- 顶部分段切换 (Segment Bar) -->
+  <view class="segment-wrapper">
+    <view class="segment-bar">
+      <view 
+        class="segment-item {{activeSegment === 'category' ? 'active' : ''}}" 
+        bindtap="switchSegment" 
+        data-segment="category"
+      >
+        <text>按分类浏览</text>
+      </view>
+      <view 
+        class="segment-item {{activeSegment === 'theme' ? 'active' : ''}}" 
+        bindtap="switchSegment" 
+        data-segment="theme"
+      >
+        <text>精选主题</text>
+      </view>
+    </view>
   </view>
 
-  <scroll-view scroll-y class="activity-list" enable-back-to-top>
-    <block wx:for="{{filteredActivities}}" wx:key="id">
-      <view class="activity-card" bindtap="handleSelectActivity" data-id="{{item.id}}">
-        <image class="card-thumb" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
-        <view class="card-info">
-          <view class="card-head">
-            <text class="card-title">{{item.cleanTitle || item.title}}</text>
-            <text class="card-badge">{{item.category}}</text>
-          </view>
-          <text class="card-sub">{{item.friendlyIntro || item.subtitle || item.description}}</text>
-          <view class="card-foot">
-            <text class="card-duration">⏱ {{item.duration || '5-8分钟'}}</text>
-            <text class="card-link">查看玩法 ›</text>
+  <!-- 1. 按分类浏览视图 -->
+  <block wx:if="{{activeSegment === 'category'}}">
+    <view class="filter-section">
+      <scroll-view scroll-x class="tag-row" enable-flex show-scrollbar="{{false}}">
+        <block wx:for="{{ageFilters}}" wx:key="*this">
+          <view 
+            class="filter-tag {{selectedAge === item ? 'active' : ''}}" 
+            data-age="{{item}}" 
+            bindtap="onSelectAge"
+          >{{item}}</view>
+        </block>
+      </scroll-view>
+
+      <scroll-view scroll-x class="tag-row tag-row-sub" enable-flex show-scrollbar="{{false}}">
+        <block wx:for="{{categoryFilters}}" wx:key="*this">
+          <view 
+            class="filter-tag {{selectedCategory === item ? 'active' : ''}}" 
+            data-category="{{item}}" 
+            bindtap="onSelectCategory"
+          >{{item}}</view>
+        </block>
+      </scroll-view>
+    </view>
+
+    <scroll-view scroll-y class="activity-list" enable-back-to-top>
+      <block wx:for="{{filteredActivities}}" wx:key="id">
+        <view class="activity-card" bindtap="handleSelectActivity" data-id="{{item.id}}">
+          <image class="card-thumb" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+          <view class="card-info">
+            <view class="card-head">
+              <text class="card-title">{{item.cleanTitle || item.title}}</text>
+              <text class="card-badge">{{item.category}}</text>
+            </view>
+            <text class="card-sub">{{item.friendlyIntro || item.subtitle || item.description}}</text>
+            <view class="card-foot">
+              <text class="card-duration">⏱ {{item.duration || '5-8分钟'}}</text>
+              <text class="card-link">查看玩法 ›</text>
+            </view>
           </view>
         </view>
-      </view>
-    </block>
-  </scroll-view>
+      </block>
+    </scroll-view>
+  </block>
 
+  <!-- 2. 精选主题视图 -->
+  <block wx:if="{{activeSegment === 'theme'}}">
+    <scroll-view scroll-y class="theme-list" enable-back-to-top>
+      <block wx:for="{{themes}}" wx:key="id">
+        <view class="theme-card" bindtap="handleSelectTheme" data-id="{{item.id}}">
+          <image class="theme-cover" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+          <view class="theme-info">
+            <view class="theme-head">
+              <text class="theme-age">{{item.ageRange}}</text>
+              <text class="theme-count">{{item.approvedCount}}条玩法</text>
+            </view>
+            <text class="theme-title">{{item.title}}</text>
+            <text class="theme-sub">{{item.subtitle}}</text>
+            <view class="theme-foot">
+              <text class="theme-explore">探索主题 ›</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
+  </block>
+
+  <!-- 3. 主题详情弹窗 -->
+  <theme-modal 
+    visible="{{isThemeModalOpen}}" 
+    theme="{{selectedTheme}}" 
+    activities="{{selectedThemeActivities}}" 
+    bind:close="handleCloseThemeModal"
+    bind:select-activity="handleThemeSelectActivity"
+  />
+
+  <!-- 4. 复用的活动详情弹窗 -->
   <activity-modal 
     visible="{{isModalOpen}}" 
     activity="{{selectedActivity}}" 
