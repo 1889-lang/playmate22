@@ -46,4 +46,11 @@
     bind:close="handleCloseModal"
     bind:finish="handleCompletePlay"
   />
+
+  <!-- 完成陪伴打卡与拍立得一体弹窗 -->
+  <polaroid-modal
+    visible="{{isPolaroidOpen}}"
+    record="{{currentRecord}}"
+    bind:close="handleClosePolaroid"
+  />
 </view>

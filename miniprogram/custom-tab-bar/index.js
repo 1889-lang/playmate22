@@ -21,11 +21,11 @@ Component({
     ]
   },
   methods: {
-    switchTab(e) {
+        switchTab(e) {
       const data = e.currentTarget.dataset;
       const index = Number(data.index);
       if (this.data.selected === index) {
-        return;
+        return; // 已在当前页面，直接拦截，避免重复路由冲突
       }
       const url = '/' + data.path.replace(/^\//, '');
       wx.switchTab({

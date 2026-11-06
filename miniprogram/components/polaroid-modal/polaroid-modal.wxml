@@ -13,7 +13,7 @@
       <view class="polaroid-photo-box" bindtap="handleChoosePhoto">
         <image class="photo-img" src="{{customPhoto || record.coverImage}}" mode="aspectFill" />
         <view class="camera-floating-btn">
-          <text class="camera-icon">📷</text>
+          <text class="camera-icon">��</text>
         </view>
       </view>
 
@@ -29,22 +29,28 @@
       <block wx:for="{{moodOptions}}" wx:key="text">
         <view 
           class="mood-chip {{selectedMood.text === item.text ? 'active' : ''}}" 
-          catchtap="onSelectMood" 
-          data-index="{{index}}"
+          bindtap="handleSelectMood" 
+          data-mood="{{item}}"
         >
-          <text class="chip-emoji">{{item.emoji}}</text>
-          <text class="chip-text">{{item.text}}</text>
+          <text>{{item.emoji}} {{item.text}}</text>
         </view>
       </block>
     </view>
 
     <view class="bottom-actions">
-      <button class="primary-share-btn" open-type="share">
-        <text>🔗 📤 分享今日陪伴足迹</text>
+      <button class="primary-save-btn" bindtap="handleSavePoster">
+        <text>保存</text>
       </button>
       <view class="close-text-btn" bindtap="handleClose">
         <text>收入成长足迹并关闭</text>
       </view>
     </view>
   </view>
+
+  <!-- 离屏海报生成画布（放在最外层根节点底部，绝不打乱布局） -->
+  <canvas 
+    id="posterCanvas" 
+    type="2d" 
+    style="position: fixed; left: -9999px; top: -9999px; width: 320px; height: 480px;"
+  ></canvas>
 </view>

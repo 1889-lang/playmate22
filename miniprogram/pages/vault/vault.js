@@ -9,6 +9,8 @@ Page({
     selectedAge: '全部月龄',
     selectedCategory: '全部类别',
     isModalOpen: false,
+    isPolaroidOpen: false,
+    currentRecord: null,
     selectedActivity: null
   },
 
@@ -77,11 +79,44 @@ Page({
   handleCloseModal() {
     this.setData({
       isModalOpen: false,
+    isPolaroidOpen: false,
+    currentRecord: null,
       selectedActivity: null
     });
   },
 
-  handleCompletePlay() {
-    this.handleCloseModal();
+  handleClosePolaroid() {
+    this.setData({
+      isPolaroidOpen: false,
+      currentRecord: null
+    });
+  },
+
+  handleCompletePlay(e) {
+    const act = (e && e.detail && e.detail.activity) || this.data.selectedActivity;
+    if (!act) {
+      this.handleCloseModal();
+      return;
+    }
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+
+    const record = {
+      id: 'footprint_' + Date.now(),
+      date: `${y}-${m}-${day}`,
+      activityTitle: act.cleanTitle || act.title,
+      coverImage: act.coverImage,
+      durationMinutes: 1,
+      totalCount: 1,
+      timestamp: Date.now()
+    };
+
+    this.setData({
+      isModalOpen: false,
+      isPolaroidOpen: true,
+      currentRecord: record
+    });
   }
 });
