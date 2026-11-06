@@ -51,27 +51,18 @@
     </view>
   </view>
 
-  <!-- 1. 三步法详情 -->
+  <!-- 1. 玩法指引弹窗（截图1） -->
   <activity-modal 
     visible="{{isModalOpen}}" 
     activity="{{selectedActivity}}" 
     bind:close="handleCloseModal"
-    bind:finish="handleEnterJournal"
+    bind:finish="handleCompletePlay"
   />
 
-  <!-- 2. 手账打卡编辑层 -->
-  <journal-modal
-    visible="{{isJournalOpen}}"
-    activity="{{selectedActivity}}"
-    bind:close="handleCloseJournal"
-    bind:confirm="handleConfirmJournal"
-  />
-
-  <!-- 3. 拍立得最终展示 -->
+  <!-- 2. 完成陪伴打卡与拍立得一体弹窗（截图2） -->
   <polaroid-modal
     visible="{{isPolaroidOpen}}"
-    records="{{newCreatedRecords}}"
-    initialIndex="{{0}}"
+    record="{{currentRecord}}"
     bind:close="handleClosePolaroid"
   />
 </view>

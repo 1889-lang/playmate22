@@ -1,39 +1,49 @@
 <view wx:if="{{visible}}" class="polaroid-overlay" catchtouchmove="preventProp" bindtap="handleClose">
-  <view class="polaroid-wrapper" catchtap="preventProp">
-    <view class="modal-top-bar">
-      <text class="top-title">陪伴手账已生成</text>
-      <view class="close-circle-btn" bindtap="handleClose">✕</view>
+  <view class="modal-card" catchtap="preventProp">
+    <view class="modal-top-banner">
+      <view class="banner-title-wrap">
+        <text class="banner-icon">🎉</text>
+        <text class="banner-text">太棒了！完成了本次陪伴</text>
+      </view>
+      <view class="close-icon-btn" bindtap="handleClose">✕</view>
     </view>
 
-    <swiper class="polaroid-swiper" current="{{currentIndex}}" bindchange="onSwiperChange">
-      <block wx:for="{{records}}" wx:key="id">
-        <swiper-item class="swiper-item-box">
-          <view class="polaroid-card">
-            <text class="card-date">{{item.date}}</text>
-            <view class="polaroid-photo-frame">
-              <image class="photo-img" src="{{item.coverImage}}" mode="aspectFill" />
-            </view>
-            <view class="card-caption">
-              <text class="act-name">{{item.activityTitle}}</text>
-              <view class="mood-stamp-badge">
-                <text>{{item.mood || '好奇探索 · 幸福 🌟'}}</text>
-              </view>
-            </view>
-          </view>
-        </swiper-item>
+    <view class="polaroid-white-frame">
+      <text class="polaroid-date">{{todayDate}}</text>
+      <view class="polaroid-photo-box" bindtap="handleChoosePhoto">
+        <image class="photo-img" src="{{customPhoto || record.coverImage}}" mode="aspectFill" />
+        <view class="camera-floating-btn">
+          <text class="camera-icon">📷</text>
+        </view>
+      </view>
+
+      <view class="polaroid-caption">
+        <text class="act-title">{{record.activityTitle}}</text>
+        <view class="mood-time-badge">
+          <text>{{selectedMood.emoji}} {{selectedMood.text}} · 陪伴 {{durationMinutes}} 分钟</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="mood-selection-row">
+      <block wx:for="{{moodOptions}}" wx:key="text">
+        <view 
+          class="mood-chip {{selectedMood.text === item.text ? 'active' : ''}}" 
+          catchtap="onSelectMood" 
+          data-index="{{index}}"
+        >
+          <text class="chip-emoji">{{item.emoji}}</text>
+          <text class="chip-text">{{item.text}}</text>
+        </view>
       </block>
-    </swiper>
-
-    <view class="page-indicator" wx:if="{{records.length > 1}}">
-      <text>{{currentIndex + 1}} / {{records.length}}</text>
     </view>
 
-    <view class="action-footer">
-      <button class="share-btn" open-type="share">
-        <text>📤 分享给家人</text>
+    <view class="bottom-actions">
+      <button class="primary-share-btn" open-type="share">
+        <text>🔗 📤 分享今日陪伴足迹</text>
       </button>
-      <view class="text-close-link" bindtap="handleClose">
-        <text>完成记录</text>
+      <view class="close-text-btn" bindtap="handleClose">
+        <text>收入成长足迹并关闭</text>
       </view>
     </view>
   </view>

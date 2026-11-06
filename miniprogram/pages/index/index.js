@@ -42,9 +42,8 @@ Page({
     backupActivities: [],
     isModalOpen: false,
     selectedActivity: null,
-    isJournalOpen: false,
     isPolaroidOpen: false,
-    newCreatedRecords: []
+    currentRecord: null
   },
 
   onShow() {
@@ -53,7 +52,6 @@ Page({
     }
     this.setData({
       isModalOpen: false,
-      isJournalOpen: false,
       isPolaroidOpen: false
     });
     this.initHomeData();
@@ -104,54 +102,44 @@ Page({
     this.setData({ isModalOpen: false });
   },
 
-  // 1. 结束陪伴 -> 打开打卡手账编辑页
-  handleEnterJournal(e) {
+  // 点击结束陪伴 -> 直接呼出截图2的拍立得打卡页
+  handleCompletePlay(e) {
     const act = (e.detail && e.detail.activity) || this.data.selectedActivity || this.data.currentActivity;
-    this.setData({
-      selectedActivity: act,
-      isModalOpen: false,
-      isJournalOpen: true
-    });
-  },
-
-  handleCloseJournal() {
-    this.setData({ isJournalOpen: false });
-  },
-
-  // 2. 编辑页点击生成手账 -> 保存并弹出拍立得结果
-  handleConfirmJournal(e) {
-    const { photoImage, mood, notes } = e.detail;
-    const act = this.data.selectedActivity || this.data.currentActivity;
     const d = new Date();
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    const dateStr = `${y}-${m}-${day}`;
 
-    const newRecord = {
+    const record = {
       id: 'footprint_' + Date.now(),
-      date: dateStr,
-      activityTitle: act ? act.title : '亲子陪伴时光',
-      durationMinutes: 5,
+      date: `${y}-${m}-${day}`,
+      activityTitle: act.title,
+      coverImage: act.coverImage,
+      durationMinutes: 1,
       totalCount: 1,
-      mood: mood || '🌟 开心投入',
-      notes: notes || '',
-      coverImage: photoImage || (act ? act.coverImage : '/assets/images/seek_hide_seek_detail_1793840598398.jpg'),
       timestamp: Date.now()
     };
 
-    saveFootprint(newRecord);
-
     this.setData({
-      isJournalOpen: false,
-      newCreatedRecords: [newRecord],
+      selectedActivity: act,
+      currentRecord: record,
+      isModalOpen: false,
       isPolaroidOpen: true
     });
   },
 
-  handleClosePolaroid() {
+  handleClosePolaroid(e) {
+    const detail = e.detail || {};
+    if (this.data.currentRecord) {
+      const finalRecord = {
+        ...this.data.currentRecord,
+        coverImage: detail.customPhoto || this.data.currentRecord.coverImage,
+        mood: detail.mood || '😍 开心'
+      };
+      saveFootprint(finalRecord);
+    }
     this.setData({ isPolaroidOpen: false });
-    wx.showToast({ title: '已收录进足迹！', icon: 'success' });
+    wx.showToast({ title: '已收入成长足迹', icon: 'success' });
   },
 
   goToLibrary() {

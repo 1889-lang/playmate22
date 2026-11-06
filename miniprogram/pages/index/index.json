@@ -4,7 +4,6 @@
   "navigationBarTextStyle": "black",
   "usingComponents": {
     "activity-modal": "/components/activity-modal/activity-modal",
-    "journal-modal": "/components/journal-modal/journal-modal",
     "polaroid-modal": "/components/polaroid-modal/polaroid-modal"
   }
 }
