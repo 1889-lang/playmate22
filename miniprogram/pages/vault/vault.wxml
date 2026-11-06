@@ -1,65 +1,49 @@
-<view class="vault-page">
-  <view class="filters-container">
-    <scroll-view scroll-x="true" class="horizontal-scroll" enable-flex="true">
-      <view class="scroll-inner">
-        <block wx:for="{{ageBrackets}}" wx:key="key">
-          <view 
-            class="filter-pill age-pill {{item.key === selectedAge ? 'active' : ''}}"
-            bindtap="onSelectAge" 
-            data-key="{{item.key}}"
-          >
-            {{item.label}}
-          </view>
-        </block>
-      </view>
+<view class="vault-container">
+  <view class="filter-section">
+    <scroll-view scroll-x class="tag-row" enable-flex show-scrollbar="{{false}}">
+      <block wx:for="{{ageFilters}}" wx:key="*this">
+        <view 
+          class="filter-tag {{selectedAge === item ? 'active' : ''}}" 
+          data-age="{{item}}" 
+          bindtap="onSelectAge"
+        >{{item}}</view>
+      </block>
     </scroll-view>
 
-    <scroll-view scroll-x="true" class="horizontal-scroll" enable-flex="true">
-      <view class="scroll-inner">
-        <block wx:for="{{categories}}" wx:key="*this">
-          <view 
-            class="filter-pill cat-pill {{item === selectedCategory ? 'active' : ''}}"
-            bindtap="onSelectCategory" 
-            data-cat="{{item}}"
-          >
-            {{item}}
-          </view>
-        </block>
-      </view>
+    <scroll-view scroll-x class="tag-row tag-row-sub" enable-flex show-scrollbar="{{false}}">
+      <block wx:for="{{categoryFilters}}" wx:key="*this">
+        <view 
+          class="filter-tag {{selectedCategory === item ? 'active' : ''}}" 
+          data-category="{{item}}" 
+          bindtap="onSelectCategory"
+        >{{item}}</view>
+      </block>
     </scroll-view>
   </view>
 
-  <view class="vault-list">
-    <block wx:if="{{filteredActivities.length > 0}}">
-      <block wx:for="{{filteredActivities}}" wx:key="id">
-        <view class="vault-activity-card" bindtap="handleOpenDetail" data-id="{{item.id}}">
-          <view class="card-thumb-frame">
-            <image class="card-thumb-image" src="{{item.coverImage}}" mode="aspectFill" />
+  <scroll-view scroll-y class="activity-list" enable-back-to-top>
+    <block wx:for="{{filteredActivities}}" wx:key="id">
+      <view class="activity-card" bindtap="handleSelectActivity" data-id="{{item.id}}">
+        <image class="card-thumb" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+        <view class="card-info">
+          <view class="card-head">
+            <text class="card-title">{{item.cleanTitle || item.title}}</text>
+            <text class="card-badge">{{item.category}}</text>
           </view>
-          <view class="card-info-box">
-            <view class="card-top-row">
-              <text class="card-title-text">{{item.cleanTitle}}</text>
-              <text class="card-tag-badge">{{item.category}}</text>
-            </view>
-            <text class="card-subtitle-desc">{{item.subtitle}}</text>
-            <view class="card-bottom-row">
-              <text class="card-duration-text">⏱ {{item.duration}}</text>
-              <text class="card-action-text">查看玩法 ›</text>
-            </view>
+          <text class="card-sub">{{item.friendlyIntro || item.subtitle || item.description}}</text>
+          <view class="card-foot">
+            <text class="card-duration">⏱ {{item.duration || '5-8分钟'}}</text>
+            <text class="card-link">查看玩法 ›</text>
           </view>
         </view>
-      </block>
+      </view>
     </block>
-    <view wx:else class="empty-box">
-      <text class="empty-icon">🌱</text>
-      <text class="empty-msg">未找到符合条件的已审核玩法</text>
-    </view>
-  </view>
+  </scroll-view>
 
   <activity-modal 
     visible="{{isModalOpen}}" 
     activity="{{selectedActivity}}" 
-    bind:close="handleCloseDetail"
-    bind:finish="handleFinishPlay"
+    bind:close="handleCloseModal"
+    bind:finish="handleCompletePlay"
   />
 </view>

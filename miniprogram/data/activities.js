@@ -1,8 +1,9 @@
-import { Activity } from '../types';
 
-export const INITIAL_ACTIVITIES: Activity[] = [
+
+const INITIAL_ACTIVITIES= [
   {
     id: 'act-01',
+    coverImage: '/assets/activities/paper_sound_detail.png',
     title: '彩色纸条沙沙响',
     subtitle: '锻炼听觉定位与双手抓握能力',
     ageRange: '6-8个月',
@@ -28,6 +29,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
   },
   {
     id: 'act-02',
+    coverImage: '/assets/activities/airplane_tummy_detail.png',
     title: '翻身小飞机',
     subtitle: '促进前庭觉发育与腰背部肌肉力量',
     ageRange: '6-8个月',
@@ -54,6 +56,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
   },
   {
     id: 'act-03',
+    coverImage: '/assets/activities/sensory_box_detail.png',
     title: '精细抓抓乐（触觉盒）',
     subtitle: '体验不同材质的触觉差异，促进手部触觉辨别',
     ageRange: '6-8个月',
@@ -80,6 +83,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
   },
   {
     id: 'act-04',
+    coverImage: '/assets/activities/mirror_face_detail.png',
     title: '照镜子做鬼脸',
     subtitle: '建立自我认知与面部表情模仿',
     ageRange: '6-8个月',
@@ -106,6 +110,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
   },
   {
     id: 'act-05',
+    coverImage: '/assets/activities/seek_hide_seek_detail.png',
     title: '寻找躲猫猫',
     subtitle: '培养客体永久性概念（物体离开视线依然存在）',
     ageRange: '6-8个月',
@@ -489,6 +494,7 @@ export const INITIAL_ACTIVITIES: Activity[] = [
   },
   {
     id: 'act-20',
+    coverImage: '/assets/activities/tummy_crawling_detail.png',
     title: '俯卧爬行逗引（向前够玩具）',
     subtitle: '为爬行做准备，锻炼四肢协调发力',
     ageRange: '6-8个月',
@@ -1348,3 +1354,6 @@ export const INITIAL_ACTIVITIES: Activity[] = [
 ];
 
 
+
+
+module.exports = { INITIAL_ACTIVITIES };

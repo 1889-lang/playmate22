@@ -1,14 +1,14 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/calendar/calendar",
     "pages/vault/vault",
+    "pages/calendar/calendar",
     "pages/profile/profile"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#FAF9F2",
-    "navigationBarTitleText": "玩伴日历",
+    "navigationBarTitleText": "",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FAF9F2"
   },
@@ -17,19 +17,20 @@
     "color": "#85877B",
     "selectedColor": "#2E5A44",
     "backgroundColor": "#FFFFFF",
-    "borderStyle": "white",
+    "borderStyle": "black",
+    "position": "bottom",
     "list": [
       {
         "pagePath": "pages/index/index",
         "text": "今日推荐"
       },
       {
-        "pagePath": "pages/calendar/calendar",
-        "text": "成长足迹"
-      },
-      {
         "pagePath": "pages/vault/vault",
         "text": "活动宝库"
+      },
+      {
+        "pagePath": "pages/calendar/calendar",
+        "text": "成长足迹"
       },
       {
         "pagePath": "pages/profile/profile",

@@ -1,49 +1,33 @@
-/* miniprogram/custom-tab-bar/index.wxss */
-.custom-tab-bar {
+.tab-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 110rpx;
-  background-color: #FFFFFF;
+  height: 100rpx;
+  background: #FFFFFF;
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  border-top: 1rpx solid #EDF4E9;
   padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.04);
+  border-top: 1rpx solid #EAEBE6;
   z-index: 9999;
 }
 
-.tab-item {
+.tab-bar-item {
   flex: 1;
-  height: 100%;
+  text-align: center;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  position: relative;
-  transition: all 0.2s ease;
+  align-items: center;
+  flex-direction: column;
 }
 
 .tab-text {
+  /* 在这里随意调整字体大小和字重 */
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   color: #85877B;
-  transition: color 0.2s ease, font-size 0.2s ease;
 }
 
-.tab-item-selected .tab-text {
+.tab-bar-item.active .tab-text {
   color: #2E5A44;
-  font-weight: 800;
-  font-size: 30rpx;
-}
-
-.active-indicator {
-  position: absolute;
-  bottom: 12rpx;
-  width: 32rpx;
-  height: 6rpx;
-  background-color: #2E5A44;
-  border-radius: 999rpx;
+  font-weight: 700;
 }

@@ -9,7 +9,7 @@
     </view>
 
     <view class="illustration-frame">
-      <image class="cover-art" src="{{activity.coverImage}}" mode="aspectFill" />
+      <image class="cover-art" src="{{activity.coverImage || activity.illustrationUrl || activity.image}}" mode="aspectFill" />
     </view>
 
     <view class="steps-section">

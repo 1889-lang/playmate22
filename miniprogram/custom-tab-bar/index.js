@@ -1,4 +1,3 @@
-// miniprogram/custom-tab-bar/index.ts
 Component({
   data: {
     selected: 0,
@@ -8,12 +7,12 @@ Component({
         text: "今日推荐"
       },
       {
-        pagePath: "/pages/calendar/calendar",
-        text: "成长足迹"
-      },
-      {
         pagePath: "/pages/vault/vault",
         text: "活动宝库"
+      },
+      {
+        pagePath: "/pages/calendar/calendar",
+        text: "成长足迹"
       },
       {
         pagePath: "/pages/profile/profile",
@@ -21,12 +20,17 @@ Component({
       }
     ]
   },
-
   methods: {
-    switchTab(e: any) {
+    switchTab(e) {
       const data = e.currentTarget.dataset;
-      const url = data.path;
-      wx.switchTab({ url });
+      const index = Number(data.index);
+      if (this.data.selected === index) {
+        return;
+      }
+      const url = '/' + data.path.replace(/^\//, '');
+      wx.switchTab({
+        url: url
+      });
     }
   }
 });
